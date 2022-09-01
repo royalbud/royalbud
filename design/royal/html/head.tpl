@@ -115,13 +115,45 @@
 
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
-    {if $noindex_nofollow}
+    {*
+    {if $controller == 'CategoryController' || $controller == 'BrandController' || $controller == 'ProductsController'}
+        {if $metaDataPage == true }
+            <meta name="robots" content="index,follow">
+        {elseif $selected_other_filters && in_array('discounted', $selected_other_filters)}
+            <meta name="robots" content="noindex,nofollow">
+        {elseif $set_canonical && !$need_indexing}
+            <meta name="robots" content="noindex,nofollow">
+        {elseif $sort}
+            <meta name="robots" content="noindex,follow">
+        {elseif isset($smarty.get.keyword)}
+            <meta name="robots" content="noindex,follow">
+        {else}
+            <meta name="robots" content="index,follow">
+        {/if}
+    {elseif $controller == "RegisterController" || $controller == "LoginController" || $controller == "UserController" || $controller == "CartController"}
+        <meta name="robots" content="noindex,follow">
+    {elseif $controller == "OrderController"}
+        <meta name="robots" content="noindex,nofollow">
+    {elseif $controller == "CartController"}
+        <meta name="robots" content="noindex,follow">
+    {elseif $noindex_nofollow}
+        <meta name="robots" content="noindex,nofollow">
+    {elseif $noindex_follow}
+        <meta name="robots" content="noindex,follow">
+    {else}
+        <meta name="robots" content="index,follow">
+    {/if}*}
+
+    {if $metaDataPage == true }
+        <meta name="robots" content="index,follow">
+    {elseif $noindex_nofollow}
         <meta name="robots" content="noindex,nofollow">
     {elseif $noindex_follow}
         <meta name="robots" content="noindex,follow">
     {else}
         <meta name="robots" content="index,follow">
     {/if}
+
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="OkayCMS {$config->version}">

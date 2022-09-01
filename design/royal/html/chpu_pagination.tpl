@@ -63,10 +63,10 @@
             </li>
         {/if}
 
-        {* Display all pages *}
+        {* Display all pages 
         <li class="pagination__item">
             <a class="fn_sort_pagination_link pagination__link" href="{furl page=all}" data-language="pagination_all">{$lang->pagination_all}</a>
-        </li>
+        </li>*}
 
         {* Link to the next page *}
         {if $current_page_num < $total_pages_num}

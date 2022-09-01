@@ -181,7 +181,9 @@ abstract class AbstractPresetAdapter implements PresetAdapterInterface
 
         $prevProductId = null;
         while ($product = $productsQuery->result()) {
-            $product = $this->modifyItem($product);
+            $product = $this->xmlFeedHelper->attachFeatures($product);
+            $product = $this->xmlFeedHelper->attachDescriptionByTemplate($product);
+            $product = $this->xmlFeedHelper->attachProductImages($product);
 
             $addVariantUrl = false;
             if ($prevProductId === $product->product_id) {
@@ -440,19 +442,6 @@ abstract class AbstractPresetAdapter implements PresetAdapterInterface
         $settings = $this->feed->categories_settings[$categoryId] ?? null;
 
         return $this->inheritedExtender(__FUNCTION__, $settings, func_get_args());
-    }
-
-    /**
-     * Вызов методов модифицирующих товар.
-     * Последняя возможность для расширений изменить товар перед сборкой объекта под шаблон
-     */
-    protected function modifyItem(object $item): object
-    {
-        $item = $this->xmlFeedHelper->attachFeatures($item);
-        $item = $this->xmlFeedHelper->attachDescriptionByTemplate($item);
-        $item = $this->xmlFeedHelper->attachProductImages($item);
-
-        return $this->inheritedExtender(__FUNCTION__, $item, func_get_args());
     }
 
     /**
