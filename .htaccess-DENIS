@@ -1,0 +1,640 @@
+# php_flag display_errors on
+# php_flag display_startup_errors on
+#php_value session.cookie_httponly true
+AddDefaultCharset UTF-8
+ErrorDocument 404 /404
+RewriteEngine on
+#RewriteBase /
+
+# Добавляем коммент чтобы потом не забыть что за редиректы
+# Редиректы со старого сайта при запуске 
+
+Redirect 301    /zhelezobetonnye-izdeliya/zabor https://royal.stare-misto.com.ua/ru/catalog/elementi-ogorozhi
+Redirect 301    /zhelezobetonnye-izdeliya/svai-zabivnye https://royal.stare-misto.com.ua/ru/catalog/zabivni-pali
+Redirect 301    /zhelezobetonnye-izdeliya/plity-perekrytiya https://royal.stare-misto.com.ua/ru/catalog/bagatoporozhninni-serijni-pliti
+Redirect 301    /zhelezobetonnye-izdeliya/peremychki    https://royal.stare-misto.com.ua/ru/catalog/peremichki
+Redirect 301    /zhelezobetonnye-izdeliya/kolodtsy  https://royal.stare-misto.com.ua/ru/catalog/kolodyazni-elementi
+Redirect 301    /zhelezobetonnye-izdeliya/fundamenty-lentochnye-fl  https://royal.stare-misto.com.ua/ru/catalog/strichkovi-fundamenti
+Redirect 301    /zhelezobetonnye-izdeliya/fundamentnye-bloki-fbs    https://royal.stare-misto.com.ua/ru/catalog/bloki-fbs
+Redirect 301    /zhelezobetonnye-izdeliya/elementy-lestnic  https://royal.stare-misto.com.ua/ru/catalog/shodovi-sistemi
+Redirect 301    /zhelezobetonnye-izdeliya/ekstrudernye-plity-perekrytiya-pb https://royal.stare-misto.com.ua/ru/catalog/ekstruderni-plity
+Redirect 301    /zhelezobetonnye-izdeliya/assortiment-plit-perekrytiya  https://royal.stare-misto.com.ua/ru/catalog/pliti-perekrittya
+Redirect 301    /zhelezobetonnye-izdeliya   https://royal.stare-misto.com.ua/ru/catalog/zalizobetonni-virobi
+Redirect 301    /ukr/zalizobetonni-vyroby/zabory    https://royal.stare-misto.com.ua/catalog/elementi-ogorozhi
+Redirect 301    /ukr/zalizobetonni-vyroby/shodovi-elementy  https://royal.stare-misto.com.ua/catalog/shodovi-sistemi
+Redirect 301    /ukr/zalizobetonni-vyroby/plyty-perekryttya https://royal.stare-misto.com.ua/catalog/bagatoporozhninni-serijni-pliti
+Redirect 301    /ukr/zalizobetonni-vyroby/peremychky    https://royal.stare-misto.com.ua/catalog/peremichki
+Redirect 301    /ukr/zalizobetonni-vyroby/pali  https://royal.stare-misto.com.ua/catalog/zabivni-pali
+Redirect 301    /ukr/zalizobetonni-vyroby/kolodyazi https://royal.stare-misto.com.ua/catalog/kolodyazni-elementi
+Redirect 301    /ukr/zalizobetonni-vyroby/fundamenty-strichkovi-fl  https://royal.stare-misto.com.ua/catalog/strichkovi-fundamenti
+Redirect 301    /ukr/zalizobetonni-vyroby/fundamentni-bloky-fbs https://royal.stare-misto.com.ua/catalog/bloki-fbs
+Redirect 301    /ukr/zalizobetonni-vyroby/ekstruderni-plyty-perekryttya-pb  https://royal.stare-misto.com.ua/catalog/ekstruderni-plity
+Redirect 301    /ukr/zalizobetonni-vyroby/asortyment-plyt-perekryttya   https://royal.stare-misto.com.ua/catalog/pliti-perekrittya
+Redirect 301    /ukr/zalizobetonni-vyroby   https://royal.stare-misto.com.ua/catalog/zalizobetonni-virobi
+Redirect 301    /ukr/trotuarna-plytka-fem/zolotyy-mandaryn/veneciya https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/brand-zolotij-mandarin/vid-venetsiya
+Redirect 301    /ukr/trotuarna-plytka-fem/zolotyy-mandaryn  https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/brand-zolotij-mandarin
+Redirect 301    /ukr/trotuarna-plytka-fem/klinkerna-brukivka-brukkeram/brukkeram-klasyka-zhemchug   https://royal.stare-misto.com.ua/products/klinkerna-brukivka-brukkeram-klasika-zhemchug
+Redirect 301    /ukr/trotuarna-plytka-fem/klinkerna-brukivka-brukkeram/brukkeram-klasyka-yantar https://royal.stare-misto.com.ua/products/klinkerna-brukivka-brukkeram-klasika-yantar
+Redirect 301    /ukr/trotuarna-plytka-fem/klinkerna-brukivka-brukkeram/brukkeram-klasyka-rubin  https://royal.stare-misto.com.ua/products/klinkerna-brukivka-brukkeram-klasika-rubin
+Redirect 301    /ukr/trotuarna-plytka-fem/klinkerna-brukivka-brukkeram/brukkeram-klasyka-oniks  https://royal.stare-misto.com.ua/products/klinkerna-brukivka-brukkeram-klasika-oniks
+Redirect 301    /ukr/trotuarna-plytka-fem/klinkerna-brukivka-brukkeram  https://royal.stare-misto.com.ua/catalog/klinkerna-brukivka
+Redirect 301    /ukr/trotuarna-plytka-fem/eko/stare-misto-25-mm https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-starespmisto/tovschinacspmm-25
+Redirect 301    /ukr/trotuarna-plytka-fem/eko   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/brand-eko
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/trapeciya  https://royal.stare-misto.com.ua/products/fem-trapetsiya
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/stare-misto    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-starespmisto
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/rymskyy-kamin  https://royal.stare-misto.com.ua/products/fem-rimskij-kamin
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/romb   https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-romb
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/porebryk   https://royal.stare-misto.com.ua/catalog/bordyuri-vidlivi-stovpchiki/vid-bordyurdspporebrik
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/podviyne-t https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-podvijnespt
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/parket https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-parket
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/modern https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-modern
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/knyazhyy-shlyah    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/gazonna-parkuvalna-reshitka    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-parkuvalnaspreshitka
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/falka  https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-falka
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/diagonal   https://royal.stare-misto.com.ua/catalog/trotuarna-plitka
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/brukivka   https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-brukivka
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu/bordyur-trotuarnyy https://royal.stare-misto.com.ua/catalog/bordyuri-vidlivi-stovpchiki/vid-bortspdorozhnij
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu-dekor/romb-fyuzhn  https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-romb
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu-dekor/parket-fyuzhn    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-parket
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu-dekor/brukivka-fyuzhn  https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-brukfusion
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu-dekor/brukivka-color-mix   https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-brukcolormiks
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu-dekor  https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-brukvintazh_brukcolormiks
+Redirect 301    /ukr/trotuarna-plytka-fem/avenyu    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/brand-avenyu
+Redirect 301    /ukr/trotuarna-plytka-fem   https://royal.stare-misto.com.ua/catalog/fem
+Redirect 301    /ukr/transportni-posluhy/tyagach-z-napivprichipom-20t   https://royal.stare-misto.com.ua/catalog/tyagach-z-napivprichipom
+Redirect 301    /ukr/transportni-posluhy/orenda-betononasosa    https://royal.stare-misto.com.ua/catalog/betononasos
+Redirect 301    /ukr/transportni-posluhy/manipulyator   https://royal.stare-misto.com.ua/ru/catalog/manipulyator
+Redirect 301    /ukr/transportni-posluhy/dostavka-plyt-perekryttya  https://royal.stare-misto.com.ua/products/dostavka-plit-perekrittya
+Redirect 301    /ukr/transportni-posluhy/dostavka-betonu    https://royal.stare-misto.com.ua/catalog/dostavka-betonu
+Redirect 301    /ukr/transportni-posluhy    https://royal.stare-misto.com.ua/catalog/transportni-poslugi
+        
+Redirect 301    /ukr/roboty-ta-poslugy/vyviz-budivelnogo-smittya    https://royal.stare-misto.com.ua/catalog/other
+Redirect 301    /ukr/roboty-ta-poslugy/ukladannya-brukivky  https://royal.stare-misto.com.ua/blog/ukladannya-brukivki
+Redirect 301    /ukr/roboty-ta-poslugy/asfaltuvannya-blagoustriy    https://royal.stare-misto.com.ua/catalog/other
+        
+Redirect 301    /ukr/pylomaterialy/drova-dubovi https://royal.stare-misto.com.ua/blog/drova-dubovi
+Redirect 301    /ukr/pylomaterialy/doshka-shalivka  https://royal.stare-misto.com.ua/blog/doska-obreznaya-shalevka
+Redirect 301    /ukr/pylomaterialy/brus-krokvy  https://royal.stare-misto.com.ua/blog/brus-stropilo-krokvi
+Redirect 301    /ukr/pylomaterialy  https://royal.stare-misto.com.ua/blog/pilomaterialy
+        
+        
+        
+Redirect 301    /ukr/nasipni-materiali/torf https://royal.stare-misto.com.ua/catalog/other
+Redirect 301    /ukr/nasipni-materiali/schebin  https://royal.stare-misto.com.ua/products/schebin
+Redirect 301    /ukr/nasipni-materiali/pisok-yaruzhniy  https://royal.stare-misto.com.ua/products/pisok-yaruzhnij
+Redirect 301    /ukr/nasipni-materiali/pisok-richkoviy  https://royal.stare-misto.com.ua/products/pisok-richkovij
+Redirect 301    /ukr/nasipni-materiali/keramzyt https://royal.stare-misto.com.ua/products/keramzit
+Redirect 301    /ukr/nasipni-materiali/chornozem    https://royal.stare-misto.com.ua/products/chornozem
+        
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/terka-dlya-shlifuvannya-gazoblokiv  https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-terka
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/shtroboriz-dlya-gazobetonu  https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-shtroboriz
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/nozhivka-dlya-gazobetonu    https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-nozhivka
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/kyyanka-gumova  https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-molotok
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/kutnyk-dlya-gazobetonu  https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-kutnik
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/kovsh-dlya-kladky-gazobloku https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-kovsh
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv/karetka-dlya-kladky-gazobetonu  https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu/vid-karetka
+Redirect 301    /ukr/instrumenty-dlya-gazobetonu-gazoblokiv https://royal.stare-misto.com.ua/catalog/instrumenti-dlya-gazobetonu
+Redirect 301    /ukr/gazoblok-gazobeton/udk-gazobeton   https://royal.stare-misto.com.ua/catalog/gazobloki/brand-udk
+Redirect 301    /ukr/gazoblok-gazobeton/gazobloky-kupjansk  https://royal.stare-misto.com.ua/catalog/gazobeton
+Redirect 301    /ukr/gazoblok-gazobeton/gazoblok-sumy   https://royal.stare-misto.com.ua/catalog/gazobeton
+Redirect 301    /ukr/gazoblok-gazobeton/gazobeton-stounlait https://royal.stare-misto.com.ua/catalog/gazobloki/brand-stonelight
+Redirect 301    /ukr/gazoblok-gazobeton/gazobeton-mchernigiv    https://royal.stare-misto.com.ua/products/gazobeton-chernigiv
+Redirect 301    /ukr/gazoblok-gazobeton/gazobeton-hetten-xcm    https://royal.stare-misto.com.ua/catalog/gazobloki/brand-hsm
+Redirect 301    /ukr/gazoblok-gazobeton/gazobeton-aeroc https://royal.stare-misto.com.ua/catalog/gazobloki/brand-aeroc
+Redirect 301    /ukr/gazoblok-gazobeton/gazobeton-aac   https://royal.stare-misto.com.ua/catalog/gazobeton
+Redirect 301    /ukr/gazoblok-gazobeton https://royal.stare-misto.com.ua/catalog/gazobeton
+Redirect 301    /ukr/fasad/shyfer   https://royal.stare-misto.com.ua/catalog/shifer/vid-8sphvil
+Redirect 301    /ukr/fasad/rizne/vorota https://royal.stare-misto.com.ua/catalog/fasad
+Redirect 301    /ukr/fasad/rizne/sitka-kladochna    https://royal.stare-misto.com.ua/products/sitka-kladochna-kladkova
+Redirect 301    /ukr/fasad/rizne/mansardni-vikna    https://royal.stare-misto.com.ua/catalog/fasad
+Redirect 301    /ukr/fasad/rizne    https://royal.stare-misto.com.ua/catalog/fasad
+Redirect 301    /ukr/fasad/profnastyl   https://royal.stare-misto.com.ua/catalog/profnastil
+Redirect 301    /ukr/fasad/pinoplast    https://royal.stare-misto.com.ua/catalog/pinoplast
+Redirect 301    /ukr/fasad/mineralna-vata-minvata   https://royal.stare-misto.com.ua/catalog/mineralna-vata
+Redirect 301    /ukr/fasad/metaloplastykovi-vikna   https://royal.stare-misto.com.ua/catalog/other
+Redirect 301    /ukr/fasad/kley-pinoplast   https://royal.stare-misto.com.ua/catalog/klej-dlya-uteplyuvachiv
+Redirect 301    /ukr/fasad/fasadna-sitka    https://royal.stare-misto.com.ua/catalog/sitka-shtukaturna
+Redirect 301    /ukr/fasad/ekstruder    https://royal.stare-misto.com.ua/catalog/ekstrudovanij-pinopolistirol---ekstruder
+Redirect 301    /ukr/fasad/akrylova-shtukaturka https://royal.stare-misto.com.ua/catalog/shtukaturki
+Redirect 301    /ukr/fasad  https://royal.stare-misto.com.ua/catalog/fasad
+        
+Redirect 301    /ukr/cerrad/fasadnyy-kamin  https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /ukr/cerrad/burgund https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /ukr/cement-sumishi/polimin-pb75    https://royal.stare-misto.com.ua/products/polimin-pb-75-klejova-sumish-dlya-kladki-gazobloku
+Redirect 301    /ukr/cement-sumishi/polimin-pb55    https://royal.stare-misto.com.ua/products/polimin-pb-55-montazh-blok
+Redirect 301    /ukr/cement-sumishi/mertel-shamotnyy    https://royal.stare-misto.com.ua/catalog/vognetrivki-sumishi/vid-mertel
+Redirect 301    /ukr/cement-sumishi/kleyzer-kts https://royal.stare-misto.com.ua/products/kleyzer-kts-klej-dlya-kladki-tsegli-blokiv
+Redirect 301    /ukr/cement-sumishi/kley-dlya-gazobetonu-kleyzer    https://royal.stare-misto.com.ua/catalog/klej-dlya-gazobetonu/brand-kleyzer
+Redirect 301    /ukr/cement-sumishi/cement-m500 https://royal.stare-misto.com.ua/catalog/tsement/marka-m500
+Redirect 301    /ukr/cement-sumishi/cement-m400 https://royal.stare-misto.com.ua/catalog/tsement/marka-m400
+Redirect 301    /ukr/cement-sumishi https://royal.stare-misto.com.ua/catalog/tsement
+Redirect 301    /ukr/cegla/vognetryvka-cegla/shamotna-cegla-sha-8   https://royal.stare-misto.com.ua/products/tsegla-sha-8-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/plyta-vognetryvka-sha-96   https://royal.stare-misto.com.ua/products/plita-sha-96-shamotna-vognetrivka
+Redirect 301    /ukr/cegla/vognetryvka-cegla/plyta-vognetryvka-sha-95   https://royal.stare-misto.com.ua/products/plita-sha-95-shamotna-vognetrivka
+Redirect 301    /ukr/cegla/vognetryvka-cegla/plyta-vognetryvka-sha-94   https://royal.stare-misto.com.ua/products/plita-sha-94-shamotna-vognetrivka
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-shl-1.3-no5-no8 https://royal.stare-misto.com.ua/products/tsegla-shl-13-5-legka
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-9   https://royal.stare-misto.com.ua/products/tsegla-sha-9-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-6   https://royal.stare-misto.com.ua/products/tsegla-sha-6-vuzka-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-5   https://royal.stare-misto.com.ua/products/tsegla-sha-5-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-47  https://royal.stare-misto.com.ua/products/tsegla-sha-47-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-45  https://royal.stare-misto.com.ua/products/tsegla-sha-45-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-44  https://royal.stare-misto.com.ua/products/tsegla-sha-44-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-25  https://royal.stare-misto.com.ua/products/tsegla-sha-25-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-23  https://royal.stare-misto.com.ua/products/tsegla-sha-23-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-22  https://royal.stare-misto.com.ua/products/tsegla-sha-22-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-10  https://royal.stare-misto.com.ua/products/tsegla-sha-10-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-sha-1   https://royal.stare-misto.com.ua/products/tsegla-sha-1-brusok-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla/cegla-shamotna-pb-5-pv-5   https://royal.stare-misto.com.ua/products/tsegla-pb-5-pv-5-vognetrivka-shamotna
+Redirect 301    /ukr/cegla/vognetryvka-cegla    https://royal.stare-misto.com.ua/catalog/vognetrivka-tsegla
+Redirect 301    /ukr/cegla/ryadova-cegla/podviyna-cegla https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/rozmiricspmm-250x120x138
+Redirect 301    /ukr/cegla/ryadova-cegla/pichna-cegla-m-200 https://royal.stare-misto.com.ua/catalog/vognetrivka-tsegla/vidsptsegli-keramichna
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-sarny    https://royal.stare-misto.com.ua/products/tsegla-m-125-msarni-rivne-pustotila
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-pustotila    https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/tipsptsegli-pustotila
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-povnotila    https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/tipsptsegli-povnotila
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-mankivka https://royal.stare-misto.com.ua/products/tsegla-m-100-mmankivka
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m125-sumy    https://royal.stare-misto.com.ua/products/tsegla-m-125-msumi-pustotila
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m125-ruzhyn  https://royal.stare-misto.com.ua/products/tsegla-m125-ruzhin
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m125-povnotila   https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/marka-msp125/tipsptsegli-povnotila
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m125 https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/marka-msp125
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m100-vatutinska  https://royal.stare-misto.com.ua/products/tsegla-m-100-mvatutine
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m100-lubny   https://royal.stare-misto.com.ua/products/tsegla-m-100-mlubni
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m100-kryzhopil   https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/marka-msp100
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m100 https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/marka-msp100
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m-200-pichna-vitebsk https://royal.stare-misto.com.ua/products/tsegla-m200-pichna-povnotila-ryadova-vitebsk
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-m-150    https://royal.stare-misto.com.ua/products/tsegla-m-150
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-kirovograd   https://royal.stare-misto.com.ua/products/tsegla-m-100-kirovograd
+Redirect 301    /ukr/cegla/ryadova-cegla/cegla-chervona https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/vidsptsegli-keramichna/rozmiricspmm-250x120x65
+Redirect 301    /ukr/cegla/ryadova-cegla/budivelna-cegla    https://royal.stare-misto.com.ua/catalog/ryadova-tsegla/vidsptsegli-keramichna
+Redirect 301    /ukr/cegla/ryadova-cegla    https://royal.stare-misto.com.ua/catalog/ryadova-tsegla
+Redirect 301    /ukr/cegla/lytsova-cegla/sylikatna-cegla    https://royal.stare-misto.com.ua/products/silikatna-tsegla
+Redirect 301    /ukr/cegla/lytsova-cegla/rvana-cegla-rustik https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-kovalska
+Redirect 301    /ukr/cegla/lytsova-cegla/klinkerna-cegla    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/vidsptsegli-klinkerna
+Redirect 301    /ukr/cegla/lytsova-cegla/katerynoslavska-cegla  https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-kerambrok
+Redirect 301    /ukr/cegla/lytsova-cegla/fasadnyy-kamin-rustyk-kutovyy  https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-kovalska/rozmiricspmm-225x100x65
+Redirect 301    /ukr/cegla/lytsova-cegla/fasadnyy-kamin-rustyk  https://royal.stare-misto.com.ua/catalog/design/brand-avenyu
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-trv  https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-trv
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-sbk-romny    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-sbk
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-prokeram-ivano-frankivsk https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-prokeram
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-litos    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-litos
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-kerameya https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-kerameya
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-kerambud-gorodok https://royal.stare-misto.com.ua/products/tsegla-kerambud-mgorodok
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-fagot    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-kovalska
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-euroton  https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-euroton
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-altcom   https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla
+Redirect 301    /ukr/cegla/lytsova-cegla/cegla-agroprombud-borzna   https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla
+Redirect 301    /ukr/cegla/lytsova-cegla/bilocerkivska-cegla    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla/brand-bc-cegla
+Redirect 301    /ukr/cegla/lytsova-cegla    https://royal.stare-misto.com.ua/catalog/oblitsyuvalna-tsegla
+Redirect 301    /ukr/cegla/keramichna-cegla https://royal.stare-misto.com.ua/catalog/tsegla/vidsptsegli-keramichna
+Redirect 301    /ukr/cegla  https://royal.stare-misto.com.ua/catalog/tsegla
+Redirect 301    /ukr/bloky-budivelni/stinovi/rakushnyak https://royal.stare-misto.com.ua/products/rakushnyak-krimskij
+Redirect 301    /ukr/bloky-budivelni/stinovi/pinobeton  https://royal.stare-misto.com.ua/catalog/gazobloki/brand-stonelight_aeroc
+Redirect 301    /ukr/bloky-budivelni/stinovi    https://royal.stare-misto.com.ua/catalog/bloki-budivelni/tipspbloku-stinovij
+Redirect 301    /ukr/bloky-budivelni/keramichni/teplokeram-kerameya https://royal.stare-misto.com.ua/catalog/keramichni-bloki/brand-kerameya
+Redirect 301    /ukr/bloky-budivelni/keramichni/poroterm    https://royal.stare-misto.com.ua/catalog/keramichni-bloki/brand-porotherm
+Redirect 301    /ukr/bloky-budivelni/keramichni/keraterm    https://royal.stare-misto.com.ua/catalog/keramichni-bloki/brand-keraterm
+Redirect 301    /ukr/bloky-budivelni/keramichni/keramoblok-rusyniya-ekoblok https://royal.stare-misto.com.ua/catalog/keramichni-bloki/brand-rusiniya
+Redirect 301    /ukr/bloky-budivelni/keramichni/keramkomfort-sbk-ozera  https://royal.stare-misto.com.ua/catalog/keramichni-bloki/brand-sbk/rozmiricspmm-250x120x138
+Redirect 301    /ukr/bloky-budivelni/keramichni https://royal.stare-misto.com.ua/catalog/keramichni-bloki
+Redirect 301    /ukr/bloky-budivelni/bloky-dlya-ogorozhi/silta-brik https://royal.stare-misto.com.ua/catalog/bloki-dlya-parkanu/brand-silta-brik
+Redirect 301    /ukr/bloky-budivelni/bloky-dlya-ogorozhi/kolotyy-blok-avenyu-dekor  https://royal.stare-misto.com.ua/catalog/bloki-dlya-parkanu/brand-avenyu
+Redirect 301    /ukr/bloky-budivelni/bloky-dlya-ogorozhi    https://royal.stare-misto.com.ua/catalog/bloki-dlya-parkanu
+Redirect 301    /ukr/bloky-budivelni/betonni/stinovi-betonni-bloky  https://royal.stare-misto.com.ua/catalog/betonni-bloki/brand-kovalska
+Redirect 301    /ukr/bloky-budivelni/betonni/shlakoblok https://royal.stare-misto.com.ua/catalog/shlakoblok
+Redirect 301    /ukr/bloky-budivelni/betonni/keramzytobetonni-bloky https://royal.stare-misto.com.ua/catalog/keramzitobetonni-bloki
+Redirect 301    /ukr/bloky-budivelni/betonni/blok-neznimnoyi-opalubky   https://royal.stare-misto.com.ua/catalog/bloki-neznimnoi-opalubki
+Redirect 301    /ukr/bloky-budivelni/betonni    https://royal.stare-misto.com.ua/catalog/betonni-bloki
+Redirect 301    /ukr/bloky-budivelni    https://royal.stare-misto.com.ua/catalog/bloki-budivelni
+Redirect 301    /ukr/beton/vapnyanyy-rozchyn    https://royal.stare-misto.com.ua/catalog/rozchini/vid-vapnyanij
+Redirect 301    /ukr/beton/suhyy-beton-p1   https://royal.stare-misto.com.ua/catalog/beton/ruhomist-p1
+Redirect 301    /ukr/beton/specbeton    https://royal.stare-misto.com.ua/catalog/beton/marka-msp500_msp600_msp700_msp800
+Redirect 301    /ukr/beton/kladochniy-rozchin   https://royal.stare-misto.com.ua/catalog/rozchini/vid-kladochnij
+Redirect 301    /ukr/beton/keramzitobeton   https://royal.stare-misto.com.ua/products/keramzitobeton
+Redirect 301    /ukr/beton/garcovka https://royal.stare-misto.com.ua/catalog/rozchini/vid-garcovka
+Redirect 301    /ukr/beton/dribnozernystyy-beton    https://royal.stare-misto.com.ua/catalog/beton/fraktsiyaspschebnyu-dribnozernistij
+Redirect 301    /ukr/beton/cementno-vapnianiy-rozchin   https://royal.stare-misto.com.ua/catalog/rozchini/vid-vapnyanij
+Redirect 301    /ukr/beton/cementniy-rozchin    https://royal.stare-misto.com.ua/catalog/rozchini/vid-tsementnij
+Redirect 301    /ukr/beton/beton-vid-kovalskoyi https://royal.stare-misto.com.ua/catalog/beton
+Redirect 301    /ukr/beton/beton-m400-b30   https://royal.stare-misto.com.ua/catalog/beton/marka-msp400
+Redirect 301    /ukr/beton/beton-m300-b25   https://royal.stare-misto.com.ua/catalog/beton/marka-msp350
+Redirect 301    /ukr/beton/beton-m250-b20   https://royal.stare-misto.com.ua/catalog/beton/marka-msp250
+Redirect 301    /ukr/beton/beton-m200   https://royal.stare-misto.com.ua/catalog/beton/marka-msp200
+Redirect 301    /ukr/beton/beton-m150-b12.5 https://royal.stare-misto.com.ua/catalog/beton/marka-msp150
+Redirect 301    /ukr/beton/beton-m100-b7.5  https://royal.stare-misto.com.ua/catalog/beton/marka-msp100
+Redirect 301    /ukr/beton  https://royal.stare-misto.com.ua/catalog/betoni-i-rozchini
+Redirect 301    /ukr/articles/zastosuvannya-fundamentnyh-blokiv https://royal.stare-misto.com.ua/blog/zastosuvannya-fundamentnih-blokiv
+Redirect 301    /ukr/articles/zalizobetonni-peremychky  https://royal.stare-misto.com.ua/blog/zalizobetonni-peremichki
+Redirect 301    /ukr/articles/vyrobnyctvo-chervonoyi-cegly  https://royal.stare-misto.com.ua/blog/virobnitstvo-chervonoi-tsegli
+Redirect 301    /ukr/articles/vykorystannya-plyt-perekryttya-v-budivnyctvi  https://royal.stare-misto.com.ua/blog/vikoristannya-plit-perekrittya-v-budivnitstvi
+Redirect 301    /ukr/articles/vykorystannya-chervonoyi-cegly    https://royal.stare-misto.com.ua/blog/vikoristannya-chervonoi-tsegli
+Redirect 301    /ukr/articles/vybir-betonu  https://royal.stare-misto.com.ua/blog/vibir-betonu
+Redirect 301    /ukr/articles/vstanovlennya-i-montazh-fundamentnyh-blokiv-fbs   https://royal.stare-misto.com.ua/blog/vstanovlennya-i-montazh-fundamentnih-blokiv-fbs
+Redirect 301    /ukr/articles/vodonepronyknist-betonu-w https://royal.stare-misto.com.ua/blog/vodoneproniknist-betonu-w
+Redirect 301    /ukr/articles/virobniki-gazobetonu  https://royal.stare-misto.com.ua/blog/virobniki-gazobetonu
+Redirect 301    /ukr/articles/vapnyanyy-rozchyn-vlastyvosti-ta-zastosuvannya    https://royal.stare-misto.com.ua/blog/vapnyanij-rozchin-vlastivosti-ta-zastosuvannya
+Redirect 301    /ukr/articles/vapnyanyy-rozchyn-sklad-i-zastosuvannya   https://royal.stare-misto.com.ua/blog/vapnyanij-rozchin-sklad-i-zastosuvannya
+Redirect 301    /ukr/articles/ukladannya-trotuarnoyi-plytky-svoyimy-rukamy  https://royal.stare-misto.com.ua/blog/ukladannya-trotuarnoi-plitki-svoimi-rukami
+Redirect 301    /ukr/articles/trotuarna-plytka  https://royal.stare-misto.com.ua/blog/trotuarna-plitka
+Redirect 301    /ukr/articles/tehnologiya-vygotovlennya-betonu-u-pryvatnomu-budivnyctvi https://royal.stare-misto.com.ua/blog/tehnologiya-vigotovlennya-betonu-u-privatnomu-budivnitstvi
+Redirect 301    /ukr/articles/shvydkotverdiyuchyy-cement    https://royal.stare-misto.com.ua/blog/shvidkotverdiyuchij-tsement
+Redirect 301    /ukr/articles/shlakoblok-zagalna-informaciya    https://royal.stare-misto.com.ua/blog/shlakoblok---zagalna-informatsiya
+Redirect 301    /ukr/articles/shlakoblok-harakterystyky-ta-zastosuvannya    https://royal.stare-misto.com.ua/blog/shlakoblok-harakteristiki-ta-zastosuvannya
+Redirect 301    /ukr/articles/ryzyky-pry-zamovlenni-betonu  https://royal.stare-misto.com.ua/blog/riziki-pri-zamovlenni-betonu
+Redirect 301    /ukr/articles/rozrakhunok-shlakoblokiv  https://royal.stare-misto.com.ua/blog/rozrahunok-garazha-z-shlakoblokiv
+Redirect 301    /ukr/articles/rozrakhunok-rakushnyaka   https://royal.stare-misto.com.ua/blog/rozrahunok-budinku-iz-rakushnyaka
+Redirect 301    /ukr/articles/rozrakhunok-gazobetonu    https://royal.stare-misto.com.ua/blog/rozrahunok-budinku-z-gazoblokiv
+Redirect 301    /ukr/articles/rozrahunok-budynku-iz-cegly   https://royal.stare-misto.com.ua/blog/rozrahunok-budinku-iz-tsegli
+Redirect 301    /ukr/articles/riznovydy-plyt-perekryttya    https://royal.stare-misto.com.ua/blog/riznovidi-plit-perekrittya
+Redirect 301    /ukr/articles/rakushnyak-cherepashnyk   https://royal.stare-misto.com.ua/blog/rakushnyak-cherepashnik
+Redirect 301    /ukr/articles/pryznachennya-betoniv-po-markah-ta-klasah https://royal.stare-misto.com.ua/blog/yak-vibrati-marku-betonu-priznachennya-betoniv-po-markah-ta-klasah
+Redirect 301    /ukr/articles/propytky-dlya-betoniv https://royal.stare-misto.com.ua/blog/propitki-dlya-betoniv
+Redirect 301    /ukr/articles/pro-gazobeton https://royal.stare-misto.com.ua/blog/pro-gazobeton
+Redirect 301    /ukr/articles/pro-ceglu https://royal.stare-misto.com.ua/blog/pro-tseglu
+Redirect 301    /ukr/articles/pinoplast https://royal.stare-misto.com.ua/blog/pinoplast-zagalni-harakteristiki
+Redirect 301    /ukr/articles/pidgotovka-do-montuvannya-plyt-perekryttya    https://royal.stare-misto.com.ua/blog/pidgotovka-do-montuvannya-plit-perekrittya
+Redirect 301    /ukr/articles/pelety-chy-drova  https://royal.stare-misto.com.ua/blog/peleti-chi-drova
+Redirect 301    /ukr/articles/parkan-iz-betonnikh-blokiv    https://royal.stare-misto.com.ua/blog/parkan-iz-betonnih-blokiv
+Redirect 301    /ukr/articles/osoblyvosti-vyboru-drov   https://royal.stare-misto.com.ua/blog/osoblivosti-viboru-drov
+Redirect 301    /ukr/articles/osoblyvosti-chervonoyi-cegly  https://royal.stare-misto.com.ua/blog/osoblivosti-chervonoi-tsegli
+Redirect 301    /ukr/articles/osnovni-perevagy-plyt-perekryttya https://royal.stare-misto.com.ua/blog/osnovni-perevagi-plit-perekrittya
+Redirect 301    /ukr/articles/osnova-dlya-fundamentnyh-blokiv   https://royal.stare-misto.com.ua/blog/osnova-dlya-fundamentnih-blokiv
+Redirect 301    /ukr/articles/nevidomi-vlastyvosti-betonu   https://royal.stare-misto.com.ua/blog/nevidomi-vlastivosti-betonu
+Redirect 301    /ukr/articles/minimalna-velychyna-opyrannya-plyt-perekryttya-na-stiny   https://royal.stare-misto.com.ua/blog/minimalna-velichina-opirannya-plit-perekrittya-na-stini
+Redirect 301    /ukr/articles/marka-betonu-vybir-potribnoyi-marky-betonu    https://royal.stare-misto.com.ua/blog/marki-i-klasi-betonu
+Redirect 301    /ukr/articles/kolorovyy-beton   https://royal.stare-misto.com.ua/blog/kolorovij-beton--perspektivi-i-mozhlivosti
+Redirect 301    /ukr/articles/klinkerna-brukivka-brukkeram-vid-kerameyya    https://royal.stare-misto.com.ua/blog/klinkerna-brukivka-brukkeram-vid-keramejya
+Redirect 301    /ukr/articles/kley-dlya-gazobetonu  https://royal.stare-misto.com.ua/blog/klej-dlya-gazobetonu---zastosuvannya
+Redirect 301    /ukr/articles/klasyfikaciya-plyt-perekryttya    https://royal.stare-misto.com.ua/blog/klasifikatsiya-plit-perekrittya-dopomoga-pri-vibori-plit-perekrittya
+Redirect 301    /ukr/articles/keraterm  https://royal.stare-misto.com.ua/blog/keraterm---keramichni-porizovani-bloki
+Redirect 301    /ukr/articles/katerynoslavska-cegla-ruchnogo-formuvannya    https://royal.stare-misto.com.ua/blog/katerinoslavska-tsegla-ruchnogo-formuvannya
+Redirect 301    /ukr/articles/gazobeton-vidguki https://royal.stare-misto.com.ua/blog/vidguki-pro-gazobeton-harakteristiki-gazobetonu
+Redirect 301    /ukr/articles/gazobeton-chy-pinobeton   https://royal.stare-misto.com.ua/blog/gazobeton-chi-pinobeton
+Redirect 301    /ukr/articles/chervona-keramichna-cegla https://royal.stare-misto.com.ua/blog/chervona-keramichna-tsegla
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-varianty-armopoyasiv https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-varianti-armopoyasiv
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-shcho-robyty-z-brakovanymy-blokamy   https://royal.stare-misto.com.ua/blog/scho-robiti-z-brakovanimi-blokami-budivnitstvo-budinku-z-gazobetonu
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-pochatok https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-pochatok
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-gazobeton-i-doshch   https://royal.stare-misto.com.ua/blog/gazobeton-i-dosch-budivnitstvo-budinku-z-gazobetonu
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-den-2-3  https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-den-2-3-pochatok-kladki
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-den-1    https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-den-1
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-9-den    https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-9-den-montazh-peremichok
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-7-8-den  https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-7-8-den-kladka
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-5-6-den-uteplennya-stin  https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-5-6-den-uteplennya-stin
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-22-23-den    https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-22-23-den-vstanovili-mauerlat
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-19-21-den-kladka-ryadiv-drugogo-poverhu  https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-19-den-kladka-ryadiv-drugogo-poverhu
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-17-18-den    https://royal.stare-misto.com.ua/blog/buduemo-budinok-z-gazobetonu-den-17-18-pochali-buduvati-drugij-poverh
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-15-16-den-derevyane-perekryttya  https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-15-den-derevyane-perekrittya
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-14-den   https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-pidgotovka-do-perekrittya
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-13-den-armopoyas https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-13-den-zalivka-armopoyasu
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-12-den-armopoyas https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-12-den-armopoyas
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-11-den   https://royal.stare-misto.com.ua/blog/budivnitstvo-budinku-z-gazobetonu-11-den-gotovij-pershij-poverh
+Redirect 301    /ukr/articles/budivnyctvo-budynku-z-gazobetonu-10-den   https://royal.stare-misto.com.ua/blog/peremichki-z-u-blokiv-budivnitstvo-budinku-z-gazobetonu-10-den
+Redirect 301    /ukr/articles/budivelni-rozchyny    https://royal.stare-misto.com.ua/blog/budivelni-rozchini
+Redirect 301    /ukr/articles/brukivka  https://royal.stare-misto.com.ua/blog/scho-take-brukivka
+Redirect 301    /ukr/articles/bilocerkivski-budmaterialy-vyrobnyk-bilocerkivskoyi-cegly https://royal.stare-misto.com.ua/blog/bilotserkivski-budmateriali---virobnik-bilotserkivskoi-tsegli
+Redirect 301    /ukr/articles/bila-cegla-v-interyeri    https://royal.stare-misto.com.ua/blog/bila-tsegla-v-intereri
+Redirect 301    /ukr/articles/bila-cegla-u-vitalni-i-kuhni  https://royal.stare-misto.com.ua/blog/bila-tsegla-u-vitalni-i-kuhni
+Redirect 301    /ukr/articles/betonna-vidmostka https://royal.stare-misto.com.ua/blog/betonna-vidmostka
+Redirect 301    /ukr/articles/beton-dlya-fundamentu-vybir-potribnoyi-marky-betonu   https://royal.stare-misto.com.ua/blog/beton-dlya-fundamentu-vibir-potribnoi-marki-betonu
+Redirect 301    /ukr/articles/avtomobilnyy-kran-manipulyator-vykorystannya-ta-vydy  https://royal.stare-misto.com.ua/blog/avtomobilnij-kran-manipulyator-vikoristannya-ta-vidi
+Redirect 301    /ukr/articles/asfalt-chy-trotuarna-plytka   https://royal.stare-misto.com.ua/blog/asfalt-chi-trotuarna-plitka
+Redirect 301    /ukr/articles   https://royal.stare-misto.com.ua/blog
+Redirect 301    /ukr    https://royal.stare-misto.com.ua
+Redirect 301    /trotuarnaya-plitka-fem/zolotoy-mandarin/veneciya   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/brand-zolotij-mandarin/vid-venetsiya
+Redirect 301    /trotuarnaya-plitka-fem/zolotoy-mandarin    https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/brand-zolotij-mandarin
+Redirect 301    /trotuarnaya-plitka-fem/klinkernaya-bruschatka-brukkeram/brukkeram-klassika-zhemchug    https://royal.stare-misto.com.ua/ru/products/klinkerna-brukivka-brukkeram-klasika-zhemchug
+Redirect 301    /trotuarnaya-plitka-fem/klinkernaya-bruschatka-brukkeram/brukkeram-klassika-yantar  https://royal.stare-misto.com.ua/ru/products/klinkerna-brukivka-brukkeram-klasika-yantar
+Redirect 301    /trotuarnaya-plitka-fem/klinkernaya-bruschatka-brukkeram/brukkeram-klassika-rubin   https://royal.stare-misto.com.ua/ru/products/klinkerna-brukivka-brukkeram-klasika-rubin
+Redirect 301    /trotuarnaya-plitka-fem/klinkernaya-bruschatka-brukkeram/brukkeram-klassika-oniks   https://royal.stare-misto.com.ua/ru/products/klinkerna-brukivka-brukkeram-klasika-oniks
+Redirect 301    /trotuarnaya-plitka-fem/klinkernaya-bruschatka-brukkeram    https://royal.stare-misto.com.ua/ru/catalog/klinkerna-brukivka
+Redirect 301    /trotuarnaya-plitka-fem/eko/staryy-gorod-25-mm  https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-starespmisto/tovschinacspmm-25
+Redirect 301    /trotuarnaya-plitka-fem/eko https://royal.stare-misto.com.ua/ru/catalog/fem/brand-eko
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/trapeciya    https://royal.stare-misto.com.ua/ru/products/fem-trapetsiya
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/staryy-gorod https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-starespmisto
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/romb https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-romb
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/rimskiy-kamen    https://royal.stare-misto.com.ua/ru/products/fem-rimskij-kamin
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/porebrik-trotuarnyy  https://royal.stare-misto.com.ua/ru/catalog/bordyuri-vidlivi-stovpchiki/vid-bordyurdspporebrik
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/parket   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-parket
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/modern   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-modern
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/knyazhiy-put https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/gazonnaya-reshetka   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-parkuvalnaspreshitka
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/falka    https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-falka
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/dvoynoe-t    https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-podvijnespt
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/diagonal https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/bruschatka   https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-brukivka
+Redirect 301    /trotuarnaya-plitka-fem/avenyu/bordyur-trotuarnyy   https://royal.stare-misto.com.ua/ru/catalog/bordyuri-vidlivi-stovpchiki/vid-bortspdorozhnij
+Redirect 301    /trotuarnaya-plitka-fem/avenyu-dekor/romb-fyuzhn    https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-romb
+Redirect 301    /trotuarnaya-plitka-fem/avenyu-dekor/parket-fyuzhn  https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-parket
+Redirect 301    /trotuarnaya-plitka-fem/avenyu-dekor/color-miks https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-brukcolormiks
+Redirect 301    /trotuarnaya-plitka-fem/avenyu-dekor/bruschatka-fyuzhn  https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/vid-brukfusion
+Redirect 301    /trotuarnaya-plitka-fem/avenyu-dekor    https://royal.stare-misto.com.ua/catalog/trotuarna-plitka/vid-brukvintazh_brukcolormiks
+Redirect 301    /trotuarnaya-plitka-fem/avenyu  https://royal.stare-misto.com.ua/ru/catalog/trotuarna-plitka/brand-avenyu
+Redirect 301    /trotuarnaya-plitka-fem https://royal.stare-misto.com.ua/ru/catalog/fem
+Redirect 301    /transportnye-uslugi/tyagach-s-polupricepom-20t https://royal.stare-misto.com.ua/ru/catalog/tyagach-z-napivprichipom
+Redirect 301    /transportnye-uslugi/manipulyator   https://royal.stare-misto.com.ua/ru/catalog/manipulyator
+Redirect 301    /transportnye-uslugi/dostavka-plit-perekrytiya  https://royal.stare-misto.com.ua/ru/products/dostavka-plit-perekrittya
+Redirect 301    /transportnye-uslugi/dostavka-betona    https://royal.stare-misto.com.ua/ru/catalog/dostavka-betonu
+Redirect 301    /transportnye-uslugi/arenda-avtobetononasosa    https://royal.stare-misto.com.ua/ru/catalog/betononasos
+Redirect 301    /transportnye-uslugi    https://royal.stare-misto.com.ua/ru/catalog/transportni-poslugi
+Redirect 301    /sypuchie-materialy/torf    https://royal.stare-misto.com.ua/ru/catalog/other
+Redirect 301    /sypuchie-materialy/shcheben    https://royal.stare-misto.com.ua/ru/products/schebin
+Redirect 301    /sypuchie-materialy/pesok-rechnoi   https://royal.stare-misto.com.ua/ru/products/pisok-richkovij
+Redirect 301    /sypuchie-materialy/pesok-ovrazhnyy https://royal.stare-misto.com.ua/ru/products/pisok-yaruzhnij
+Redirect 301    /sypuchie-materialy/keramzit    https://royal.stare-misto.com.ua/ru/products/keramzit
+Redirect 301    /sypuchie-materialy/chernozem   https://royal.stare-misto.com.ua/ru/products/chornozem
+        
+        
+        
+        
+        
+        
+        
+        
+Redirect 301    /raboty-i-uslugi/vyvoz-stroymusora-kiev https://royal.stare-misto.com.ua/ru/blog
+Redirect 301    /raboty-i-uslugi/ukladka-trotuarnoy-plitki  https://royal.stare-misto.com.ua/ru/blog/ukladannya-brukivki
+Redirect 301    /raboty-i-uslugi/asfaltirovanie-blagoustroystvo https://royal.stare-misto.com.ua/ru/blog
+        
+        
+Redirect 301    /pilomaterialy/drova-dubovye    https://royal.stare-misto.com.ua/ru/blog/drova-dubovi
+Redirect 301    /pilomaterialy/doska-obreznaya-shalevka https://royal.stare-misto.com.ua/ru/blog/doska-obreznaya-shalevka
+Redirect 301    /pilomaterialy/brus-stropilo    https://royal.stare-misto.com.ua/ru/blog/brus-stropilo-krokvi
+Redirect 301    /pilomaterialy  https://royal.stare-misto.com.ua/ru/blog/pilomaterialy
+        
+Redirect 301    /kirpich/ryadovoy-kirpich/pustotelyy-kirpich    https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/tipsptsegli-pustotila
+Redirect 301    /kirpich/ryadovoy-kirpich/polnotelyy-kirpich    https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/tipsptsegli-povnotila
+Redirect 301    /kirpich/ryadovoy-kirpich/krasnyy-kirpich   https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/vidsptsegli-keramichna/rozmiricspmm-250x120x65
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-stroitelnyy   https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/tipsptsegli-povnotila_pustotila
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m200-pechnoy-vitebsk  https://royal.stare-misto.com.ua/ru/products/tsegla-m200-pichna-povnotila-ryadova-vitebsk
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m125  https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/marka-msp125
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m100-vatutino https://royal.stare-misto.com.ua/ru/products/tsegla-m-100-mvatutine
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m100-mankovka https://royal.stare-misto.com.ua/ru/products/tsegla-m-100-mmankivka
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m100-lubny    https://royal.stare-misto.com.ua/ru/products/tsegla-m-100-mlubni
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m100-kryzhopol    https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/marka-msp100
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m100  https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/marka-msp100
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-200-pechnoy https://royal.stare-misto.com.ua/ru/catalog/vognetrivka-tsegla/vidsptsegli-keramichna
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-150 https://royal.stare-misto.com.ua/ru/products/tsegla-m-150
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-125-sumy    https://royal.stare-misto.com.ua/ru/products/tsegla-m-125-msumi-pustotila
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-125-sarny   https://royal.stare-misto.com.ua/ru/products/tsegla-m-125-msarni-rivne-pustotila
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-125-ruzhin  https://royal.stare-misto.com.ua/ru/products/tsegla-m125-ruzhin
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-m-125-korsun-shevchenkovskiy  https://royal.stare-misto.com.ua/ru/products/tsegla-m-125-korsun-shevchenkivskij
+Redirect 301    /kirpich/ryadovoy-kirpich/kirpich-kirovograd-M100   https://royal.stare-misto.com.ua/ru/products/tsegla-m-100-kirovograd
+Redirect 301    /kirpich/ryadovoy-kirpich/dvoynoy-kirpich-2nf   https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/rozmiricspmm-250x120x138
+Redirect 301    /kirpich/ryadovoy-kirpich   https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-shl-1.3-5-8  https://royal.stare-misto.com.ua/ru/products/tsegla-shl-13-5-legka
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-9    https://royal.stare-misto.com.ua/ru/products/tsegla-sha-9-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-8    https://royal.stare-misto.com.ua/ru/products/tsegla-sha-8-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-6    https://royal.stare-misto.com.ua/ru/products/tsegla-sha-6-vuzka-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-5    https://royal.stare-misto.com.ua/ru/products/tsegla-sha-5-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-47   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-47-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-45   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-45-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-44   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-44-klin-rebrovij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-25   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-25-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-23   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-23-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-22   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-22-klin-tortsevij-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-10   https://royal.stare-misto.com.ua/ru/products/tsegla-sha-10-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-sha-1    https://royal.stare-misto.com.ua/ru/products/tsegla-sha-1-brusok-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/shamotnyy-pb-5 https://royal.stare-misto.com.ua/ru/products/tsegla-pb-5-pv-5-vognetrivka-shamotna
+Redirect 301    /kirpich/ogneupornyy-kirpich/plita-shamotnaya-sha-94    https://royal.stare-misto.com.ua/ru/products/plita-sha-94-shamotna-vognetrivka
+Redirect 301    /kirpich/ogneupornyy-kirpich/plita-ogneupornaya-sha-96  https://royal.stare-misto.com.ua/ru/products/plita-sha-96-shamotna-vognetrivka
+Redirect 301    /kirpich/ogneupornyy-kirpich/plita-ogneupornaya-sha-95  https://royal.stare-misto.com.ua/ru/products/plita-sha-95-shamotna-vognetrivka
+Redirect 301    /kirpich/ogneupornyy-kirpich    https://royal.stare-misto.com.ua/ru/catalog/vognetrivka-tsegla
+Redirect 301    /kirpich/oblicovochnyy-kirpich/silikatnyy-kirpich   https://royal.stare-misto.com.ua/ru/products/silikatna-tsegla
+Redirect 301    /kirpich/oblicovochnyy-kirpich/sbk-romny    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-sbk
+Redirect 301    /kirpich/oblicovochnyy-kirpich/rvanyy-kirpich-rustik    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-kovalska
+Redirect 301    /kirpich/oblicovochnyy-kirpich/prokeram-ivano-frankovsk https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-prokeram
+Redirect 301    /kirpich/oblicovochnyy-kirpich/litos    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-litos
+Redirect 301    /kirpich/oblicovochnyy-kirpich/kolotye-izdeliya-rustik  https://royal.stare-misto.com.ua/ru/catalog/design/brand-avenyu
+Redirect 301    /kirpich/oblicovochnyy-kirpich/klinkernyy-kirpich   https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/vidsptsegli-klinkerna
+Redirect 301    /kirpich/oblicovochnyy-kirpich/kirpich-trv  https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-trv
+Redirect 301    /kirpich/oblicovochnyy-kirpich/kerameya https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-kerameya
+Redirect 301    /kirpich/oblicovochnyy-kirpich/kerambud https://royal.stare-misto.com.ua/ru/products/tsegla-kerambud-mgorodok
+Redirect 301    /kirpich/oblicovochnyy-kirpich/fasadnyy-kamen-rustik-uglovoy    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-kovalska/rozmiricspmm-225x100x65
+Redirect 301    /kirpich/oblicovochnyy-kirpich/fagot    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-kovalska
+Redirect 301    /kirpich/oblicovochnyy-kirpich/evroton  https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-euroton
+Redirect 301    /kirpich/oblicovochnyy-kirpich/ekaterinoslavskiy-kirpich    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-kerambrok
+Redirect 301    /kirpich/oblicovochnyy-kirpich/belocerkovskiy-kirpich   https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla/brand-bc-cegla
+Redirect 301    /kirpich/oblicovochnyy-kirpich/altkom   https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla
+Redirect 301    /kirpich/oblicovochnyy-kirpich/agroprombud-borzna   https://royal.stare-misto.com.ua/ru/blog/tsegla-agroprombud-borzna
+Redirect 301    /kirpich/oblicovochnyy-kirpich  https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-tsegla
+Redirect 301    /kirpich/keramicheskiy-kirpich  https://royal.stare-misto.com.ua/ru/catalog/tsegla/vidsptsegli-keramichna
+Redirect 301    /kirpich-stroitelnyi    https://royal.stare-misto.com.ua/ru/catalog/ryadova-tsegla/vidsptsegli-keramichna
+Redirect 301    /kirpich    https://royal.stare-misto.com.ua/ru/catalog/tsegla
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/ugolnik-dlya-gazobetona  https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-kutnik
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/terka-dlya-shlifovki-gazobloka   https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-terka
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/shtroborez-dlya-gazobetona   https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-shtroboriz
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/nozhovka-dlya-gazobetona https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-nozhivka
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/kovsh-dlya-kladki-gazobloka  https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-kovsh
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/kiyanka-rezinovaya-dlya-gazobloka    https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-molotok
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka/karetka-dlya-kladki-gazobetona   https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu/vid-karetka
+Redirect 301    /instrumenty-dlya-gazobetona-gazobloka  https://royal.stare-misto.com.ua/ru/catalog/instrumenti-dlya-gazobetonu
+Redirect 301    /gazobeton-gazoblok/udk https://royal.stare-misto.com.ua/ru/catalog/gazobloki/brand-udk
+Redirect 301    /gazobeton-gazoblok/stonelight  https://royal.stare-misto.com.ua/ru/catalog/gazobloki/brand-stonelight
+Redirect 301    /gazobeton-gazoblok/hetten-xcm  https://royal.stare-misto.com.ua/ru/catalog/gazobloki/brand-hsm
+Redirect 301    /gazobeton-gazoblok/gazoblok-sumy   https://royal.stare-misto.com.ua/ru/catalog/gazobeton
+Redirect 301    /gazobeton-gazoblok/gazoblok-kupyansk   https://royal.stare-misto.com.ua/ru/catalog/gazobeton
+Redirect 301    /gazobeton-gazoblok/gazobeton-chernigov https://royal.stare-misto.com.ua/ru/products/gazobeton-chernigiv
+Redirect 301    /gazobeton-gazoblok/aeroc   https://royal.stare-misto.com.ua/ru/catalog/gazobloki/brand-aeroc
+Redirect 301    /gazobeton-gazoblok/aac https://royal.stare-misto.com.ua/ru/catalog/gazobeton
+Redirect 301    /gazobeton-gazoblok https://royal.stare-misto.com.ua/ru/catalog/gazobeton
+Redirect 301    /fasad/shifer   https://royal.stare-misto.com.ua/ru/catalog/shifer/vid-8sphvil
+Redirect 301    /fasad/raznoye/vorota   https://royal.stare-misto.com.ua/ru/catalog/other
+Redirect 301    /fasad/raznoye/setka-kladochnaya    https://royal.stare-misto.com.ua/ru/products/sitka-kladochna-kladkova
+Redirect 301    /fasad/raznoye/mansardnye-okna  https://royal.stare-misto.com.ua/ru/catalog/fasad
+Redirect 301    /fasad/raznoye  https://royal.stare-misto.com.ua/ru/catalog/fasad
+Redirect 301    /fasad/profnastil   https://royal.stare-misto.com.ua/ru/catalog/profnastil
+Redirect 301    /fasad/penoplast    https://royal.stare-misto.com.ua/ru/catalog/pinoplast
+Redirect 301    /fasad/mineralnaya-vata-minvata https://royal.stare-misto.com.ua/ru/catalog/mineralna-vata
+Redirect 301    /fasad/metalloplastikovye-okna  https://royal.stare-misto.com.ua/ru/catalog/other
+Redirect 301    /fasad/kley-dlya-penoplasta https://royal.stare-misto.com.ua/ru/catalog/klej-dlya-uteplyuvachiv
+Redirect 301    /fasad/fasadnaya-setka  https://royal.stare-misto.com.ua/ru/catalog/sitka-shtukaturna
+Redirect 301    /fasad/ekstrudirovannyy-penopolistirol-ekstruder    https://royal.stare-misto.com.ua/ru/catalog/ekstrudovanij-pinopolistirol---ekstruder
+Redirect 301    /fasad/akrilovaya-shtukaturka   https://royal.stare-misto.com.ua/ru/catalog/shtukaturki
+Redirect 301    /fasad  https://royal.stare-misto.com.ua/ru/catalog/fasad
+        
+        
+Redirect 301    /cerrad/vishnya https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cerrad/nero    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cerrad/kantri-bezh https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cerrad/gobi    https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cerrad/fasadnyy-kamen  https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cerrad https://royal.stare-misto.com.ua/ru/catalog/oblitsyuvalna-plitka-fasadna/vid-klinker
+Redirect 301    /cement-smesi/polimin-pb-75 https://royal.stare-misto.com.ua/ru/products/polimin-pb-75-klejova-sumish-dlya-kladki-gazobloku
+Redirect 301    /cement-smesi/polimin-pb-55 https://royal.stare-misto.com.ua/ru/products/polimin-pb-55-montazh-blok
+Redirect 301    /cement-smesi/mertel-shamotnyy  https://royal.stare-misto.com.ua/ru/catalog/vognetrivki-sumishi/vid-mertel
+Redirect 301    /cement-smesi/kley-dlya-gazobetona-kleyzer  https://royal.stare-misto.com.ua/ru/catalog/klej-dlya-gazobetonu/brand-kleyzer
+Redirect 301    /cement-smesi/kley-dlya-blokov-kleyzer-kts  https://royal.stare-misto.com.ua/ru/products/kleyzer-kts-klej-dlya-kladki-tsegli-blokiv
+Redirect 301    /cement-smesi/cement-m500   https://royal.stare-misto.com.ua/ru/catalog/tsement/marka-m500
+Redirect 301    /cement-smesi/cement-m400   https://royal.stare-misto.com.ua/ru/catalog/tsement/marka-m400
+Redirect 301    /cement-smesi   https://royal.stare-misto.com.ua/ru/catalog/tsement
+Redirect 301    /cement-M500    https://royal.stare-misto.com.ua/ru/catalog/tsement/marka-m500
+Redirect 301    /bloki-stroitelnye/stenovye-bloki/rakushnyak    https://royal.stare-misto.com.ua/ru/products/rakushnyak-krimskij
+Redirect 301    /bloki-stroitelnye/stenovye-bloki/penoblok  https://royal.stare-misto.com.ua/ru/catalog/gazobloki/brand-stonelight_aeroc
+Redirect 301    /bloki-stroitelnye/stenovye-bloki   https://royal.stare-misto.com.ua/ru/catalog/bloki-budivelni/tipspbloku-stinovij
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki/porotherm    https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki/brand-porotherm
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki/keraterm https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki/brand-keraterm
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki/keramoblok-rusiniya-ekoblok  https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki/brand-rusiniya
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki/keramkomfort-sbk-ozera   https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki/brand-sbk/rozmiricspmm-250x120x138
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki/kerameya-teplokeram  https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki/brand-kerameya
+Redirect 301    /bloki-stroitelnye/keramicheskie-bloki  https://royal.stare-misto.com.ua/ru/catalog/keramichni-bloki
+Redirect 301    /bloki-stroitelnye/bloki-dlya-zabora/silta-brik https://royal.stare-misto.com.ua/ru/catalog/bloki-dlya-parkanu/brand-silta-brik
+Redirect 301    /bloki-stroitelnye/bloki-dlya-zabora/kolotyy-blok-avenyu-dekor  https://royal.stare-misto.com.ua/ru/catalog/bloki-dlya-parkanu/brand-avenyu
+Redirect 301    /bloki-stroitelnye/bloki-dlya-zabora    https://royal.stare-misto.com.ua/ru/catalog/bloki-dlya-parkanu
+Redirect 301    /bloki-stroitelnye/betonnye/shlakoblok  https://royal.stare-misto.com.ua/ru/catalog/shlakoblok
+Redirect 301    /bloki-stroitelnye/betonnye/keramzitobetonnye-bloki https://royal.stare-misto.com.ua/ru/catalog/keramzitobetonni-bloki
+Redirect 301    /bloki-stroitelnye/betonnye/blok-nesemnoy-opalubki-betonnyy https://royal.stare-misto.com.ua/ru/catalog/bloki-neznimnoi-opalubki
+Redirect 301    /bloki-stroitelnye/betonnye https://royal.stare-misto.com.ua/ru/catalog/betonni-bloki
+Redirect 301    /bloki-stroitelnye  https://royal.stare-misto.com.ua/ru/catalog/bloki-budivelni
+Redirect 301    /betony-rastvory/suhoy-beton-p1 https://royal.stare-misto.com.ua/ru/catalog/beton/ruhomist-p1
+Redirect 301    /betony-rastvory/specbeton  https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp500_msp600_msp700_msp800
+Redirect 301    /betony-rastvory/melkozernistyy-beton   https://royal.stare-misto.com.ua/ru/catalog/beton/fraktsiyaspschebnyu-dribnozernistij
+Redirect 301    /betony-rastvory/kladochnyy-rastvor https://royal.stare-misto.com.ua/ru/catalog/rozchini/vid-kladochnij
+Redirect 301    /betony-rastvory/keramzitobeton https://royal.stare-misto.com.ua/ru/products/keramzitobeton
+Redirect 301    /betony-rastvory/izvestkovyy-rastvor    https://royal.stare-misto.com.ua/ru/catalog/rozchini/vid-vapnyanij
+Redirect 301    /betony-rastvory/garcovka   https://royal.stare-misto.com.ua/ru/catalog/rozchini/vid-garcovka
+Redirect 301    /betony-rastvory/cementnyy-rastvor  https://royal.stare-misto.com.ua/ru/catalog/rozchini/vid-tsementnij
+Redirect 301    /betony-rastvory/cementno-izvestkovyy-rastvor   https://royal.stare-misto.com.ua/ru/catalog/rozchini/vid-tsementnomvapnyanij
+Redirect 301    /betony-rastvory/beton-ot-kovalskoy https://royal.stare-misto.com.ua/ru/catalog/beton
+Redirect 301    /betony-rastvory/beton-m400-b30 https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp400
+Redirect 301    /betony-rastvory/beton-m300-b25 https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp350
+Redirect 301    /betony-rastvory/beton-m250-b20 https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp250
+Redirect 301    /betony-rastvory/beton-m200-b15 https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp200
+Redirect 301    /betony-rastvory/beton-m150-b12.5   https://royal.stare-misto.com.ua/catalog/beton/marka-msp150
+Redirect 301    /betony-rastvory/beton-m100-b7.5    https://royal.stare-misto.com.ua/ru/catalog/beton/marka-msp100
+Redirect 301    /betony-rastvory    https://royal.stare-misto.com.ua/ru/catalog/betoni-i-rozchini
+Redirect 301    /articles/zhelezobetonnye-peremychki    https://royal.stare-misto.com.ua/ru/blog/zalizobetonni-peremichki
+Redirect 301    /articles/zabor-iz-betonnykh-blokov https://royal.stare-misto.com.ua/ru/blog/parkan-iz-betonnih-blokiv
+Redirect 301    /articles/vybor-betona  https://royal.stare-misto.com.ua/ru/blog/vibir-betonu
+Redirect 301    /articles/vodonepronicaemost-betona-w   https://royal.stare-misto.com.ua/ru/blog/vodoneproniknist-betonu-w
+Redirect 301    /articles/ustanovka-i-montazh-fundamentnyh-blokov-fbs   https://royal.stare-misto.com.ua/ru/blog/vstanovlennya-i-montazh-fundamentnih-blokiv-fbs
+Redirect 301    /articles/ukladka-trotuarnoy-plitki-svoimi-rukami   https://royal.stare-misto.com.ua/ru/blog/ukladannya-trotuarnoi-plitki-svoimi-rukami
+Redirect 301    /articles/trotuarnaya-plitka    https://royal.stare-misto.com.ua/ru/blog/trotuarna-plitka
+Redirect 301    /articles/tehnologiya-izgotovleniya-betona-v-chastnom-stroitelstve  https://royal.stare-misto.com.ua/ru/blog/tehnologiya-vigotovlennya-betonu-u-privatnomu-budivnitstvi
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-nachalo   https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-pochatok
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-gazobeton-i-dozhd https://royal.stare-misto.com.ua/ru/blog/gazobeton-i-dosch-budivnitstvo-budinku-z-gazobetonu
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-den-1 https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-den-1
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-chto-delat-s-brakovannymi-blokami https://royal.stare-misto.com.ua/ru/blog/scho-robiti-z-brakovanimi-blokami-budivnitstvo-budinku-z-gazobetonu
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-9-den https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-9-den-montazh-peremichok
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-7-8-den   https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-7-8-den-kladka
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-5-6-den-uteplenie-sten    https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-5-6-den-uteplennya-stin
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-22-23-den https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-22-23-den-vstanovili-mauerlat
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-2-3-den   https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-den-2-3-pochatok-kladki
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-19-21-den-kladka-ryadov-vtorogo-etazha    https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-19-den-kladka-ryadiv-drugogo-poverhu
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-17-18-den https://royal.stare-misto.com.ua/ru/blog/buduemo-budinok-z-gazobetonu-den-17-18-pochali-buduvati-drugij-poverh
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-15-16-den-derevyannoe-perekrytie  https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-15-den-derevyane-perekrittya
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-14-den    https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-pidgotovka-do-perekrittya
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-13-den-armopoyas  https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-13-den-zalivka-armopoyasu
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-12-den-varianty-armopoyasov   https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-varianti-armopoyasiv
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-12-den-armopoyas  https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-12-den-armopoyas
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-11-den    https://royal.stare-misto.com.ua/ru/blog/budivnitstvo-budinku-z-gazobetonu-11-den-gotovij-pershij-poverh
+Redirect 301    /articles/stroitelstvo-doma-iz-gazobetona-10-den    https://royal.stare-misto.com.ua/ru/blog/peremichki-z-u-blokiv-budivnitstvo-budinku-z-gazobetonu-10-den
+Redirect 301    /articles/stroitelnye-rastvory  https://royal.stare-misto.com.ua/ru/blog/budivelni-rozchini
+Redirect 301    /articles/shlakoblok-harakteristiki-i-primenenie    https://royal.stare-misto.com.ua/ru/blog/shlakoblok-harakteristiki-ta-zastosuvannya
+Redirect 301    /articles/shlakoblok    https://royal.stare-misto.com.ua/ru/blog/shlakoblok---zagalna-informatsiya
+Redirect 301    /articles/riski-pri-zakaze-betona   https://royal.stare-misto.com.ua/ru/blog/riziki-pri-zamovlenni-betonu
+Redirect 301    /articles/raznovidnost-plit-perekrytiya https://royal.stare-misto.com.ua/ru/blog/riznovidi-plit-perekrittya
+Redirect 301    /articles/raschet-garazha-iz-shlakoblokov   https://royal.stare-misto.com.ua/ru/blog/rozrahunok-garazha-z-shlakoblokiv
+Redirect 301    /articles/raschet-doma-iz-rakushechnika https://royal.stare-misto.com.ua/ru/blog/rozrahunok-budinku-iz-rakushnyaka
+Redirect 301    /articles/raschet-doma-iz-kirpicha  https://royal.stare-misto.com.ua/ru/blog/rozrahunok-budinku-iz-tsegli
+Redirect 301    /articles/raschet-doma-iz-gazoblokov    https://royal.stare-misto.com.ua/ru/blog/rozrahunok-budinku-z-gazoblokiv
+Redirect 301    /articles/rakushnyak-rakushechnik   https://royal.stare-misto.com.ua/ru/blog/rakushnyak-cherepashnik
+Redirect 301    /articles/propitki-dlya-betona  https://royal.stare-misto.com.ua/ru/blog/propitki-dlya-betoniv
+Redirect 301    /articles/proizvodstvo-krasnogo-kirpicha    https://royal.stare-misto.com.ua/ru/blog/virobnitstvo-chervonoi-tsegli
+Redirect 301    /articles/proizvoditeli-gazobetona  https://royal.stare-misto.com.ua/ru/blog/virobniki-gazobetonu
+Redirect 301    /articles/primenenie-plit-perekrytiya-v-stroitelstve    https://royal.stare-misto.com.ua/ru/blog/vikoristannya-plit-perekrittya-v-budivnitstvi
+Redirect 301    /articles/primenenie-fundamentnyh-blokov    https://royal.stare-misto.com.ua/ru/blog/zastosuvannya-fundamentnih-blokiv
+Redirect 301    /articles/podgotovka-k-montazhu-plit-perekrytiya    https://royal.stare-misto.com.ua/ru/blog/pidgotovka-do-montuvannya-plit-perekrittya
+Redirect 301    /articles/penoplast https://royal.stare-misto.com.ua/ru/blog/pinoplast-zagalni-harakteristiki
+Redirect 301    /articles/pellety-ili-drova https://royal.stare-misto.com.ua/ru/blog/peleti-chi-drova
+Redirect 301    /articles/osobennosti-vybora-drov   https://royal.stare-misto.com.ua/ru/blog/osoblivosti-viboru-drov
+Redirect 301    /articles/osobennosti-krasnogo-kirpicha https://royal.stare-misto.com.ua/ru/blog/osoblivosti-chervonoi-tsegli
+Redirect 301    /articles/osnovnye-preimushchestva-plit-perekrytiya https://royal.stare-misto.com.ua/ru/blog/osnovni-perevagi-plit-perekrittya
+Redirect 301    /articles/osnovanie-dlya-fundamentnyh-blokov    https://royal.stare-misto.com.ua/ru/blog/osnova-dlya-fundamentnih-blokiv
+Redirect 301    /articles/o-kirpiche    https://royal.stare-misto.com.ua/ru/blog/pro-tseglu
+Redirect 301    /articles/o-gazobetone  https://royal.stare-misto.com.ua/ru/blog/pro-gazobeton
+Redirect 301    /articles/neizvestnye-svoystva-betona   https://royal.stare-misto.com.ua/ru/blog/nevidomi-vlastivosti-betonu
+Redirect 301    /articles/naznachenie-betona-po-markam-i-klassam    https://royal.stare-misto.com.ua/ru/blog/yak-vibrati-marku-betonu-priznachennya-betoniv-po-markah-ta-klasah
+Redirect 301    /articles/minimalnaya-velichina-opiraniya-plit-perekrytiya-na-steny https://royal.stare-misto.com.ua/ru/blog/minimalna-velichina-opirannya-plit-perekrittya-na-stini
+Redirect 301    /articles/marka-betona-osobennosti-vybora-betona-po-marke   https://royal.stare-misto.com.ua/ru/blog/marki-i-klasi-betonu
+Redirect 301    /articles/krasnyy-keramicheskiy-kirpich https://royal.stare-misto.com.ua/ru/blog/chervona-keramichna-tsegla
+Redirect 301    /articles/klinkernaya-bruschatka-brukkeram-ot-kerameyya https://royal.stare-misto.com.ua/ru/blog/klinkerna-brukivka-brukkeram-vid-keramejya
+Redirect 301    /articles/kley-dlia-gazobetona  https://royal.stare-misto.com.ua/ru/blog/klej-dlya-gazobetonu---zastosuvannya
+Redirect 301    /articles/klassifikaciya-plit-perekrytiya   https://royal.stare-misto.com.ua/ru/blog/klasifikatsiya-plit-perekrittya-dopomoga-pri-vibori-plit-perekrittya
+Redirect 301    /articles/keraterm  https://royal.stare-misto.com.ua/ru/blog/keraterm---keramichni-porizovani-bloki
+Redirect 301    /articles/izvestkovyy-rastvor-svoystva-i-primenenie https://royal.stare-misto.com.ua/ru/blog/vapnyanij-rozchin-vlastivosti-ta-zastosuvannya
+Redirect 301    /articles/izvestkovyy-rastvor-sostav-i-primenenie   https://royal.stare-misto.com.ua/ru/blog/vapnyanij-rozchin-sklad-i-zastosuvannya
+Redirect 301    /articles/ispolzovanie-krasnogo-kirpicha    https://royal.stare-misto.com.ua/ru/blog/vikoristannya-chervonoi-tsegli
+Redirect 301    /articles/gazobeton-otzyvy  https://royal.stare-misto.com.ua/ru/blog/vidguki-pro-gazobeton-harakteristiki-gazobetonu
+Redirect 301    /articles/gazobeton-ili-penobeton   https://royal.stare-misto.com.ua/ru/blog/gazobeton-chi-pinobeton
+Redirect 301    /articles/ekaterinoslavskiy-kirpich-ruchnoy-formovki    https://royal.stare-misto.com.ua/ru/blog/katerinoslavska-tsegla-ruchnogo-formuvannya
+Redirect 301    /articles/cvetnoy-beton https://royal.stare-misto.com.ua/ru/blog/kolorovij-beton--perspektivi-i-mozhlivosti
+Redirect 301    /articles/cement-bystrotverdeyushchiy   https://royal.stare-misto.com.ua/ru/blog/shvidkotverdiyuchij-tsement
+Redirect 301    /articles/bruschatka    https://royal.stare-misto.com.ua/ru/blog/scho-take-brukivka
+Redirect 301    /articles/betonnaya-otmostka    https://royal.stare-misto.com.ua/ru/blog/betonna-vidmostka
+Redirect 301    /articles/beton-dlya-fundamenta-vybor-nuzhnoy-marki-betona  https://royal.stare-misto.com.ua/ru/blog/beton-dlya-fundamentu-vibir-potribnoi-marki-betonu
+Redirect 301    /articles/belyy-kirpich-v-interere  https://royal.stare-misto.com.ua/ru/blog/bila-tsegla-v-intereri
+Redirect 301    /articles/belyy-kirpich-v-gostinoy-i-kuhne  https://royal.stare-misto.com.ua/ru/blog/bila-tsegla-u-vitalni-i-kuhni
+Redirect 301    /articles/belocerkovskie-stroymaterialy https://royal.stare-misto.com.ua/ru/blog/bilotserkivski-budmateriali---virobnik-bilotserkivskoi-tsegli
+Redirect 301    /articles/avtomobilnyy-kran-manipulyator-ispolzovanie-i-vidy    https://royal.stare-misto.com.ua/ru/blog/avtomobilnij-kran-manipulyator-vikoristannya-ta-vidi
+Redirect 301    /articles/asfalt-ili-trotuarnaya-plitka https://royal.stare-misto.com.ua/ru/blog/asfalt-chi-trotuarna-plitka
+Redirect 301    /articles   https://royal.stare-misto.com.ua/ru/blog
+
+# Конец. Редиректы со старого сайта при запуске 
+
+
+# закрываем ненужные директорию от веба
+RewriteRule .*(\.git/|\.idea|\.gitignore).* - [F]
+RewriteRule ^vendor/.* - [F]
+
+# Редирект с повторяющихся слешей
+RewriteCond %{REQUEST_URI} ^(.*)/{2,}(.*)$
+RewriteRule ^(.*)$ %1/%2 [R=301,L]
+
+# Редирект со слеша в конце на без него
+#RewriteCond %{REQUEST_FILENAME} !-d
+#RewriteCond %{REQUEST_URI} ^(.+)/$
+#RewriteRule ^(.+)/$ %1 [R=301,L]
+
+# Редирект с page-1 на основную страницу в ЧПУ
+RewriteCond %{REQUEST_URI} ^(.*)/page-1(?![0-9])(.*)$
+RewriteRule ^(.*)$ %1%3 [R=301,L]
+
+# Редирект с page=1 на основную страницу без ЧПУ
+RewriteCond %{QUERY_STRING} ^(.*)&?page=1(?![0-9])(.*)$
+RewriteRule ^(.*)/?$ /$1?%1%3 [R=301,L]
+
+# Админка теперь по адресу /backend
+RewriteRule	^admin/?$  backend [L]
+
+# Кэширование / поддерживается не на всех хостингах
+<ifmodule mod_expires.c>
+    <filesmatch "\.(jpg|jpeg|png|gif|js|css|swf|ico|woff|mp3)$">
+        ExpiresActive on
+        ExpiresDefault "access plus 7 days"
+    </filesmatch>
+</ifmodule>
+
+# Gzip сжатие / поддерживается не на всех хостингах
+<ifmodule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/css
+    <ifmodule mod_setenvif.c>
+        BrowserMatch ^Mozilla/4 gzip-only-text/html
+        BrowserMatch ^Mozilla/4\.0[678] no-gzip
+        BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    </ifmodule>
+</ifmodule>
+
+# Google PageSpeed Insights модуль PageSpeed,есть не на всех хостингах и не везде может работать, нужно уточнять у хостеров
+<IfModule pagespeed_module>
+    ModPagespeed on
+    ModPagespeedRewriteLevel CoreFilters
+    ModPagespeedEnableFilters make_google_analytics_async
+    ModPagespeedEnableFilters prioritize_critical_css
+    ModPagespeedEnableFilters defer_javascript
+    ModPagespeedEnableFilters sprite_images
+    ModPagespeedEnableFilters convert_png_to_jpeg,convert_jpeg_to_webp
+    ModPagespeedEnableFilters collapse_whitespace,remove_comments
+</IfModule>
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule .* index.php [E=REMOTE_USER:%{HTTP:Authorization},L,QSA]
