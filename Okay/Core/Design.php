@@ -5,7 +5,9 @@ namespace Okay\Core;
 
 
 use Okay\Core\Modules\Module;
-use OkayLicense\License;
+use Okay\Core\Modules\Modules;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
+use Okay\Core\TplMod\TplMod;
 use Smarty;
 use Mobile_Detect;
 
@@ -20,20 +22,20 @@ class Design
      */
     public $smarty;
 
-    /**
-     * @var Mobile_Detect
-     */
+    /** @var Mobile_Detect */
     public $detect;
 
-    /**
-     * @var TemplateConfig
-     */
-    private $templateConfig;
+    /** @var FrontTemplateConfig */
+    private $frontTemplateConfig;
 
-    /**
-     * @var Module
-     */
+    /** @var Module */
     private $module;
+
+    /** @var Modules */
+    private $modules;
+
+    /** @var TplMod */
+    private $tplMod;
 
     /** @var array */
     private $smartyFunctions = [];
@@ -46,17 +48,15 @@ class Design
 
     /** @var string */
     private $defaultTemplateDir;
-    
-    private $moduleChangeDir = null;
-    
-    private $prevModuleDir;
-    
-    private $isUseModuleDirBeforeChange;
-    
+
+    private $moduleChangeDir = [];
+
     private $rootDir;
 
     /** @var string */
     private $useTemplateDir = self::TEMPLATES_DEFAULT;
+    
+    private $smartyHtmlMinify;
     
     /**
      * @var array
@@ -105,25 +105,33 @@ class Design
         'ltrim',
         'rtrim',
         'array_keys',
+        'pathinfo',
+        'strtolower',
+        'strpos',
     ];
 
 
     public function __construct(
         Smarty $smarty,
         Mobile_Detect $mobileDetect,
-        TemplateConfig $templateConfig,
+        FrontTemplateConfig $frontTemplateConfig,
         Module $module,
+        Modules $modules,
+        TplMod $tplMod,
         $smartyCacheLifetime,
         $smartyCompileCheck,
         $smartyHtmlMinify,
         $smartyDebugging,
         $smartySecurity,
         $smartyCaching,
+        $smartyForceCompile,
         $rootDir
     ) {
-        $this->templateConfig = $templateConfig;
+        $this->frontTemplateConfig = $frontTemplateConfig;
         $this->detect         = $mobileDetect;
         $this->module         = $module;
+        $this->modules        = $modules;
+        $this->tplMod         = $tplMod;
         $this->rootDir        = $rootDir;
 
         $this->smarty = $smarty;
@@ -131,9 +139,9 @@ class Design
         $this->smarty->caching         = $smartyCaching;
         $this->smarty->cache_lifetime  = $smartyCacheLifetime;
         $this->smarty->debugging       = $smartyDebugging;
-        $this->smarty->error_reporting = E_ALL & ~E_NOTICE;
+        $this->smarty->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING;
 
-        $theme = $this->templateConfig->getTheme();
+        $theme = $this->frontTemplateConfig->getTheme();
 
         if ($smartySecurity == true) {
             $this->smarty->enableSecurity();
@@ -157,14 +165,48 @@ class Design
         
         $this->smarty->setCacheDir('cache');
         
+        $this->smartyHtmlMinify = $smartyHtmlMinify;
         if ($smartyHtmlMinify) {
             $this->smarty->loadFilter('output', 'trimwhitespace');
         }
+
+        if ($smartyForceCompile) {
+            $smarty->setForceCompile(true);
+        }
+        
+        $this->smarty->registerFilter('pre', [$this, 'applyTplModifiers']);
+    }
+    
+    public function applyTplModifiers($content, $s)
+    {
+        
+        $currentFile = $s->_current_file;
+        
+        // Определяем модификации чего сейчас нам нужны, фронта или бека
+        if (strpos($currentFile, $this->rootDir.'backend'.DIRECTORY_SEPARATOR.'design'.DIRECTORY_SEPARATOR.'html') !== false) {
+            $modifications = $this->modules->getBackendModulesTplModifications();
+        } else {
+            $modifications = $this->modules->getFrontModulesTplModifications();
+        }
+        $fileModifications = [];
+        if (!empty($modifications)) {
+            foreach ($modifications as $modification) {
+                if (DIRECTORY_SEPARATOR.ltrim($modification->file, DIRECTORY_SEPARATOR) == substr($currentFile, -strlen(DIRECTORY_SEPARATOR.$modification->file))) {
+                    $fileModifications = array_merge($fileModifications, $modification->changes);
+                }
+            }
+        }
+        
+        if (!empty($fileModifications)) {
+            $content = $this->tplMod->buildFile($content, $fileModifications);
+        }
+        
+        return $content;
     }
 
     /**
      * Метод нужен для модулей, если в каком-то экстендере или еще где нужно обработать tpl файл
-     * нужно предватилельно вызвать этот метод, чтобы переключить директорию tpl файлов.
+     * нужно предварительно вызвать этот метод, чтобы переключить директорию tpl файлов.
      * После вызова fetch() нужно обязательно вернуть стандартную директорию методом rollbackTemplatesDir()
      * 
      * @param $moduleClassName
@@ -172,10 +214,6 @@ class Design
      */
     public function setModuleDir($moduleClassName)
     {
-        
-        if ($this->moduleChangeDir !== null) {
-            throw new \Exception("Module \"{$this->moduleChangeDir}\" is changed dir and not rollback from Design::rollbackTemplatesDir()");
-        }
         
         $vendor = $this->module->getVendorName($moduleClassName);
         $name = $this->module->getModuleName($moduleClassName);
@@ -185,11 +223,13 @@ class Design
             $name
         );
 
-        $this->prevModuleDir = $this->getModuleTemplatesDir();
-        $this->isUseModuleDirBeforeChange = $this->isUseModuleDir();
+        $this->moduleChangeDir[] = [
+            'prev_module_dir' => $this->getModuleTemplatesDir(),
+            'is_use_prev_module_dir' => $this->isUseModuleDir(),
+        ];
+        
         $this->setModuleTemplatesDir($moduleTemplateDir);
         $this->useModuleDir();
-        $this->moduleChangeDir = "{$vendor}\{$name}";
     }
 
     /**
@@ -198,13 +238,17 @@ class Design
      */
     public function rollbackTemplatesDir()
     {
-        if (!empty($this->prevModuleDir)) {
-            $this->setModuleTemplatesDir($this->prevModuleDir);
-        }
-        if (!$this->isUseModuleDirBeforeChange) {
+        
+        if ($moduleChangeDir = array_pop($this->moduleChangeDir)) {
+            if (!empty($moduleChangeDir['prev_module_dir'])) {
+                $this->setModuleTemplatesDir($moduleChangeDir['prev_module_dir']);
+            }
+            if (!$moduleChangeDir['is_use_prev_module_dir']) {
+                $this->useDefaultDir();
+            }
+        } else {
             $this->useDefaultDir();
         }
-        $this->moduleChangeDir = null;
     }
     
     /**
@@ -216,28 +260,10 @@ class Design
      */
     public function templateExists($tplFile)
     {
-        if ($this->isUseModuleDir() === false) {
-            $this->setSmartyTemplatesDir($this->getDefaultTemplatesDir());
-        } else {
-            
-            $namespace = str_replace($this->rootDir, '', $this->getModuleTemplatesDir());
-            $namespace = str_replace('/', '\\', $namespace);
-            
-            $vendor = $this->module->getVendorName($namespace);
-            $moduleName = $this->module->getModuleName($namespace);
-            /**
-             * Устанавливаем директории поиска файлов шаблона как:
-             * Директория модуля в дизайне (если модуль кастомизируют)
-             * Директория модуля
-             * Стандартная директория дизайна
-             */
-            $this->setSmartyTemplatesDir([
-                dirname($this->getDefaultTemplatesDir()) . "/modules/{$vendor}/{$moduleName}/html",
-                $this->getModuleTemplatesDir(),
-                $this->getDefaultTemplatesDir(),
-            ]);
-        }
-        
+        $tplFile = mb_strcut($tplFile, 0, 250);
+
+        $this->setSmartyTemplatesDir();
+
         return $this->smarty->templateExists(trim(preg_replace('~[\n\r]*~', '', $tplFile)));
     }
     
@@ -283,20 +309,34 @@ class Design
     }
 
     /*Отображение конкретного шаблона*/
-    public function fetch($template)
+    public function fetch($template, $forceMinify = false)
     {
+        if (!$this->smartyHtmlMinify && $forceMinify === true) {
+            $this->smarty->loadFilter('output', 'trimwhitespace');
+        }
+        
         $this->registerSmartyPlugins();
-        return License::getHtml($this, $template);
+
+        $this->setSmartyTemplatesDir();
+
+        $html = $this->smarty->fetch($template);
+        
+        if (!$this->smartyHtmlMinify && $forceMinify === true) {
+            $this->smarty->unloadFilter('output', 'trimwhitespace');
+        }
+        return $html;
     }
 
     public function useDefaultDir()
     {
         $this->useTemplateDir = self::TEMPLATES_DEFAULT;
+        $this->setSmartyTemplatesDir();
     }
 
     public function useModuleDir()
     {
         $this->useTemplateDir = self::TEMPLATES_MODULE;
+        $this->setSmartyTemplatesDir();
     }
 
     public function isUseModuleDir()
@@ -328,6 +368,7 @@ class Design
     public function setModuleTemplatesDir($moduleTemplateDir)
     {
         $this->moduleTemplateDir = $moduleTemplateDir;
+        $this->setSmartyTemplatesDir();
     }
 
     public function getModuleTemplatesDir()
@@ -344,7 +385,7 @@ class Design
         }
         
         $this->defaultTemplateDir = $dir;
-        $this->setSmartyTemplatesDir($dir);
+        $this->smarty->setTemplateDir($dir);
     }
 
     /*Установка директории для готовых файлов для отображения*/
@@ -396,9 +437,64 @@ class Design
         return $this->detect->isTablet();
     }
 
-    public function setSmartyTemplatesDir($dir)
+    public function setSmartyTemplatesDir()
     {
-        $this->smarty->setTemplateDir($dir);
+        if ($this->isUseModuleDir() === false) {
+            $this->smarty->setTemplateDir($this->getDefaultTemplatesDir());
+        } else {
+            $namespace = str_replace($this->rootDir, '', $this->getModuleTemplatesDir());
+            $namespace = str_replace('/', '\\', $namespace);
+
+            $vendor = $this->module->getVendorName($namespace);
+            $moduleName = $this->module->getModuleName($namespace);
+            /**
+             * Устанавливаем директории поиска файлов шаблона как:
+             * Директория модуля в дизайне (если модуль кастомизируют)
+             * Директория модуля
+             * Стандартная директория дизайна
+             */
+            $this->smarty->setTemplateDir([
+                dirname($this->getDefaultTemplatesDir()) . "/modules/{$vendor}/{$moduleName}/html",
+                $this->getModuleTemplatesDir(),
+                $this->getDefaultTemplatesDir(),
+            ]);
+        }
+    }
+    
+    public function clearCompiled()
+    {
+        $theme = $this->frontTemplateConfig->getTheme();
+        $dir = $this->rootDir.'compiled/'.$theme;
+        if ($handle = opendir($dir)) {
+            while (false !== ($file = readdir($handle))) {
+                if ($file != "." && $file != "..") {
+                    @unlink($dir."/".$file);
+                }
+            }
+            closedir($handle);
+        }
+
+        $dir = $this->rootDir.'backend/design/compiled/';
+        if ($handle = opendir($dir)) {
+            while (false !== ($file = readdir($handle))) {
+                if ($file != "." && $file != ".." && $file != '.keep_folder') {
+                    @unlink($dir."/".$file);
+                }
+            }
+            closedir($handle);
+        }
+    }
+
+    private function getModuleVendorByPath($path)
+    {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        return preg_replace('~.*/?Okay/Modules/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/?.*~', '$1', $path);
+    }
+
+    private function getModuleNameByPath($path)
+    {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        return preg_replace('~.*/?Okay/Modules/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/?.*~', '$2', $path);
     }
 
 }

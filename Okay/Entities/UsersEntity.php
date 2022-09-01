@@ -15,6 +15,7 @@ class UsersEntity extends Entity
         'email',
         'password',
         'name',
+        'last_name',
         'phone',
         'address',
         'group_id',
@@ -22,6 +23,8 @@ class UsersEntity extends Entity
         'created',
         'remind_code',
         'remind_expire',
+        'preferred_delivery_id',
+        'preferred_payment_method_id',
         'g.discount',
         'g.name as group_name',
     ];
@@ -39,6 +42,8 @@ class UsersEntity extends Entity
     protected static $table = '__users';
     protected static $tableAlias = 'u';
     protected static $alternativeIdField = 'email';
+    protected static $langTable;
+    protected static $langObject;
 
     // осторожно, при изменении соли испортятся текущие пароли пользователей
     private $salt = '8e86a279d6e182b3c811c559e6b15484';
@@ -145,13 +150,6 @@ class UsersEntity extends Entity
         return ExtenderFacade::execute([static::class, __FUNCTION__], $pass, func_get_args());
     }
 
-    public function getULoginUser($token)
-    {
-        $s = file_get_contents('https://ulogin.ru/token.php?token=' . $token . '&host=' . $_SERVER['HTTP_HOST']);
-        $result = json_decode($s, true);
-        return ExtenderFacade::execute([static::class, __FUNCTION__], $result, func_get_args());
-    }
-
     protected function customOrder($order = null, array $orderFields = [], array $additionalData = [])
     {
         switch ($order) {
@@ -159,7 +157,7 @@ class UsersEntity extends Entity
                 $orderFields = ['u.created DESC'];
                 break;
             case 'cnt_order':
-                $orderFields = ["(select count(o.id) as count from __orders o where o.user_id = u.id) DESC"];
+                $orderFields = ["(select count(o.id) from __orders o where o.user_id = u.id) DESC"];
                 break;
         }
 

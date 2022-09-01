@@ -18,7 +18,7 @@ class Phone
         $this->settings = $settings;
     }
 
-    public function getPhoneExample()
+    public function getPhoneExample(): string
     {
         $phoneUtil = PhoneNumberUtil::getInstance();
         $phoneExample = '';
@@ -46,9 +46,13 @@ class Phone
      * @return string
      * @throws NumberParseException
      */
-    public static function toSave($phoneNumber)
+    public static function toSave($phoneNumber): ?string
     {
-        return self::format($phoneNumber, PhoneNumberFormat::E164);
+        try {
+            return self::format($phoneNumber, PhoneNumberFormat::E164);
+        } catch (\Exception $exception) {
+            return null;
+        }
     }
 
     /**
@@ -57,7 +61,7 @@ class Phone
      * @param $phoneNumber
      * @return string
      */
-    public static function clear($phoneNumber)
+    public static function clear($phoneNumber): string
     {
         return substr(preg_replace('~[^0-9.+]~', '', $phoneNumber), 0, PhoneNumberUtil::MAX_LENGTH_FOR_NSN);
     }
@@ -69,17 +73,43 @@ class Phone
      * @return bool
      * @throws NumberParseException
      */
-    public static function isValid($phoneNumber)
+    public static function isValid($phoneNumber): bool
     {
+        $wrongPrefixes = [
+            '+0',
+            '+89',
+        ];
+        
+        foreach ($wrongPrefixes as $prefix) {
+            if (strpos($phoneNumber, $prefix) === 0) {
+                $phoneNumber = ltrim($phoneNumber, '+');
+            }
+        }
+        
+        if (empty($phoneNumber)) {
+            return false;
+        }
+        
+        if (!PhoneNumberUtil::isViablePhoneNumber($phoneNumber)) {
+            return false;
+        }
+        
+        if (($len = mb_strlen(trim($phoneNumber, '+'))) < 5 || $len > 20) {
+            return false;
+        }
+        
         $SL = ServiceLocator::getInstance();
         /** @var Settings $settings */
         $settings = $SL->getService(Settings::class);
 
         $defaultRegion = $settings->get('phone_default_region');
-        
-        $phoneUtil = PhoneNumberUtil::getInstance();
-        $phoneObject = $phoneUtil->parse($phoneNumber, $defaultRegion);
-        return $phoneUtil->isValidNumber($phoneObject);
+        try {
+            $phoneUtil = PhoneNumberUtil::getInstance();
+            $phoneObject = $phoneUtil->parse($phoneNumber, $defaultRegion);
+            return $phoneUtil->isValidNumber($phoneObject);
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -90,24 +120,28 @@ class Phone
      * @return string
      * @throws NumberParseException
      */
-    public static function format($phoneNumber, $numberFormat = null)
+    public static function format($phoneNumber, $numberFormat = null): string
     {
+        if (substr($phoneNumber, 0, 2) == '+0') {
+            $phoneNumber = substr($phoneNumber, 1);
+        }
+
         if (!$phoneNumber = self::clear($phoneNumber)) {
             return '';
         }
-        
+
         $SL = ServiceLocator::getInstance();
         $phoneUtil = PhoneNumberUtil::getInstance();
 
         /** @var Settings $settings */
         $settings = $SL->getService(Settings::class);
-        
+
         $defaultRegion = $settings->get('phone_default_region');
         
         if ($numberFormat === null) {
             $numberFormat = $settings->get('phone_default_format');
         }
-        
+
         $phoneObject = $phoneUtil->parse($phoneNumber, $defaultRegion);
         return $phoneUtil->format($phoneObject, $numberFormat);
     }

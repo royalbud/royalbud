@@ -1,8 +1,5 @@
 {* Product page *}
 
-{* The canonical address of the page *}
-{$canonical="{url_generator route="product" url=$product->url absolute=1}" scope=global}
-
 <div class="fn_product block" itemscope itemtype="http://schema.org/Product">
     {* The product name *}
     <div class="block__header block__header--boxed block__header--border  {if $product->variant->sku}block__header--promo{/if}">
@@ -20,43 +17,63 @@
             <div class="block--boxed block--border boxed--stretch d-md-flex justify-content-between">
                 {if $product->images}
                     {* Main product image *}
-                    <div class="gallery_image product-page__image f_row justify-content-center">
-                        <div class="product-page__img">
-                            <img class="fn_img fn_xzoom-fancy product_img xzoom4" xoriginal="{$product->image->filename|resize:1800:1800:w}" itemprop="image" src="{$product->image->filename|resize:800:550}" alt="{$product->name|escape}" title="{$product->name|escape}">
-
-                            {if $product->featured || $product->special || $product->variant->compare_price}
-                                <div class="stickers stickers_product-page">
-                                    {if $product->featured}
-                                    <span class="sticker sticker--hit" data-language="product_sticker_hit">{$lang->product_sticker_hit}</span>
-                                    {/if}
-                                    {if $product->variant->compare_price}
-                                    <span class="sticker sticker--discount" data-language="product_sticker_discount">{$lang->product_sticker_discount}</span>
-                                    {/if}
-                                    {if $product->special}
-                                        <span class="sticker sticker--special">
-                                            <img class="sticker__image" src='files/special/{$product->special}' alt='{$product->special|escape}' title="{$product->special|escape}"/>
-                                        </span>
-                                    {/if}
-                                </div>
+                    <div class="gallery_image product-page__image {if $product->images|count == 1} product-page__image--full {/if} f_row justify-content-center">
+                        <div class="product-page__img swiper-container gallery-top">
+                            <div class="swiper-wrapper">
+                                {foreach $product->images as $i=>$image}
+                                    <a href="{$image->filename|resize:1800:1800:w}" data-fancybox="we2" class="swiper-slide">
+                                        <picture>
+                                            {if $settings->support_webp}
+                                                <source type="image/webp" srcset="{$image->filename|resize:700:800|webp}>
+                                            {/if}
+                                                <source srcset="{$image->filename|resize:700:800}">
+                                                <img {if $image@first} itemprop="image" {/if} src="{$image->filename|resize:700:800}" alt="{$product->name|escape}" title="{$product->name|escape}"/>
+                                        </picture>
+                                    </a>
+                                {/foreach}
+                            </div>
+                            {if $product->images|count > 1}
+                                <div class="swiper-button-next"></div>
+                                <div class="swiper-button-prev"></div>
                             {/if}
                         </div>
+                        {if $product->featured || $product->special || $product->variant->compare_price}
+                            <div class="stickers stickers_product-page">
+                                {if $product->featured}
+                                <span class="sticker sticker--hit" data-language="product_sticker_hit">{$lang->product_sticker_hit}</span>
+                                {/if}
+                                {if $product->variant->compare_price}
+                                <span class="sticker sticker--discount" data-language="product_sticker_discount">{$lang->product_sticker_discount}</span>
+                                {/if}
+                                {if $product->special}
+                                    <span class="sticker sticker--special">
+                                        <img class="sticker__image" src='files/special/{$product->special}' alt='{$product->special|escape}' title="{$product->special|escape}"/>
+                                    </span>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     {* Additional product images *}
                     {if $product->images|count > 1}
-                    <div class="product-page__images xzoom-thumbs d-md-flex justify-content-center justify-content-md-start flex-md-column">
-                        <div class="scrollbar-inner">
-                        {* cut removes the first image, if you need start from the second - write cut:2 *}
-                        {foreach $product->images as $i=>$image}
-                        <a href="{$image->filename|resize:1800:1800:w}" class="product-page__images-item">
-                            <img class="xzoom-gallery4" src="{$image->filename|resize:60:60}" xpreview="{$image->filename|resize:800:550}" alt="{$product->name|escape}"/>
-                        </a>
-                        {/foreach}
+                    <div class="product-page__images swiper-container gallery-thumbs d-md-flex justify-content-center justify-content-md-start flex-md-column hidden-sm-down">
+                        <div class="swiper-wrapper">
+                            {* cut removes the first image, if you need start from the second - write cut:2 *}
+                            {foreach $product->images as $i=>$image}
+                            <div class="swiper-slide product-page__images-item">
+                                <picture>
+                                    {if $settings->support_webp}
+                                        <source type="image/webp" data-srcset="{$image->filename|resize:60:60|webp}">
+                                    {/if}
+                                        <source data-srcset="{$image->filename|resize:60:60}">
+                                        <img class="lazy" data-src="{$image->filename|resize:60:60}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$product->name|escape}" title="{$product->name|escape}"/>
+                                </picture>
+                            </div>
+                            {/foreach}
                         </div>
+                        {if $product->images|count > 4}
+                            <div class="swiper-scrollbar"></div>
+                        {/if}
                     </div>
-                    {else}
-                        <a href="{$product->image->filename|resize:1800:1800:w}" class="hidden">
-                            <img class="xzoom-gallery4" xpreview="{$product->image->filename|resize:800:550}" alt="{$product->name|escape}"/>
-                        </a>
                     {/if}
                 {else}
                     <div class="product-page__no_image d-flex align-items-center justify-content-center" title="{$product->name|escape}">
@@ -72,7 +89,7 @@
                     {* Product Rating *}
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="details_boxed__rating">
-                            {*<div class="details_boxed__title" data-language="product_rating">{$lang->product_rating}:</div>*}
+{*                            <div class="details_boxed__title" data-language="product_rating">{$lang->product_rating}:</div>*}
                             <div id="product_{$product->id}" class="product__rating fn_rating" data-rating_post_url="{url_generator route='ajax_product_rating'}" {if $product->rating > 0} itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating"{/if}>
                                 <span class="rating_starOff">
                                     <span class="rating_starOn" style="width:{$product->rating*90/5|string_format:'%.0f'}px;"></span>
@@ -110,7 +127,7 @@
 
                     {* Anchor form comments *}
                     <div class="details_boxed__anchor_comments">
-                        <a href="#fn_products_tab" class="fn_anchor_comments d-inline-flex align-items-center anchor_comments__link">
+                        <a href="#comments" class="fn_anchor_comments d-inline-flex align-items-center anchor_comments__link">
                             {if $comments|count}
                                 {$comments|count}
                                 {$comments|count|plural:$lang->product_anchor_comment_plural1:$lang->product_anchor_comment_plural2:$lang->product_anchor_comment_plural3}
@@ -135,7 +152,7 @@
                             <div class="details_boxed__title {if $product->variants|count < 2} hidden{/if}" data-language="product_variant">{$lang->product_variant}:</div>
                             <select name="variant" class="fn_variant variant_select {if $product->variants|count < 2} hidden {else}fn_select2{/if}">
                                 {foreach $product->variants as $v}
-                                    <option{if !empty($smarty.get.variant) && $smarty.get.variant == $v->id} selected{/if} value="{$v->id}" data-price="{$v->price|convert}" data-stock="{$v->stock}"{if $v->compare_price > 0} data-cprice="{$v->compare_price|convert}"{if $v->compare_price>$v->price && $v->price>0} data-discount="{round((($v->price-$v->compare_price)/$v->compare_price)*100, 2)}&nbsp;%"{/if}{/if}{if $v->sku} data-sku="{$v->sku|escape}"{/if} {if $v->units}data-units="{$v->units}"{/if}>{if $v->name}{$v->name|escape}{else}{$product->name|escape}{/if}</option>
+                                    <option{if $product->variant->id == $v->id} selected{/if} value="{$v->id}" data-price="{$v->price|convert}" data-stock="{$v->stock}"{if $v->compare_price > 0} data-cprice="{$v->compare_price|convert}"{if $v->compare_price>$v->price && $v->price>0} data-discount="{round((($v->price-$v->compare_price)/$v->compare_price)*100, 2)}&nbsp;%"{/if}{/if}{if $v->sku} data-sku="{$v->sku|escape}"{/if} {if $v->units}data-units="{$v->units}"{/if}>{if $v->name}{$v->name|escape}{else}{$product->name|escape}{/if}</option>
                                 {/foreach}
                             </select>
                             <div class="dropDownSelect2"></div>
@@ -226,11 +243,11 @@
 
                                     {* Comparison *}
                                     {if is_array($comparison->ids) && in_array($product->id, $comparison->ids)}
-                                        <a class="fn_comparison product-page__compare selected" href="#" data-id="{$product->id}" title="{$lang->product_remove_comparison}" data-result-text="{$lang->product_add_comparison}" data-language="product_remove_comparison">
+                                        <a class="fn_comparison product-page__compare selected" href="#" data-id="{$product->id}" title="{$lang->remove_comparison}" data-result-text="{$lang->product_add_comparison}" data-language="product_remove_comparison">
                                             <i class="fa fa-balance-scale"></i>
                                         </a>
                                     {else}
-                                        <a class="fn_comparison product-page__compare" href="#" data-id="{$product->id}" title="{$lang->product_add_comparison}" data-result-text="{$lang->product_remove_comparison}" data-language="product_add_comparison">
+                                        <a class="fn_comparison product-page__compare" href="#" data-id="{$product->id}" title="{$lang->product_add_comparison}" data-result-text="{$lang->remove_comparison}" data-language="product_add_comparison">
                                             <i class="fa fa-balance-scale"></i>
                                         </a>
                                     {/if}
@@ -342,7 +359,7 @@
                                     <div class="features__value">
                                         {foreach $f->values as $value}
                                         {if $category && $f->url_in_product && $f->in_filter && $value->to_index}
-                                        <a href="{url_generator route="category" url=$category->url}/{$f->url}-{$value->translit}">{$value->value|escape}</a>{if !$value@last},{/if}{*todo генерация урла*}
+                                        <a href="{url_generator route="category" url=$category->url}{if !$settings->category_routes_template_slash_end}/{/if}{$f->url}-{$value->translit}">{$value->value|escape}</a>{if !$value@last},{/if}{*todo генерация урла*}
                                         {else}
                                         {$value->value|escape}{if !$value@last},{/if}
                                         {/if}
@@ -367,46 +384,46 @@
                         <div class="comment f_col-lg-7">
                             {if $comments}
                                 {function name=comments_tree level=0}
-                                {foreach $comments as $comment}
-                                <div class="comment__item {if $level > 0} admin_note{/if}">
-                                {* Comment anchor *}
-                                <a name="comment_{$comment->id}"></a>
-                                {* Comment list *}
-                                <div class="comment__inner"> 
-                                    <div class="comment__icon">
-                                        {if $level > 0}
-                                            {include file="svg.tpl" svgId="comment-admin_icon"} 
-                                        {else}
-                                            {include file="svg.tpl" svgId="comment-user_icon"}
-                                        {/if}
-                                    </div>
-                                    <div class="comment__boxed">
-                                        <div class="d-flex flex-wrap align-items-center justify-content-between comment__header">
-                                            {* Comment name *}
-                                            <div class="d-flex flex-wrap align-items-center comment__author">
-                                                <span class="comment__name">{$comment->name|escape}</span>
-                                                {* Comment status *}
-                                                {if !$comment->approved}
-                                                    <span class="comment__status" data-language="post_comment_status">({$lang->post_comment_status})</span>
-                                                {/if}
+                                    {foreach $comments as $comment}
+                                    <div class="comment__item {if $level > 0} admin_note{/if}">
+                                    {* Comment anchor *}
+                                    <a name="comment_{$comment->id}"></a>
+                                    {* Comment list *}
+                                    <div class="comment__inner"> 
+                                        <div class="comment__icon">
+                                            {if $level > 0}
+                                                {include file="svg.tpl" svgId="comment-admin_icon"} 
+                                            {else}
+                                                {include file="svg.tpl" svgId="comment-user_icon"}
+                                            {/if}
+                                        </div>
+                                        <div class="comment__boxed">
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between comment__header">
+                                                {* Comment name *}
+                                                <div class="d-flex flex-wrap align-items-center comment__author">
+                                                    <span class="comment__name">{$comment->name|escape}</span>
+                                                    {* Comment status *}
+                                                    {if !$comment->approved}
+                                                        <span class="comment__status" data-language="post_comment_status">({$lang->post_comment_status})</span>
+                                                    {/if}
+                                                </div>
+                                                {* Comment date *}
+                                                <div class="comment__date">
+                                                    <span>{$comment->date|date}, {$comment->date|time}</span>
+                                                </div>
                                             </div>
-                                            {* Comment date *}
-                                            <div class="comment__date">
-                                                <span>{$comment->date|date}, {$comment->date|time}</span>
+    
+                                            {* Comment content *}
+                                            <div class="comment__body">
+                                                {$comment->text|escape|nl2br}
                                             </div>
                                         </div>
-
-                                        {* Comment content *}
-                                        <div class="comment__body">
-                                            {$comment->text|escape|nl2br}
-                                        </div>
                                     </div>
-                                </div>
-                                {if !empty($comment->children)}
-                                    {comments_tree comments=$comment->children level=$level+1}
-                                {/if}
-                                </div>
-                                {/foreach}
+                                    {if !empty($comment->children)}
+                                        {comments_tree comments=$comment->children level=$level+1}
+                                    {/if}
+                                    </div>
+                                    {/foreach}
                                 {/function}
                                 {comments_tree comments=$comments}
                             {else}
@@ -448,13 +465,13 @@
                                 <div class="form__body">
                                     {* User's name *}
                                     <div class="form__group">
-                                        <input class="form__input form__placeholder--focus" type="text" name="name" value="{$request_data.name|escape}" />
+                                        <input class="form__input form__placeholder--focus" type="text" name="name" value="{if $request_data.name}{$request_data.name|escape}{elseif $user->name}{$user->name|escape}{/if}" />
                                         <span class="form__placeholder">{$lang->form_name}*</span>
                                     </div>
 
                                     {* User's email *}
                                     <div class="form__group">
-                                        <input class="form__input form__placeholder--focus" type="text" name="email" value="{$request_data.email|escape}" data-language="form_email" />
+                                        <input class="form__input form__placeholder--focus" type="text" name="email" value="{if $request_data.email}{$request_data.email|escape}{elseif $user->email}{$user->email|escape}{/if}" data-language="form_email" />
                                         <span class="form__placeholder">{$lang->form_email}</span>
                                     </div>
                                     
@@ -573,7 +590,7 @@
 "@type": "Product",
 "name": "{/literal}{$product->name|escape}{literal}",
 "image": "{/literal}{$product->image->filename|resize:330:300}{literal}",
-"description": "{/literal}{str_replace(array("\r", "\n"), "", $product->annotation|strip_tags|escape)}{literal}",
+"description": "{/literal}{str_replace(array("\r", "\n"), "", $annotation|strip_tags|escape)}{literal}",
 "mpn": "{/literal}{if $product->variant->sku}{$product->variant->sku|escape}{else}Не указано{/if}{literal}",
 {/literal}
 {if $brand->name}

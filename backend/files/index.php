@@ -1,10 +1,8 @@
 <?php
 
-use Okay\Core\Request;
 use Okay\Core\Response;
 use Okay\Core\EntityFactory;
 use Okay\Entities\ManagersEntity;
-use OkayLicense\License;
 use Okay\Core\Modules\Modules;
 
 if(!empty($_SERVER['HTTP_USER_AGENT'])){
@@ -18,24 +16,14 @@ require_once('vendor/autoload.php');
 
 $DI = include 'Okay/Core/config/container.php';
 
-/** @var License $license */
-$license = $DI->get(License::class);
-$license->check();
-
 /** @var Modules $modules */
 $modules = $DI->get(Modules::class);
 $modules->startEnabledModules();
 
-$license->registerSmartyPlugins();
-
-/** @var Request $request */
-$request = $DI->get(Request::class);
+$modules->registerSmartyPlugins();
 
 /** @var Response $response */
 $response = $DI->get(Response::class);
-
-/** @var EntityFactory $entityFactory */
-$entityFactory = $DI->get(EntityFactory::class);
 
 /** @var EntityFactory $entityFactory */
 $entityFactory = $DI->get(EntityFactory::class);
@@ -73,7 +61,7 @@ if ($ext == 'csv') {
     $response->sendHeaders();
     readfile($file);
     exit();
-} elseif ($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'tif' || $ext == 'bmp' || $ext == 'bmp') {
+} elseif ($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'tif' || $ext == 'bmp') {
     $response->setContent(file_get_contents($file), RESPONSE_IMAGE);
     $response->sendContent();
 }

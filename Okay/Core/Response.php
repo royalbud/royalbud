@@ -5,7 +5,6 @@ namespace Okay\Core;
 
 
 use Okay\Core\Adapters\Response\AdapterManager;
-use OkayLicense\License;
 
 class Response
 {
@@ -14,15 +13,14 @@ class Response
     private $adapterManager;
     private $headers;
     private $type;
-    private $license;
     private $isStream = false;
     private $statusCode = 200;
     
-    public function __construct(AdapterManager $adapterManager, License $license)
+    public function __construct(AdapterManager $adapterManager, string $version)
     {
         $this->adapterManager = $adapterManager;
-        $this->license = $license;
         $this->type = RESPONSE_HTML;
+        $this->addHeader('X-Powered-CMS: OkayCMS ' . $version);
     }
 
     /**
@@ -78,6 +76,11 @@ class Response
     {
         return $this->type;
     }
+    
+    public function getContent()
+    {
+        return $this->content;
+    }
 
     /**
      * В отличии от метода sendContent(), этот метод непосредственно сейчас отправляет данные.
@@ -103,7 +106,6 @@ class Response
         /** @var Adapters\Response\AbstractResponse $adapter */
         $adapter = $this->adapterManager->getAdapter($this->type);
 
-        $this->license->setResponseType($this->type);
         $adapter->send([$content]);
     }
     
@@ -116,11 +118,7 @@ class Response
         /** @var Adapters\Response\AbstractResponse $adapter */
         $adapter = $this->adapterManager->getAdapter($this->type);
 
-        if ($this->headersExists()) {
-            $this->sendHeaders();
-        }
-
-        $this->license->setResponseType($this->type);
+        $this->sendHeaders();
         
         $adapter->send($this->content);
     }
@@ -136,17 +134,19 @@ class Response
         foreach ($adapter->getSpecialHeaders() as $header) {
             $this->addHeader($header, true);
         }
-        
-        foreach ($this->headers as $k=>$header) {
-            list($headerContent, $replace, $responseCode) = $header;
 
-            if (is_null($responseCode)) {
-                header($headerContent, $replace);
-                continue;
+        if ($this->headersExists()) {
+            foreach ($this->headers as $k => $header) {
+                list($headerContent, $replace, $responseCode) = $header;
+
+                if (is_null($responseCode)) {
+                    header($headerContent, $replace);
+                    continue;
+                }
+
+                header($headerContent, $replace, $responseCode);
+                unset($this->headers[$k]);
             }
-
-            header($headerContent, $replace, $responseCode);
-            unset($this->headers[$k]);
         }
     }
 

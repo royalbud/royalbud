@@ -26,6 +26,6 @@ class DefaultStrategy extends AbstractRouteStrategy
             $prefix = 'products';
         }
 
-        return ['/'.$prefix.'/{$url}', [], []];
+        return ['/'.$prefix.'/{$url}/?{$variantId}', ['{$variantId}' => '(\d*)'], []];
     }
 }

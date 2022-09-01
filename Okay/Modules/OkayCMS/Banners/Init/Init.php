@@ -6,6 +6,8 @@ namespace Okay\Modules\OkayCMS\Banners\Init;
 
 use Okay\Core\Modules\AbstractInit;
 use Okay\Core\Modules\EntityField;
+use Okay\Core\QueryFactory;
+use Okay\Core\ServiceLocator;
 use Okay\Helpers\MainHelper;
 use Okay\Helpers\MetadataHelpers\BrandMetadataHelper;
 use Okay\Helpers\MetadataHelpers\CategoryMetadataHelper;
@@ -76,33 +78,33 @@ class Init extends AbstractInit
         $this->addBackendControllerPermission('BannersImagesAdmin', self::PERMISSION);
         
         $this->registerQueueExtension(
-            ['class' => MainHelper::class, 'method' => 'commonAfterControllerProcedure'],
-            ['class' => FrontExtender::class, 'method' => 'assignCurrentBanners']
+            [MainHelper::class, 'commonAfterControllerProcedure'],
+            [FrontExtender::class, 'assignCurrentBanners']
         );
         
         $this->registerChainExtension(
-            ['class' => CategoryMetadataHelper::class, 'method' => 'getParts'],
-            ['class' => FrontExtender::class, 'method' => 'metadataGetParts']
+            [CategoryMetadataHelper::class, 'getParts'],
+            [FrontExtender::class, 'metadataGetParts']
         );
         
         $this->registerChainExtension(
-            ['class' => BrandMetadataHelper::class, 'method' => 'getParts'],
-            ['class' => FrontExtender::class, 'method' => 'metadataGetParts']
+            [BrandMetadataHelper::class, 'getParts'],
+            [FrontExtender::class, 'metadataGetParts']
         );
         
         $this->registerChainExtension(
-            ['class' => ProductMetadataHelper::class, 'method' => 'getParts'],
-            ['class' => FrontExtender::class, 'method' => 'metadataGetParts']
+            [ProductMetadataHelper::class, 'getParts'],
+            [FrontExtender::class, 'metadataGetParts']
         );
         
         $this->registerChainExtension(
-            ['class' => PostMetadataHelper::class, 'method' => 'getParts'],
-            ['class' => FrontExtender::class, 'method' => 'metadataGetParts']
+            [PostMetadataHelper::class, 'getParts'],
+            [FrontExtender::class, 'metadataGetParts']
         );
         
         $this->registerChainExtension(
-            ['class' => CommonMetadataHelper::class, 'method' => 'getParts'],
-            ['class' => FrontExtender::class, 'method' => 'metadataGetParts']
+            [CommonMetadataHelper::class, 'getParts'],
+            [FrontExtender::class, 'metadataGetParts']
         );
         
         $this->extendBackendMenu('left_banners', [
@@ -142,5 +144,22 @@ class Init extends AbstractInit
 
         $this->extendUpdateObject('okay_cms__banners', self::PERMISSION, BannersEntity::class);
         $this->extendUpdateObject('okay_cms__banners_images', self::PERMISSION, BannersImagesEntity::class);
+    }
+    
+    public function update_1_0_1()
+    {
+        $SL = ServiceLocator::getInstance();
+
+        /** @var QueryFactory $queryFactory */
+        $queryFactory = $SL->getService(QueryFactory::class);
+        
+        $sql = $queryFactory->newSqlQuery();
+        $sql->setStatement("ALTER TABLE " . BannersImagesEntity::getLangTable() . " ADD `image` varchar(255) NULL DEFAULT ''")->execute();
+
+        $sql = $queryFactory->newSqlQuery();
+        $sql->setStatement("UPDATE " . BannersImagesEntity::getLangTable() . " AS l LEFT JOIN " . BannersImagesEntity::getTable() . " AS b ON l." . BannersImagesEntity::getLangObject() . "_id = b.id SET l.image=b.image")->execute();
+        
+        $this->migrateEntityField(BannersImagesEntity::class, (new EntityField('is_lang_banner'))->setTypeTinyInt(1, true)->setDefault(1));
+        
     }
 }

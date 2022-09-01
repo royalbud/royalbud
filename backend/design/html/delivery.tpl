@@ -100,18 +100,36 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="activity_of_switch_item"> {* row block *}
-                                <div class="okay_switch clearfix">
-                                    <label class="switch_label">{$btr->hide_front_delivery_price|escape}</label>
-                                    <label class="switch switch-default">
-                                        <input class="switch-input" name="hide_front_delivery_price" value='1' type="checkbox" id="visible_checkbox" {if $delivery->hide_front_delivery_price}checked=""{/if}/>
-                                        <span class="switch-label"></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            {get_design_block block="delivery_switch_checkboxes"}
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {*Дополнительные настройки*}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        <div class="activity_of_switch_item"> {* row block *}
+                            <div class="okay_switch clearfix">
+                                <label class="switch_label">{$btr->hide_front_delivery_price|escape}</label>
+                                <label class="switch switch-default">
+                                    <input class="switch-input" name="hide_front_delivery_price" value='1' type="checkbox" id="visible_checkbox" {if $delivery->hide_front_delivery_price}checked=""{/if}/>
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
+                        </div>
+                        {get_design_block block="delivery_switch_checkboxes"}
                     </div>
                 </div>
             </div>
@@ -267,9 +285,9 @@
                                         <div class="form-group clearfix">
                                             <div class="heading_label" >{$setting->name|escape}</div>
                                             <div class="">
-                                                <select name="delivery_settings[{$setting->variable}]" class="selectpicker form-control">
+                                                <select name="delivery_settings[{$setting->variable|escape}]" class="selectpicker form-control">
                                                     {foreach $setting->options as $option}
-                                                        <option value="{$option->value}" {if isset($delivery->delivery_settings[$setting->variable]) && $option->value==$delivery->delivery_settings[$setting->variable]}selected{/if}>{$option->name|escape}</option>
+                                                        <option value="{$option->value|escape}" {if isset($delivery->delivery_settings[$setting->variable]) && $option->value==$delivery->delivery_settings[$setting->variable]}selected{/if}>{$option->name|escape}</option>
                                                     {/foreach}
                                                 </select>
                                             </div>
@@ -280,16 +298,16 @@
                                         <div class="form-group clearfix">
                                             
                                             {if $setting->type == 'checkbox'}
-                                                <label class="heading_label" for="{$setting->variable}">{$setting->name|escape}</label>
+                                                <label class="heading_label" for="{$setting->variable|escape}">{$setting->name|escape}</label>
                                                 <div class="boxes_inline">
                                                     
-                                                    <input name="delivery_settings[{$setting->variable}]" class="hidden_check" type="{$setting->type|escape}" value="{$setting->value|escape}" {if $setting->value == $delivery->delivery_settings[$setting->variable]}checked{/if} id="{$setting->variable}"/>
-                                                    <label class="okay_ckeckbox" for="{$setting->variable}"></label>
+                                                    <input name="delivery_settings[{$setting->variable|escape}]" class="hidden_check" type="{$setting->type|escape}" value="{$setting->value|escape}" {if $setting->value == $delivery->delivery_settings[$setting->variable]}checked{/if} id="{$setting->variable|escape}"/>
+                                                    <label class="okay_ckeckbox" for="{$setting->variable|escape}"></label>
                                                 </div>
                                             {else}
-                                                <label class="heading_label" for="{$setting->variable}">{$setting->name|escape}</label>
+                                                <label class="heading_label" for="{$setting->variable|escape}">{$setting->name|escape}</label>
                                                 <div>
-                                                    <input name="delivery_settings[{$setting->variable}]" class="form-control" type="{$setting->type|escape}" value="{if isset($delivery->delivery_settings[$setting->variable])}{$delivery->delivery_settings[$setting->variable]|escape}{/if}" id="{$setting->variable}"/>
+                                                    <input name="delivery_settings[{$setting->variable|escape}]" class="form-control" type="{$setting->type|escape}" value="{if isset($delivery->delivery_settings[$setting->variable])}{$delivery->delivery_settings[$setting->variable]|escape}{/if}" id="{$setting->variable|escape}"/>
                                                 </div>
                                             {/if}
                                         </div>

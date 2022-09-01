@@ -1,8 +1,5 @@
 {* Login page *}
 
-{* The canonical address of the page *}
-{$canonical="{url_generator route="login"}" scope=global}
-
 {* The page title *}
 {$meta_title = $lang->login_title scope=global}
 
@@ -28,8 +25,6 @@
                         <div class="message_error">
                             {if $error == 'login_incorrect'}
                             <span data-language="login_error_pass">{$lang->login_error_pass}</span>
-                            {elseif $error == 'user_disabled'}
-                            <span data-language="login_pass_not_active">{$lang->login_pass_not_active}</span>
                             {else}
                             {$error|escape}
                             {/if}
@@ -57,8 +52,6 @@
                         <button type="submit" class="form__button button--blick" name="login" value="{$lang->login_sign_in}">
                             <span data-language="login_sign_in">{$lang->login_sign_in}</span>
                         </button>
-
-                        <div id="uLogin" data-ulogin="display=panel;theme=flat;fields=first_name,last_name,email;providers=facebook,google;"></div>
                     </div>
                 </form>
             </div>

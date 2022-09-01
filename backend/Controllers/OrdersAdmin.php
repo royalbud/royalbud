@@ -8,6 +8,7 @@ use Okay\Admin\Helpers\BackendOrderHistoryHelper;
 use Okay\Admin\Helpers\BackendOrdersHelper;
 use Okay\Entities\OrderLabelsEntity;
 use Okay\Entities\OrdersEntity;
+use Okay\Entities\UsersEntity;
 
 class OrdersAdmin extends IndexAdmin
 {
@@ -16,7 +17,8 @@ class OrdersAdmin extends IndexAdmin
         OrderLabelsEntity   $orderLabelsEntity,
         BackendOrdersHelper $backendOrdersHelper,
         BackendOrderHistoryHelper $backendOrderHistoryHelper,
-        OrdersEntity $ordersEntity
+        OrdersEntity $ordersEntity,
+        UsersEntity $usersEntity
     ) {
         //> Обработка действий
         if ($this->request->method('post')) {
@@ -95,6 +97,10 @@ class OrdersAdmin extends IndexAdmin
 
         if (isset($filter['to_date'])) {
             $this->design->assign('to_date', $filter['to_date']);
+        }
+
+        if (!empty($filter['user_id'])) {
+            $this->design->assign('order_user', $usersEntity->findOne(['id' => $filter['user_id']]));
         }
 
         $this->design->assign('pages_count',   ceil($ordersCount/$filter['limit']));

@@ -69,6 +69,13 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         
         return parent::find($filter);
     }
+    
+    public function getSelect(array $filter = [])
+    {
+        $this->select->leftJoin(RouterCacheEntity::getTable() . ' AS r', 'r.url=p.url AND r.type="product"');
+        
+        return parent::getSelect($filter);
+    }
 
     public function update($ids, $object)
     {
@@ -154,7 +161,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         return ExtenderFacade::execute([static::class, __FUNCTION__], true, func_get_args());
     }
 
-    private function unlinkImageFiles($productsIds, $imagesIds)
+    private function unlinkImageFiles($productsIds, $imagesIds) // todo нужно ли?
     {
         $select = $this->queryFactory->newSelect();
         $select->cols(['filename'])
@@ -195,14 +202,22 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         $filenameWithoutExt = implode($parts, '.');
 
         $pattern = $this->config->root_dir . $this->config->resized_images_dir . $filenameWithoutExt . ".*x*." . $ext;
-        $rezisedImages = glob($pattern);
+        $resizedImages = glob($pattern);
 
-        if (!is_array($rezisedImages)) {
+        if (!is_array($resizedImages)) {
             return;
         }
 
-        foreach ($rezisedImages as $rezisedImage) {
-            @unlink($rezisedImage);
+        foreach ($resizedImages as $resizedImage) {
+            @unlink($resizedImage);
+        }
+
+        $webpPattern = $this->config->root_dir . $this->config->resized_images_dir . $filenameWithoutExt . '.*x*.' . $ext . '.webp';
+        $resizedImagesWebp = glob($webpPattern);
+        if (is_array($resizedImagesWebp)) {
+            foreach ($resizedImagesWebp as $f) {
+                @unlink($f);
+            }
         }
     }
 
@@ -254,7 +269,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         $this->buildFilter($filter);
         $this->select->cols([
             "floor(min(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef})) as min",
-            "floor(max(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef})) as max",
+            "ceil(max(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef})) as max",
         ]);
 
         $this->select->join('LEFT', '__variants AS pv', 'pv.product_id = p.id');
@@ -420,13 +435,10 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
 
         $productId = (int)$productId;
         $product = $this->findOne(['id' => $productId]);
-        //$product = $this->get((int)$productId);
 
         //Запоминаем текущую позицию, на нее станет новая запись
         $position = $product->position;
-
-
-
+        
         $newProduct = new \stdClass();
 
         $fields = array_merge($this->getFields(), $this->getLangFields());
@@ -439,6 +451,9 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
 
         $newProduct->id = null;
         $newProduct->url = '';
+        $newProduct->meta_title = '';
+        $newProduct->meta_keywords = '';
+        $newProduct->meta_description = '';
         $newProduct->external_id = '';
         unset($newProduct->created);
 
@@ -498,6 +513,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         $variants = $variantsEntity->find(['product_id'=>$productId]);
         foreach($variants as $variant) {
             $variant->product_id = $newProductId;
+            unset($variant->sku);
             unset($variant->id);
             if (isset($variant->infinity)) {
                 $variant->stock = null;
@@ -546,6 +562,9 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
                         $sourceProduct = $this->get($productId);
                         $destinationProduct = new \stdClass();
                         foreach($productLangFields as $field) {
+                            if (in_array($field, ['meta_title', 'meta_keywords', 'meta_description'])) {
+                                continue;
+                            }
                             $destinationProduct->{$field} = $sourceProduct->{$field};
                         }
                         $this->update($newProductId, $destinationProduct);
@@ -651,10 +670,14 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         return ExtenderFacade::execute([static::class, __FUNCTION__], $orderFields, func_get_args());
     }
 
-    protected function filter__has_price($state)
+    protected function filter__has_price($state, $filter)
     {
         if ($state == true) {
-            $this->select->join('INNER', '__variants AS pv', 'pv.product_id = p.id AND v.price > 0');
+            if (isset($filter['price'])) {
+                $this->select->where('pv.price > 0');
+            } else {
+                $this->select->join('INNER', '__variants AS pv', 'pv.product_id = p.id AND pv.price > 0');
+            }
         }
     }
     
@@ -695,7 +718,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
                 ->cols(['DISTINCT(pf.product_id)'])
                 ->where('(' . implode(' OR ', $featuresValues) . ')')
                 ->join('LEFT', '__features_values AS fv', 'fv.id=pf.value_id')
-                ->having('COUNT(*) >=' . count($features))
+                ->having('COUNT(DISTINCT fv.feature_id) >=' . count($features))
                 ->groupBy(['product_id']);
 
             $this->select->joinSubSelect(
@@ -712,10 +735,10 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         $coef = $this->serviceLocator->getService(Money::class)->getCoefMoney();
 
         if (isset($priceRange['min'])) {
-            $this->select->where("floor(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef})>=?", trim($priceRange['min']));
+            $this->select->where("ROUND(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef}, 2)>=?", trim($priceRange['min']));
         }
         if (isset($priceRange['max'])) {
-            $this->select->where("floor(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef})<=?", trim($priceRange['max']));
+            $this->select->where("ROUND(IF(pv.currency_id=0 OR c.id is null,pv.price, pv.price*c.rate_to/c.rate_from)*{$coef}, 2)<=?", trim($priceRange['max']));
         }
 
         $this->select->join('LEFT', '__variants AS pv', 'pv.product_id = p.id');
@@ -768,7 +791,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
 
     protected function filter__discounted($state)
     {
-        $this->select->where('(SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = :discounted')
+        $this->select->where('(SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>pv.price LIMIT 1) = :discounted')
             ->bindValue('discounted', (int)$state);
     }
     
@@ -791,7 +814,7 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
         }
 
         if (in_array("discounted", $filters)) {
-            $otherFilter[] = "(SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = 1";
+            $otherFilter[] = "(SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>pv.price LIMIT 1) = 1";
         }
 
         return ExtenderFacade::execute([static::class, __FUNCTION__], $otherFilter, func_get_args());
@@ -823,5 +846,10 @@ class ProductsEntity extends Entity implements RelatedProductsInterface
             
             $this->select->where('(' . implode(' OR ', $keywordFilter) . ')');
         }
+    }
+
+    protected function filter__brand($value)
+    {
+        $this->select->where(($value ? '' : '!') . self::getTableAlias().'.brand_id');
     }
 }

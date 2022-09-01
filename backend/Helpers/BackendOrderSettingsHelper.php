@@ -6,6 +6,7 @@ namespace Okay\Admin\Helpers;
 
 use Okay\Core\EntityFactory;
 use Okay\Entities\OrderLabelsEntity;
+use Okay\Entities\OrdersEntity;
 use Okay\Entities\OrderStatusEntity;
 use Okay\Core\Modules\Extender\ExtenderFacade;
 
@@ -20,9 +21,12 @@ class BackendOrderSettingsHelper
      * @var OrderLabelsEntity
      */
     private $orderLabelsEntity;
+    
+    private $entityFactory;
 
     public function __construct(EntityFactory $entityFactory)
     {
+        $this->entityFactory = $entityFactory;
         $this->orderStatusEntity = $entityFactory->get(OrderStatusEntity::class);
         $this->orderLabelsEntity = $entityFactory->get(OrderLabelsEntity::class);
     }
@@ -65,14 +69,30 @@ class BackendOrderSettingsHelper
 
     public function deleteStatuses($ids)
     {
-        $result = $this->orderStatusEntity->delete($ids);
-        return ExtenderFacade::execute(__METHOD__, $result, func_get_args());
+        ExtenderFacade::execute(__METHOD__, null, func_get_args());
+        $this->orderStatusEntity->delete($ids);
     }
 
-    public function statusCanBeDeleted()
+    public function statusCanBeDeleted(array $idsToDelete)
     {
-        $result = $this->orderStatusEntity->count() > 1;
-        return ExtenderFacade::execute(__METHOD__, $result, func_get_args());
+
+        if ($this->orderStatusEntity->count() == 1) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
+        }
+        
+        /** @var OrdersEntity $ordersEntity */
+        $ordersEntity = $this->entityFactory->get(OrdersEntity::class);
+
+        $statusesForNotDelete = [];
+        foreach ($idsToDelete as $id) {
+            $checkCnt = $ordersEntity->count(['status_id' => $id]);
+
+            if ($checkCnt > 0) {
+                $statusesForNotDelete[] = $id;
+            }
+        }
+        return ExtenderFacade::execute(__METHOD__, $statusesForNotDelete, func_get_args());
+        
     }
 
     public function updateLabels($labels)

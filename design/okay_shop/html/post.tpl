@@ -1,9 +1,6 @@
-{* Post page *}
+<!-- Post page -->
 
-{* The canonical address of the page *}
-{$canonical="{url_generator route=$route_name url=$post->url absolute=1}" scope=global}
-
-<div class="clearfix">
+<div class="d-lg-flex align-items-lg-start justify-content-lg-between flex-lg-row-reverse">
     {* Sidebar with post *}
     <div class="fn_mobile_toogle sidebar sidebar--right position_sticky d-lg-flex flex-lg-column">
         {include 'blog_sidebar.tpl'}
@@ -58,7 +55,7 @@
                         {if $post->date}
                             <div class="post_information__item" title="{$lang->blog_date_public}">
                                 {include file="svg.tpl" svgId="calendar_icon"}
-                                <span>{$post->date|date:"d cFR Y, cD"}</span>
+                                <span>{$post->date|date:"d m Y, H:i"}</span>
                             </div>
                         {/if}
                         {* Reading time *}
@@ -78,7 +75,7 @@
                     {if $post->updated_date > 0}
                         <div class="post__update_date">
                             {include file="svg.tpl" svgId="update_date_icon"}
-                            <span class="post__update_date_text">{$lang->blog_update_date} {$post->updated_date|date:"d cFR Y, cD"}</span>
+                            <span class="post__update_date_text">{$lang->blog_update_date} {$post->updated_date|date:"d m Y"}</span>
                         </div>
                     {/if}
                     {* Table contents *}
@@ -116,7 +113,7 @@
                     {/if}
 
                     <div class="post_share">
-                        <div id="post_{$post->id}" class="post__rating product__rating fn_rating" data-rating_post_url="{url_generator route='ajax_post_rating'}" {if $post->rating > 0} itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating"{/if}>
+                        <div id="post_{$post->id}" class="post__rating product__rating fn_rating" data-rating_post_url="{url_generator route='ajax_post_rating'}">
                             <div class="share__text post_share__text">
                                 <span data-language="product_share">{$lang->post_rating_title}</span>
                             </div>
@@ -125,10 +122,10 @@
                             </span>
                             {*Вывод количества голосов данного товара, скрыт ради микроразметки*}
                             {if $post->rating > 0}
-                            <span class="rating_text">( <span itemprop="reviewCount">{$post->votes|string_format:"%.0f"}</span> )</span>
-                            <span class="rating_text hidden">( <span itemprop="ratingValue">{$post->rating|string_format:"%.1f"}</span> )</span>
+                            <span class="rating_text">( <span>{$post->votes|string_format:"%.0f"}</span> )</span>
+                            <span class="rating_text hidden">( <span>{$post->rating|string_format:"%.1f"}</span> )</span>
                             {*Вывод лучшей оценки товара для микроразметки*}
-                            <span class="rating_text hidden" itemprop="bestRating" style="display:none;">5</span>
+                            <span class="rating_text hidden" style="display:none;">5</span>
                             {else}
                             <span class="rating_text hidden">({$post->rating|string_format:"%.1f"})</span>
                             {/if}
@@ -325,13 +322,13 @@
 
                                 {* User's name *}
                                 <div class="form__group">
-                                    <input class="form__input form__placeholder--focus" type="text" name="name" value="{$request_data.name|escape}" />
+                                    <input class="form__input form__placeholder--focus" type="text" name="name" value="{if $request_data.name}{$request_data.name|escape}{elseif $user->name}{$user->name|escape}{/if}" />
                                     <span class="form__placeholder">{$lang->form_name}*</span>
                                 </div>
 
                                 {* User's email *}
                                 <div class="form__group">
-                                    <input class="form__input form__placeholder--focus" type="text" name="email" value="{$request_data.email|escape}" data-language="form_email" />
+                                    <input class="form__input form__placeholder--focus" type="text" name="email" value="{if $request_data.email}{$request_data.email|escape}{elseif $user->email}{$user->email|escape}{/if}" data-language="form_email" />
                                     <span class="form__placeholder">{$lang->form_email}</span>
                                 </div>
 
@@ -378,20 +375,18 @@
 <script type="application/ld+json">
 
     { "@context": "http://schema.org",
-        "@type": "NewsArticle",
+        "@type": "Article",
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "{/literal}{$canonical}{literal}"
         },
         "headline": "{/literal}{$h1|escape}{literal}",
         "alternativeHeadline": "{/literal}{$h1|escape}{literal}",
-        "image": {
-            "@type": "ImageObject",
-            "url": "{/literal}{$post->image|resize:800:800:false:$config->resized_blog_dir}{literal}",
-            "width": 800,
-            "height": 800
+        "image": "{/literal}{$post->image|resize:800:800:false:$config->resized_blog_dir}{literal}",
+        "author": {
+            "@type": "Person",
+            "name": "{/literal}{$post->author->name|escape}{literal}"
         },
-        "editor": "{/literal}{$post->author->name|escape}{literal}",
         "publisher": {
             "@type": "Organization",
             "name": "{/literal}{$settings->site_name|escape}{literal}",
@@ -407,21 +402,17 @@
         "dateCreated": "{/literal}{$post->date|date_format:'%Y-%m-%d'}{literal}",
         {/literal}
         {if $post->updated_date > 0}
-        "dateModified": "{$post->updated_date|date_format:'%Y-%m-%d'}",
+        {literal}
+        "dateModified": "{/literal}{$post->updated_date|date_format:'%Y-%m-%d'}{literal}",
+        {/literal}
         {else}
-        "dateModified": "{$post->date|date_format:'%Y-%m-%d'}",
+        {literal}
+        "dateModified": "{/literal}{$post->date|date_format:'%Y-%m-%d'}{literal}",
+        {/literal}
         {/if}
         {literal}
-        "author": {
-            "@type": "Person",
-            "name": "{/literal}{$post->author->name|escape}{literal}"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "{/literal}{$post->rating|string_format:"%.1f"}{literal}",
-            "ratingCount": "{/literal}{$post->votes|string_format:"%.0f"}{literal}"
-          },
-        "description": "{/literal}{$post->annotation|strip_tags|escape}{literal}"
+        "description": "{/literal}{$annotation|json_ld_text}{literal}",
+        "articleBody": "{/literal}{$description|json_ld_text}{literal}"
     }
 
 </script>

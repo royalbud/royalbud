@@ -2,9 +2,9 @@
 {$meta_title=$btr->features_features scope=global}
 
 {*Название страницы*}
-<div class="row">
-    <div class="col-lg-12 col-md-12">
-        <div class="wrap_heading">
+<div class="main_header">
+    <div class="main_header__item">
+        <div class="main_header__inner">
             <div class="box_heading heading_page">
                 {$btr->features_features|escape} - {$features_count}
             </div>
@@ -14,6 +14,19 @@
                     <span>{$btr->features_add|escape}</span>
                 </a>
             </div>
+        </div>
+    </div>
+    <div class="main_header__item">
+        <div class="main_header__inner">
+            <form class="search" method="get">
+                <input type="hidden" name="controller" value="FeaturesAdmin">
+                <div class="input-group input-group--search">
+                    <input name="keyword" class="form-control" placeholder="{$btr->features_search|escape}" type="text" value="{$keyword|escape}" >
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn_blue"><i class="fa fa-search"></i> <span class="hidden-md-down"></span></button>
+                    </span>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -30,32 +43,32 @@
                     </div>
                 </div>
                 <div class="boxed_sorting toggle_body_wrap off fn_card">
-                <div class="row">
-                    <div class="col-md-3 col-lg-3 col-sm-12">
-                        <select id="id_categories" name="categories_filter" title="{$btr->general_category_filter|escape}" class="selectpicker form-control" data-live-search="true" data-size="10" onchange="location = this.value;">
-                            <option value="{url keyword=null brand_id=null page=null limit=null category_id=null}" {if !$category}selected{/if}>{$btr->general_all_categories|escape}</option>
-                            {function name=category_select level=0}
-                                {foreach $categories as $c}
-                                    <option value='{url category_id=$c->id}' {if $category->id == $c->id}selected{/if}>
-                                        {section sp $level}-{/section}{$c->name|escape}
-                                    </option>
-                                    {category_select categories=$c->subcategories level=$level+1}
-                                {/foreach}
-                            {/function}
-                            {category_select categories=$categories_tree}
-                        </select>
-                    </div>
-                    <div class="col-lg-3 col-md-3 col-sm 12">
-                        <select onchange="location = this.value;" class="selectpicker form-control">
-                            <option value="{url limit=5}" {if $current_limit == 5}selected{/if}>{$btr->general_show_by|escape} 5</option>
-                            <option value="{url limit=10}" {if $current_limit == 10}selected{/if}>{$btr->general_show_by|escape} 10</option>
-                            <option value="{url limit=25}" {if $current_limit == 25}selected{/if}>{$btr->general_show_by|escape} 25</option>
-                            <option value="{url limit=50}" {if $current_limit == 50}selected{/if}>{$btr->general_show_by|escape} 50</option>
-                            <option value="{url limit=100}" {if $current_limit == 100}selected=""{/if}>{$btr->general_show_by|escape} 100</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-3 col-lg-3 col-sm-12">
+                            <select id="id_categories" name="categories_filter" title="{$btr->general_category_filter|escape}" class="selectpicker form-control" data-live-search="true" data-size="10" onchange="location = this.value;">
+                                <option value="{url keyword=null brand_id=null page=null limit=null category_id=null}" {if !$category}selected{/if}>{$btr->general_all_categories|escape}</option>
+                                {function name=category_select level=0}
+                                    {foreach $categories as $c}
+                                        <option value='{url keyword=null category_id=$c->id}' {if $category->id == $c->id}selected{/if}>
+                                            {section sp $level}-{/section}{$c->name|escape}
+                                        </option>
+                                        {category_select categories=$c->subcategories level=$level+1}
+                                    {/foreach}
+                                {/function}
+                                {category_select categories=$categories_tree}
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-3 col-sm 12">
+                            <select onchange="location = this.value;" class="selectpicker form-control">
+                                <option value="{url limit=5}" {if $current_limit == 5}selected{/if}>{$btr->general_show_by|escape} 5</option>
+                                <option value="{url limit=10}" {if $current_limit == 10}selected{/if}>{$btr->general_show_by|escape} 10</option>
+                                <option value="{url limit=25}" {if $current_limit == 25}selected{/if}>{$btr->general_show_by|escape} 25</option>
+                                <option value="{url limit=50}" {if $current_limit == 50}selected{/if}>{$btr->general_show_by|escape} 50</option>
+                                <option value="{url limit=100}" {if $current_limit == 100}selected=""{/if}>{$btr->general_show_by|escape} 100</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
@@ -83,6 +96,8 @@
                     <div class="okay_list_heading okay_list_features_name">{$btr->general_name|escape}</div>
                     <div class="okay_list_heading okay_list_features_tag">{$btr->general_categories|escape}</div>
                     <div class="okay_list_heading okay_list_setting okay_list_features_setting"></div>
+                    <div class="okay_list_heading feature_value_products_num_title">{$btr->product_count_by_feature}</div>
+                    <div class="okay_list_heading okay_list_status">{$btr->general_enable|escape}</div>
                     <div class="okay_list_heading okay_list_url_status">{$btr->feature_url_in_product_short|escape}</div>
                     <div class="okay_list_heading okay_list_status">{$btr->features_in_filter|escape}</div>
                     <div class="okay_list_heading okay_list_close"></div>
@@ -92,7 +107,7 @@
                 {foreach $features as $feature}
                     <div class="fn_step-2 fn_row okay_list_body_item fn_sort_item">
                         <div class="okay_list_row ">
-                            <input type="hidden" name="positions[{$feature->id}]" value="{$feature->position}" />
+                            <input type="hidden" name="positions[{$feature->id}]" value="{$feature->position|escape}" />
 
                             <div class="okay_list_boding okay_list_drag move_zone">
                                 {include file='svg_icon.tpl' svgId='drag_vertical'}
@@ -123,6 +138,27 @@
                                 </div>
                             </div>
                             <div class="okay_list_boding okay_list_setting okay_list_features_setting"></div>
+
+                            <div class="okay_list_boding feature_value_products_num">
+                                <div class="heading_label visible_md">{$btr->feature_value_products_num}</div>
+                                <a href="{$rootUrl}/backend/index.php?controller=ProductsAdmin&feature_id={$feature->id}" class="form-control" target="_blank">
+                                    {if isset($products_counts[$feature->id]['count'])}
+                                        {$products_counts[$feature->id]['count']}
+                                    {else}
+                                        0
+                                    {/if}
+                                </a>
+                            </div>
+
+
+                            <div class="okay_list_boding okay_list_status">
+                                {*url_in_product*}
+                                <label class="switch switch-default">
+                                    <input class="switch-input fn_ajax_action {if $feature->visible}fn_active_class{/if}" data-controller="feature" data-action="visible" data-id="{$feature->id}" name="visible" value="1" type="checkbox"  {if $feature->visible}checked=""{/if}/>
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
                             <div class="okay_list_boding okay_list_url_status">
                                 {*url_in_product*}
                                 <label class="switch switch-default">
@@ -160,6 +196,8 @@
                         </div>
                         <div class="okay_list_option">
                             <select name="action" class="selectpicker features_action">
+                                <option value="enable">{$btr->general_do_enable|escape}</option>
+                                <option value="disable">{$btr->general_do_disable|escape}</option>
                                 <option value="set_in_filter">{$btr->features_in_filter|escape}</option>
                                 <option value="unset_in_filter">{$btr->features_not_in_filter|escape}</option>
                                 <option value="delete">{$btr->general_delete|escape}</option>

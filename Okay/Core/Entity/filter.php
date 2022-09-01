@@ -47,9 +47,6 @@ trait filter
             } elseif ($entityClass->hasMethod($filterMethod)) {
                 // Применяем фильтр
                 $this->$filterMethod($value, $filter);
-
-                // Удаляем фильтр, чтобы он повторно не применился
-                unset($filter[$filterName]);
             } else {
                 $this->autoFilter($filterName, $value);
             }
@@ -76,10 +73,15 @@ trait filter
      * @param string $filterName
      * @param string|array $value
      * @return void
-     * "Магический" фильтр, если передали $filterName и у сущности зарегистрированно такое поле, по нему пройдет фильтрация автоматически
+     * "Магический" фильтр, если передали $filterName и у сущности зарегистрировано такое поле, по нему пройдет фильтрация автоматически
      */
     private function autoFilter($filterName, $value)
     {
+        
+        if ($value === null || $value === []) {
+            return;
+        }
+        
         $langFields = $this->getLangFields();
         $fields = $this->getFields();
         $allFields = array_merge($langFields, $fields);

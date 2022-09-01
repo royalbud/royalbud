@@ -1,7 +1,5 @@
-{* The brand page template *}
+<!-- The authors page template -->
 
-{* The canonical address of the page *}
-{$canonical="{url_generator route='brands' absolute=1}" scope=global}
 <div class="block">
 	{* The page heading *}
 	<div class="block__header block__header--boxed block__header--border">
@@ -18,7 +16,13 @@
 								<a class="d-flex align-items-center justify-content-center flex-column author_list__link" data-author="{$a->id}" href="{url_generator route='author' url=$a->url}">
 									<div class="author_list__image">
 									{if $a->image}
-										<img class="brand_img lazy" data-src="{$a->image|resize:320:500:false:$config->resized_authors_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$a->name|escape}" title="{$a->name|escape}">
+										<picture>
+											{if $settings->support_webp}
+												<source type="image/webp" data-srcset="{$a->image|resize:320:500:false:$config->resized_authors_dir|webp}">
+											{/if}
+											<source data-srcset="{$a->image|resize:320:500:false:$config->resized_authors_dir}">
+											<img class="lazy" data-src="{$a->image|resize:320:500:false:$config->resized_authors_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$a->name|escape}" title="{$a->name|escape}"/>
+										</picture>
 									{else}
 										<div class="author_card__no_image d-flex align-items-start">
 											{include file="svg.tpl" svgId="comment-user_icon"}

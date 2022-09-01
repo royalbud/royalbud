@@ -30,7 +30,7 @@ class NoPrefixAndCategoryStrategy extends AbstractRouteStrategy
     // Сообщаем что данная стратегия может использовать sql для формирования урла
     protected $isUsesSqlToGenerate = true;
 
-    private $mockRouteParams = ['{$url}', ['{$url}' => ''], []];
+    private $mockRouteParams = ['{$url}/?{$variantId}', ['{$url}' => '', '{$variantId}' => '(\d*)'], []];
 
     public function __construct()
     {
@@ -42,7 +42,7 @@ class NoPrefixAndCategoryStrategy extends AbstractRouteStrategy
         $this->cacheEntity      = $entityFactory->get(RouterCacheEntity::class);
     }
 
-    public function generateSlugUrl($url)
+    public function generateSlugUrl($url) : string
     {
         if (empty($url)) {
             return '';
@@ -56,9 +56,8 @@ class NoPrefixAndCategoryStrategy extends AbstractRouteStrategy
         if ($slug = $this->cacheEntity->cols(['slug_url'])->findOne(['type' => 'product', 'url' => $url])) {
             return $slug;
         }
-        
-        $product  = $this->productsEntity->get((string) $url);
 
+        $product  = $this->productsEntity->get((string) $url);
         $slug = $product->url;
         if (empty($product->main_category_id)) {
             $this->logger->warning('Missing "main_category_id" for product "'.$url.'"');
@@ -80,34 +79,38 @@ class NoPrefixAndCategoryStrategy extends AbstractRouteStrategy
         return $slug;
     }
 
-    public function generateRouteParams($url)
+    public function generateRouteParams($url) : array
     {
         $url = rtrim($url, '/');
         $parts = explode('/', $url);
 
-        if (count($parts) != 2) {
+        if (($partsNum = count($parts)) < 2 || $partsNum > 3) {
             return $this->mockRouteParams;
         }
 
-        list($categoryUrl, $productUrl) = $parts;
+        list($categoryUrl, $productUrl, $variantId) = array_pad($parts, 3, '');
 
         $category = $this->categoriesEntity->get((string) $categoryUrl);
         if (empty($category)) {
             return $this->mockRouteParams;
         }
 
-        $product  = $this->productsEntity->get((string) $productUrl);
+        $product  = $this->productsEntity->cols(['id', 'main_category_id'])->get((string) $productUrl);
         if (empty($product) || $category->id !== $product->main_category_id) {
             return $this->mockRouteParams;
         }
 
+        $productPath = $category->url . '/' . $productUrl;
+
         return [
-            '{$url}',
+            '{$url}/?{$variantId}',
             [
-                '{$url}' => $url
+                '{$url}' => $productPath,
+                '{$variantId}' => $variantId,
             ],
             [
-                '{$url}' => $productUrl
+                '{$url}' => $productUrl,
+                '{$variantId}' => $variantId,
             ]
         ];
     }

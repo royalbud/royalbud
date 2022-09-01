@@ -26,7 +26,7 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
     // Сообщаем что данная стратегия может использовать sql для формирования урла
     protected $isUsesSqlToGenerate = true;
 
-    private $mockRouteParams = ['{$url}{$filtersUrl}', ['{$url}' => '', '{$filtersUrl}' => ''], []];
+    private $mockRouteParams = ['/{$url}/?{$filtersUrl}', ['{$url}' => '', '{$filtersUrl}' => ''], []];
 
     public function __construct()
     {
@@ -71,13 +71,24 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
     {
         $allCategories = $this->categoriesEntity->find();
 
-        $matchedRoute = null;
+        $categoriesPathUrls = [];
         foreach($allCategories as $category) {
-            if ($this->compareUrlStartsNoSuccess($category->path_url, $url)) {
+            $categoriesPathUrls[] = $category->path_url;
+        }
+        
+        // Сортируем урлы категорий по длине, от большей к меньшей
+        usort($categoriesPathUrls, function($a, $b) {
+            $difference =  strlen($b) - strlen($a);
+            return $difference ?: strcmp($a, $b);
+        });
+        
+        $matchedRoute = null;
+        foreach ($categoriesPathUrls as $categoryPathUrl) {
+            if ($this->compareUrlStartsNoSuccess($categoryPathUrl, $url)) {
                 continue;
             }
             
-            $urlPath = trim($category->path_url, '/');
+            $urlPath = trim($categoryPathUrl, '/');
 
             $urlParts = explode('/', $urlPath);
             $lastPart = array_pop($urlParts);
@@ -87,13 +98,14 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
             }
             $filter = trim($this->matchFiltersUrl($urlPath, $url), '/');
             $matchedRoute = [
-                '{$url}{$filtersUrl}',
+                '/{$url}/?{$filtersUrl}',
                 [
                     '{$url}' => "{$pathPrefix}({$lastPart})",
-                    '{$filtersUrl}' => "/?(" . $filter . ")",
+                    '{$filtersUrl}' => "(" . $filter . ")",
                 ],
                 []
             ];
+            break;
         }
 
         if (empty($matchedRoute)) {
@@ -105,13 +117,22 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
 
     private function compareUrlStartsNoSuccess($categoryPathUrl, $url)
     {
-        $categoryPathUrl = substr($categoryPathUrl, 1);
+
+        if (strpos($url, 'category_features') !== false) {
+            $url = substr($url, strlen('category_features') + 1);
+        }
+        
+        $categoryPathUrl = ltrim($categoryPathUrl, '/');
         $compareAccessUri = substr($url, 0, strlen($categoryPathUrl));
         return $categoryPathUrl !== $compareAccessUri;
     }
 
     private function matchFiltersUrl($categoryPathUrl, $url)
     {
+        if (strpos($url, 'category_features') !== false) {
+            $url = substr($url, strlen('category_features') + 1);
+        }
+        
         return substr($url, strlen($categoryPathUrl));
     }
 }

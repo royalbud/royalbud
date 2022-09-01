@@ -31,6 +31,14 @@ class FeaturesAdmin extends IndexAdmin
             $action = $featuresRequest->postAction();
             if (is_array($ids)) {
                 switch($action) {
+                    case 'enable': {
+                        $backendFeaturesHelper->enable($ids);
+                        break;
+                    }
+                    case 'disable': {
+                        $backendFeaturesHelper->disable($ids);
+                        break;
+                    }
                     case 'set_in_filter': {
                         $backendFeaturesHelper->setInFilter($ids);
                         break;
@@ -62,6 +70,7 @@ class FeaturesAdmin extends IndexAdmin
 
         $featuresCount  = $backendFeaturesHelper->count($filter);
         $pagesCount     = $backendFeaturesHelper->countPages($filter);
+        $keyword        = isset($filter['keyword']) ? $filter['keyword'] : '';
 
         if ($this->request->get('page') == 'all') {
             $filter['limit'] = $featuresCount;
@@ -75,6 +84,7 @@ class FeaturesAdmin extends IndexAdmin
         $this->design->assign('features_count',  $featuresCount);
         $this->design->assign('pages_count',     $pagesCount);
         $this->design->assign('current_page',    $filter['page']);
+        $this->design->assign('keyword',         $keyword);
         $this->design->assign('categories',      $categories);
         $this->design->assign('categories_tree', $categoriesEntity->getCategoriesTree());
         $this->design->assign('category',        $category);

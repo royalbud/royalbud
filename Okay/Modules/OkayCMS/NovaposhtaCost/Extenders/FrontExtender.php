@@ -13,18 +13,28 @@ use Okay\Core\Request;
 use Okay\Core\ServiceLocator;
 use Okay\Entities\OrdersEntity;
 use Okay\Entities\PaymentsEntity;
+use Okay\Modules\OkayCMS\NovaposhtaCost\Entities\NPCitiesEntity;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Entities\NPCostDeliveryDataEntity;
 
 class FrontExtender implements ExtensionInterface
 {
-    
+    /** @var Request  */
     private $request;
+
+    /** @var EntityFactory  */
     private $entityFactory;
+
+    /** @var FrontTranslations */
+    private $frontTranslations;
     
-    public function __construct(Request $request, EntityFactory $entityFactory)
-    {
-        $this->request = $request;
-        $this->entityFactory = $entityFactory;
+    public function __construct(
+        Request           $request,
+        EntityFactory     $entityFactory,
+        FrontTranslations $frontTranslations
+    ) {
+        $this->request           = $request;
+        $this->entityFactory     = $entityFactory;
+        $this->frontTranslations = $frontTranslations;
     }
 
     /**
@@ -89,9 +99,23 @@ class FrontExtender implements ExtensionInterface
             /** @var NPCostDeliveryDataEntity $npDeliveryDataEntity */
             $npDeliveryDataEntity = $this->entityFactory->get(NPCostDeliveryDataEntity::class);
 
+            /** @var NPCitiesEntity $npCitiesEntity */
+            $npCitiesEntity = $this->entityFactory->get(NPCitiesEntity::class);
+
             if (($lastOrder = $ordersEntity->findOne(['user_id'=>$user->id])) && ($npDeliveryData = $npDeliveryDataEntity->getByOrderId($lastOrder->id))) {
                 $defaultData['novaposhta_delivery_city_id'] = $npDeliveryData->city_id;
                 $defaultData['novaposhta_delivery_warehouse_id'] = $npDeliveryData->warehouse_id;
+                
+                if (!empty($npDeliveryData->city_id) && empty($npDeliveryData->city_name)) {
+                    $npDeliveryData->city_name = $npCitiesEntity->col('name')->findOne(['ref' => $npDeliveryData->city_id]);
+                }
+                
+                $defaultData['novaposhta_city'] = $defaultData['novaposhta_city_name'] = $npDeliveryData->city_name;
+                $defaultData['novaposhta_area_name'] = $npDeliveryData->area_name;
+                $defaultData['novaposhta_region_name'] = $npDeliveryData->region_name;
+                $defaultData['novaposhta_street'] = $defaultData['novaposhta_street_name'] = $npDeliveryData->street;
+                $defaultData['novaposhta_house'] = $npDeliveryData->house;
+                $defaultData['novaposhta_apartment'] = $npDeliveryData->apartment;
             }
         }
         
@@ -109,9 +133,14 @@ class FrontExtender implements ExtensionInterface
      */
     public function setCartDeliveryPrice($result, $delivery, $order)
     {
-        if ($this->request->post('is_novaposhta_delivery', 'boolean')) {
+        if (
+            $this->request->post('is_novaposhta_delivery', 'boolean') &&
+            $delivery->paid &&
+            $delivery->free_from > $order->total_price
+        ) {
             $result['delivery_price'] = $this->request->post('novaposhta_delivery_price');
         }
+
         return $result;
     }
     
@@ -128,12 +157,51 @@ class FrontExtender implements ExtensionInterface
             $npDeliveryDataEntity = $this->entityFactory->get(NPCostDeliveryDataEntity::class);
             $deliveryData = new \stdClass();
             $deliveryData->city_id = $this->request->post('novaposhta_delivery_city_id');
-            $deliveryData->warehouse_id = $this->request->post('novaposhta_delivery_warehouse_id');
             $deliveryData->delivery_term = $this->request->post('novaposhta_delivery_term');
             $deliveryData->redelivery = $this->request->post('novaposhta_redelivery');
             $deliveryData->order_id = $order->id;
 
+            if ($this->request->post('novaposhta_door_delivery')) {
+                if (!$deliveryData->city_name = $this->request->post('novaposhta_city_name')) {
+                    // Если API заглючило, запомнить хоть что пользователь писал
+                    $deliveryData->city_name = $this->request->post('novaposhta_city');
+                }
+                $deliveryData->area_name = $this->request->post('novaposhta_area_name');
+                $deliveryData->region_name = $this->request->post('novaposhta_region_name');
+                if (!$deliveryData->street = $this->request->post('novaposhta_street_name')) {
+                    $deliveryData->street = $this->request->post('novaposhta_street');
+                }
+                $deliveryData->house = $this->request->post('novaposhta_house');
+                $deliveryData->apartment = $this->request->post('novaposhta_apartment');
+            } else {
+                $deliveryData->warehouse_id = $this->request->post('novaposhta_delivery_warehouse_id');
+            }
+            
             $npDeliveryDataEntity->add($deliveryData);
         }
+    }
+
+    /**
+     * @param $error
+     * @param $order
+     * @return null|string
+     */
+    public function getCartValidateError($error)
+    {
+        if (is_null($error) && $this->request->post('is_novaposhta_delivery', 'boolean')) {
+            if (empty($this->request->post('novaposhta_city'))) {
+                $error = $this->frontTranslations->getTranslation('np_cart_error_city');
+            } else if ($this->request->post('novaposhta_door_delivery')) {
+                if (empty($this->request->post('novaposhta_street'))) {
+                    $error = $this->frontTranslations->getTranslation('np_cart_error_street');
+                } else if (empty($this->request->post('novaposhta_house'))) {
+                    $error = $this->frontTranslations->getTranslation('np_cart_error_house');
+                }
+            } else if (empty($this->request->post('novaposhta_warehouses'))) {
+                $error = $this->frontTranslations->getTranslation('np_cart_error_warehouse');
+            }
+        }
+
+        return $error;
     }
 }

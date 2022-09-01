@@ -6,30 +6,41 @@ use Okay\Core\Router;
 use Okay\Core\Request;
 use Okay\Core\Response;
 use Okay\Core\Config;
-use OkayLicense\License;
+use Okay\Core\DebugBar\DebugBar;
 use Okay\Core\Modules\Modules;
+use Okay\Core\OkayContainer\OkayContainer;
+use Psr\Log\LoggerInterface;
+
+ini_set('display_errors', 'off');
+
+require_once('vendor/autoload.php');
+
+if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+    session_name(md5($_SERVER['HTTP_USER_AGENT']));
+}
+session_start();
+
+/** @var OkayContainer $DI */
+$DI = include 'Okay/Core/config/container.php';
+
+/** Инициализируем панель отладки */
+if (false) {
+    DebugBar::init();
+}
+DebugBar::startMeasure('init', 'System init');
+
+/** @var Config $config Конфигурируем в конструкторе сервиса параметры системы */
+$config = $DI->get(Config::class);
 
 try {
-    ini_set('display_errors', 'off');
-
-    if (!empty($_SERVER['HTTP_USER_AGENT'])) {
-        session_name(md5($_SERVER['HTTP_USER_AGENT']));
-    }
-    session_start();
-    
-    require_once('vendor/autoload.php');
-
-    $DI = include 'Okay/Core/config/container.php';
-
-    /**
-     * Конфигурируем в конструкторе сервиса параметры системы
-     *
-     * @var Config $config
-     */
-    $config = $DI->get(Config::class);
-
     /** @var Router $router */
     $router = $DI->get(Router::class);
+    
+    // Редирект с повторяющихся слешей
+    $uri = str_replace(Request::getDomainWithProtocol(), '', Request::getCurrentUrl());
+    if (($destination = preg_replace('~//+~', '/', $uri, -1, $countReplace)) && $countReplace > 0) {
+        Response::redirectTo($destination, 301);
+    }
     $router->resolveCurrentLanguage();
 
     if ($config->get('debug_mode') == true) {
@@ -47,20 +58,17 @@ try {
 
     if (isset($_GET['logout'])) {
         unset($_SESSION['admin']);
+        unset($_SESSION['last_version_data']);
         setcookie('admin_login', '', time()-100, '/');
         
         $response->redirectTo($request->getRootUrl());
     }
-
-    /** @var License $license */
-    $license = $DI->get(License::class);
-    $license->check();
     
     /** @var Modules $modules */
     $modules = $DI->get(Modules::class);
+    DebugBar::stopMeasure('init');
     $modules->startEnabledModules();
-    
-    $license->bindModulesRoutes();
+
     $router->run();
 
     if ($response->getContentType() == RESPONSE_HTML) {
@@ -75,8 +83,17 @@ try {
         print "page generation time: " . $execTime . " seconds\r\n";
         print "-->";
     }
-    
+
 } catch (\Exception $e) {
-    print $e->getMessage() . PHP_EOL;
-    print $e->getTraceAsString();
+    
+    /** @var LoggerInterface $logger */
+    $logger = $DI->get(LoggerInterface::class);
+    
+    $message = $e->getMessage() . PHP_EOL . $e->getTraceAsString();
+    header($_SERVER['SERVER_PROTOCOL'].' 500 Internal Server Error');
+    if ($config->get('debug_mode') == true) {
+        print $message;
+    } else {
+        $logger->critical($message);
+    }
 }

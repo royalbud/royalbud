@@ -27,9 +27,19 @@ class Integration1C
     
     public $onlyEnabledCurrencies = false; // Учитывает все валюты(false) или только включенные(true)
     
-    public $stock_from_1c = true;   // TRUE Учитывать количество товара из 1с FALSE установить доступность в бесконечное количество
+    public $stockFrom1c = true;   // TRUE Учитывать количество товара из 1с FALSE установить доступность в бесконечное количество
     
-    public $importProductsOnly = true;   // TRUE Импортировать только товары, без услуг и прочего (ВидНоменклатуры == Товар)
+    public $importProductsOnly = false;   // TRUE Импортировать только товары, без услуг и прочего (ВидНоменклатуры == Товар)
+
+    public $exportPurchasesDiscountsSeparate = false;   // TRUE Экспортировать скидки товаров в заказе отдельно
+    
+    public $eraseComparePrice = false;   // TRUE сбрасывать старую цену, если она не пришла с 1С
+    
+    public $eraseComparePriceEqual = false;   // TRUE сбрасывать старую цену, если равна либо меньше основной цены
+
+    public $guidPriceFrom1C = '';  // ID типа цены в 1С, который нужно загрузить в товар, если не указать, будет браться первая
+
+    public $guidComparePriceFrom1C = ''; // ID типа цены в 1С, который нужно загрузить в товар как старую цену
     
     public $startTime;             // В начале скрипта засекли время, нужно для определения когда закончиться max_execution_time
     
@@ -105,6 +115,50 @@ class Integration1C
         $this->maxExecTime = min(30, @ini_get("max_execution_time"));
         if (empty($this->maxExecTime)) {
             $this->maxExecTime = 30;
+        }
+        $this->configureFromSettings();
+    }
+    
+    public function configureFromSettings()
+    {
+        if ($this->settings->has('integration1cFullUpdate')) {
+            $this->fullUpdate = (bool)$this->settings->get('integration1cFullUpdate');
+        }
+        
+        if ($this->settings->has('integration1cBrandOptionName') && ($brandOptionName = $this->settings->get('integration1cBrandOptionName'))) {
+            $this->brandOptionName = $brandOptionName;
+        }
+        
+        if ($this->settings->has('integration1cOnlyEnabledCurrencies')) {
+            $this->onlyEnabledCurrencies = (bool)$this->settings->get('integration1cOnlyEnabledCurrencies');
+        }
+        
+        if ($this->settings->has('integration1cStockFrom1c')) {
+            $this->stockFrom1c = (bool)$this->settings->get('integration1cStockFrom1c');
+        }
+        
+        if ($this->settings->has('integration1cImportProductsOnly')) {
+            $this->importProductsOnly = (bool)$this->settings->get('integration1cImportProductsOnly');
+        }
+
+        if ($this->settings->has('integration1cExportPurchasesDiscountsSeparate')) {
+            $this->exportPurchasesDiscountsSeparate = (bool)$this->settings->get('integration1cExportPurchasesDiscountsSeparate');
+        }
+        
+        if ($this->settings->has('integration1cGuidPriceFrom1C')) {
+            $this->guidPriceFrom1C = $this->settings->get('integration1cGuidPriceFrom1C');
+        }
+        
+        if ($this->settings->has('integration1cGuidComparePriceFrom1C')) {
+            $this->guidComparePriceFrom1C = $this->settings->get('integration1cGuidComparePriceFrom1C');
+        }
+        
+        if ($this->settings->has('integration1cEraseComparePrice')) {
+            $this->eraseComparePrice = (bool)$this->settings->get('integration1cEraseComparePrice');
+        }
+        
+        if ($this->settings->has('integration1cEraseComparePriceEqual')) {
+            $this->eraseComparePriceEqual = (bool)$this->settings->get('integration1cEraseComparePriceEqual');
         }
     }
 
@@ -206,7 +260,7 @@ class Integration1C
     
     public function getFromStorage($param)
     {
-        return (isset($_SESSION["integration_1c"][$param]) ? $_SESSION["integration_1c"][$param] : null);
+        return $_SESSION["integration_1c"][$param] ?? null;
     }
     
     public function clearStorage()

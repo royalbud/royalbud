@@ -7,6 +7,7 @@ namespace Okay\Modules\OkayCMS\PayKeeper\Controllers;
 use Okay\Controllers\AbstractController;
 use Okay\Core\Money;
 use Okay\Core\Notify;
+use Okay\Entities\PurchasesEntity;
 use Okay\Entities\VariantsEntity;
 use Okay\Entities\OrdersEntity;
 use Okay\Entities\PaymentsEntity;
@@ -17,6 +18,7 @@ class CallbackController extends AbstractController
         PaymentsEntity $paymentsEntity,
         VariantsEntity $variantsEntity,
         OrdersEntity $ordersEntity,
+        PurchasesEntity $purchasesEntity,
         Notify $notify,
         Money $money
     ) {
@@ -50,7 +52,7 @@ class CallbackController extends AbstractController
             die("Unknown payment method");
         }
 
-        $ourPrice = $money->convert($theOrder->total_price, $method->currency_id, false);
+        $ourPrice = $money->convert($theOrder->total_price, $method->currency_id, false, false, 2);
         $ourPrice = number_format($ourPrice, 2, '.', '');
 
         $settings = unserialize($method->settings);
@@ -79,7 +81,7 @@ class CallbackController extends AbstractController
             die('Message digest incorrect');
         }
 
-        $purchases = $ordersEntity->find(['order_id'=> (int) $theOrder->id]);
+        $purchases = $purchasesEntity->find(['order_id'=> (int) $theOrder->id]);
         foreach($purchases as $purchase) {
             $variant = $variantsEntity->get((int) $purchase->variant_id);
             if(empty($variant) || (!$variant->infinity && $variant->stock < $purchase->amount)) {

@@ -18,6 +18,7 @@ class Managers
         'features',
         'orders',
         'order_settings',
+        'discounts_settings',
         'users',
         'groups',
         'coupons',
@@ -58,10 +59,11 @@ class Managers
         'theme',
         'learning',
         'router',
-        'system_modules'
+        'system_modules',
+        'settings_indexing',
     ];
 
-    // Соответсвие модулей и названий соответствующих прав
+    // Соответствие модулей и названий соответствующих прав
     private $controllersPermissions = [
         'ProductsAdmin'       => 'products',
         'ProductAdmin'        => 'products',
@@ -126,6 +128,7 @@ class Managers
         'CategoryStatsAdmin'    => 'category_stats',
         'RobotsAdmin'               => 'robots',
         'OrderSettingsAdmin'        => 'order_settings',
+        'DiscountsSettingsAdmin'    => 'discounts_settings',
         'SeoPatternsAdmin'          => 'seo_patterns',
         'SeoFilterPatternsAdmin'    => 'seo_filter_patterns',
         'SupportAdmin'              => 'support',
@@ -135,6 +138,7 @@ class Managers
         'ModuleDesignAdmin'         => 'modules',
         'LearningAdmin'             => 'learning',
         'SettingsRouterAdmin'       => 'router',
+        'SettingsIndexingAdmin'     => 'settings_indexing',
     ];
     
     /**

@@ -5,7 +5,7 @@
  * Если скрипт лежит не в стандартном месте (design/theme_name/js/)
  * нужно указать новое место, вызвав метод setDir() и передать путь к файл относительно корня сайта (DOCUMENT_ROOT)
  * Также можно вызвать метод setPosition() и указать head или footer (по умолчанию head)
- * todo ссылка на документацию
+ * @link https://github.com/OkayCMS/Okay3/blob/master/docs/js_css_files.md
  */
 
 use Okay\Core\TemplateConfig\Js;
@@ -15,6 +15,8 @@ return [
     (new Js('jquery-ui.min.js')),
     (new Js('owl.carousel.min.js')),
     (new Js('jquery.scrollbar.min.js')),
+    (new Js('swiper-bundle.min.js')),
+    (new Js('nouislider.min.js'))->setPosition('footer'),
     (new Js('select2.min.js'))->setPosition('footer'),
     (new Js('okay.js'))->setPosition('footer'),
     (new Js('lazyload.min.js'))->setPosition('footer'),

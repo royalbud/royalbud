@@ -15,7 +15,7 @@ class NoPrefixStrategy extends AbstractRouteStrategy
      */
     private $categoriesEntity;
 
-    private $mockRouteParams = ['{$url}{$filtersUrl}', ['{$url}' => '', '{$filtersUrl}' => ''], ['{$url}' => '', '{$filtersUrl}' => '']];
+    private $mockRouteParams = ['/{$url}/?{$filtersUrl}', ['{$url}' => '', '{$filtersUrl}' => ''], ['{$url}' => '', '{$filtersUrl}' => '']];
 
     public function __construct()
     {
@@ -34,23 +34,21 @@ class NoPrefixStrategy extends AbstractRouteStrategy
             return $this->mockRouteParams;
         }
 
+        $filter = trim($this->matchFiltersUrl($categoryUrl, $url), '/');
+        
         return [
-            '{$url}{$filtersUrl}',
+            '/{$url}/?{$filtersUrl}',
             [
-                '{$url}' => $categoryUrl,
-                '{$filtersUrl}' => '/'.$this->matchFiltersUrl($categoryUrl, $url)
+                '{$url}' => "({$categoryUrl})",
+                '{$filtersUrl}' => '(' . $filter . ')',
             ],
-            [
-                '{$url}' => $categoryUrl,
-                '{$filtersUrl}' => $this->matchFiltersUrl($categoryUrl, $url)
-            ]
+            []
         ];
     }
 
     private function matchCategoryUrl($url)
     {
-        preg_match("/([^\/]+)/ui", $url, $matches);
-
+        preg_match("~(?:category_features/)?([^/]+)~ui", $url, $matches);
         if (isset($matches[1])) {
             return $matches[1];
         }
@@ -60,6 +58,10 @@ class NoPrefixStrategy extends AbstractRouteStrategy
 
     private function matchFiltersUrl($categoryUrl, $url)
     {
-        return substr($url, strlen($categoryUrl) + 1);
+        if (strpos($url, 'category_features') !== false) {
+            $url = substr($url, strlen('category_features') + 1);
+        }
+        
+        return substr($url, strlen($categoryUrl));
     }
 }

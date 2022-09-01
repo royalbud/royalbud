@@ -142,12 +142,33 @@
                                 </div>
                             </div>
                         </div>
-                        {get_design_block block="category_switch_checkboxes"}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {*Дополнительные настройки*}
+    {$switch_checkboxes = {get_design_block block="category_switch_checkboxes"}}
+    {if !empty($switch_checkboxes)}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        {$switch_checkboxes}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {/if}
 
     {*Параметры элемента*}
     <div class="row">
@@ -226,7 +247,7 @@
                                 {function name=category_select level=0}
                                     {foreach $cats as $cat}
                                         {if $category->id != $cat->id}
-                                            <option value='{$cat->id}' {if $category->parent_id == $cat->id}selected{/if}>{section name=sp loop=$level}--{/section}{$cat->name}</option>
+                                            <option value='{$cat->id}' {if $category->parent_id == $cat->id}selected{/if}>{section name=sp loop=$level}--{/section}{$cat->name|escape}</option>
                                             {category_select cats=$cat->subcategories level=$level+1}
                                         {/if}
                                     {/foreach}

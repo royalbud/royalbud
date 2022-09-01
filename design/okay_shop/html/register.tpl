@@ -1,7 +1,4 @@
-{* Registration page *}
-
-{* The canonical address of the page *}
-{$canonical="{url_generator route="register" absolute=1}" scope=global}
+<!-- Registration page -->
 
 {* The page title *}
 {$meta_title = $lang->register_title scope=global}
@@ -51,6 +48,12 @@
                         <div class="form__group">
                             <input class="form__input form__placeholder--focus" type="text" name="name" value="{$request_data.name|escape}" data-language="form_name" />
                             <span class="form__placeholder">{$lang->form_name}*</span>
+                        </div>
+
+                        {* User's  last name *}
+                        <div class="form__group">
+                            <input class="form__input form__placeholder--focus" type="text" name="last_name" value="{$request_data.name|escape}" data-language="form_last_name" />
+                            <span class="form__placeholder">{$lang->form_last_name}</span>
                         </div>
 
                         {* User's  email *}
@@ -107,10 +110,6 @@
                 <div class="block_explanation">
                     <div class="block__description">
                         {$description}
-                    </div>
-                    {* Link to registration *}
-                    <div class="form__footer">
-                        <div id="uLogin" data-ulogin="display=panel;theme=flat;fields=first_name,last_name,email;providers=facebook,google;mobilebuttons=0;"></div>
                     </div>
                 </div>
             </div>

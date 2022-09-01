@@ -10,6 +10,10 @@ use Okay\Core\Modules\Extender\ExtenderFacade;
 trait CRUD
 {
 
+    /**
+     * @param array $filter
+     * @return false|string|object
+     */
     public function findOne(array $filter = [])
     {
         $filter['limit'] = 1;
@@ -47,7 +51,7 @@ trait CRUD
         $this->buildFilter($filter);
         $this->select->cols($this->getAllFields());
         
-        $this->db->query($this->select);
+        $this->db->query($this->select, $this->debug);
 
         $result = $this->getResult();
         return ExtenderFacade::execute([static::class, __FUNCTION__], $result, func_get_args());
@@ -60,27 +64,34 @@ trait CRUD
     public function getSelect(array $filter = [])
     {
         $this->setUp();
-        $this->buildPagination($filter);
+        if ($this->noLimit === false) {
+            $this->buildPagination($filter);
+        }
         $this->buildFilter($filter);
+        $this->select->cols($this->getAllFields());
         $this->select->distinct(true);
-        
-        $this->select->cache();
         
         $select = clone $this->select;
         $this->flush();
         return $select; // No ExtenderFacade
     }
-    
+
+    /**
+     * @param array $filter
+     * @return false|array
+     */
     public function find(array $filter = [])
     {
         $this->setUp();
-        $this->buildPagination($filter);
+        if ($this->noLimit === false) {
+            $this->buildPagination($filter);
+        }
+        
         $this->buildFilter($filter);
         $this->select->distinct(true);
         $this->select->cols($this->getAllFields());
-        $this->select->cache();
         
-        $this->db->query($this->select);
+        $this->db->query($this->customChangeSelect($this->select), $this->debug);
         
         // Получаем результирующие поля сущности
         $resultFields = $this->getAllFieldsWithoutAlias();
@@ -94,6 +105,15 @@ trait CRUD
         return ExtenderFacade::execute([static::class, __FUNCTION__], $results, func_get_args());
     }
 
+    public function customChangeSelect(Select $select)
+    {
+        return ExtenderFacade::execute([static::class, __FUNCTION__], $select, func_get_args());
+    }
+
+    /**
+     * @param array $filter
+     * @return false|string
+     */
     public function count(array $filter = [])
     {
         $this->setUp();
@@ -105,7 +125,7 @@ trait CRUD
         $this->select->resetGroupBy();
         $this->select->resetOrderBy();
 
-        $this->db->query($this->select);
+        $this->db->query($this->customChangeSelect($this->select), $this->debug);
 
         $count = $this->getResult('count');
         return ExtenderFacade::execute([static::class, __FUNCTION__], $count, func_get_args());
@@ -119,7 +139,8 @@ trait CRUD
         $object = (object)$object;
 
         // Проверяем есть ли мультиязычность и забираем описания для перевода
-        $result = $this->getDescription($object);
+        // При добавлении записи мультиязычные поля должны добавиться и в основную таблицу
+        $result = $this->getDescription($object, false);
 
         $insert = $this->queryFactory->newInsert();
 
@@ -172,6 +193,7 @@ trait CRUD
         // Проверяем есть ли мультиязычность и забираем описания для перевода
         $result = $this->getDescription($object);
 
+        $funcAsData = false;
         foreach ($object as $field=>$value) {
             if (is_array($value) || is_object($value)) {
                 unset($object->$field);
@@ -181,16 +203,17 @@ trait CRUD
             if (strtolower($value) == 'now()') {
                 $update->set($field, $value);
                 unset($object->$field);
+                $funcAsData = true;
             }
         }
 
         $props = get_object_vars($object);
-        if (empty($props) && empty($result->description)) {
+        if ($funcAsData === false && empty($props) && empty($result->description)) {
             return ExtenderFacade::execute([static::class, __FUNCTION__], false, func_get_args());
         }
 
         // Вдруг обновляют только мультиязычные поля
-        if (!empty((array)$object) && !empty($ids)) {
+        if ((!empty((array)$object) || $funcAsData === true) && !empty($ids)) {
             $update->table($this->getTable() . ' AS ' . $this->getTableAlias())
                 ->cols((array)$object)// todo здесь нужно сделать через bindValues
                 ->where($this->getTableAlias() . '.id IN (:update_entity_id)');
@@ -228,13 +251,35 @@ trait CRUD
 
         return ExtenderFacade::execute([static::class, __FUNCTION__], true, func_get_args());
     }
-    
-    final public function cols(array $cols)
+
+    /**
+     * Метод регистрирует список колонок, которые нужно достать
+     * 
+     * @param array $cols
+     * @return $this
+     */
+    public function cols(array $cols)
     {
         $this->setSelectFields($cols);
         return $this;
     }
 
+    /**
+     * Метод регистрирует одну колонку, которую нужно достать
+     * 
+     * @param $colName
+     * @return $this
+     */
+    final public function col($colName)
+    {
+        $defaultFields = $this->getAllDefaultFields();
+        if (in_array($colName, $defaultFields)) {
+            $this->setSelectFields([$colName]);
+        }
+        
+        return $this;
+    }
+    
     public function getResult($field = null)
     {
         $results = $this->db->result($field);

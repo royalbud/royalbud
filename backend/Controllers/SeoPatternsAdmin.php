@@ -52,6 +52,7 @@ class SeoPatternsAdmin extends IndexAdmin
                     $defaultProductsSeoPattern['auto_meta_title']    = $this->request->post('auto_meta_title');
                     $defaultProductsSeoPattern['auto_meta_keywords'] = $this->request->post('auto_meta_keywords');
                     $defaultProductsSeoPattern['auto_meta_desc']     = $this->request->post('auto_meta_desc');
+                    $defaultProductsSeoPattern['auto_annotation']    = $this->request->post('auto_annotation');
                     $defaultProductsSeoPattern['auto_description']   = $this->request->post('auto_description');
                     $defaultProductsSeoPattern['auto_h1']            = $this->request->post('auto_h1');
 
@@ -68,11 +69,13 @@ class SeoPatternsAdmin extends IndexAdmin
                         $categoryToUpdate->auto_meta_title      = $this->request->post('auto_meta_title');
                         $categoryToUpdate->auto_meta_keywords   = $this->request->post('auto_meta_keywords');
                         $categoryToUpdate->auto_meta_desc       = $this->request->post('auto_meta_desc');
+                        $categoryToUpdate->auto_annotation      = $this->request->post('auto_annotation');
                         $categoryToUpdate->auto_description     = $this->request->post('auto_description');
                         $categoryToUpdate->auto_h1              = $this->request->post('auto_h1');
                         
                         $categoriesEntity->update($category->id, $categoryToUpdate);
                         $category = $categoriesEntity->get($categoryId);
+                        $this->design->assign('features', $featuresEntity->find(array('category_id' => $category->id)));
                         $this->design->assign("category", $category);
                         $result->success = true;
                     } else {

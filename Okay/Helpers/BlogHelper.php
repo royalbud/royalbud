@@ -148,8 +148,8 @@ class BlogHelper implements GetListInterface
 
         return ExtenderFacade::execute(__METHOD__, $posts, func_get_args());
     }
-    
-    private function attachAuthor(array $posts)
+
+    public function attachAuthor(array $posts)
     {
         /** @var AuthorsEntity $authorsEntity */
         $authorsEntity = $this->entityFactory->get(AuthorsEntity::class);
@@ -176,8 +176,8 @@ class BlogHelper implements GetListInterface
 
         return ExtenderFacade::execute(__METHOD__, $posts, func_get_args());
     }
-    
-    private function attachCommentsCount(array $posts)
+
+    public function attachCommentsCount(array $posts)
     {
         /** @var CommentsEntity $commentsEntity */
         $commentsEntity = $this->entityFactory->get(CommentsEntity::class);
@@ -189,7 +189,7 @@ class BlogHelper implements GetListInterface
         
         // Получаем часть запроса с примененными фильтрами и немного его модифицируем
         $query = $commentsEntity->getSelect(['type' => 'post', 'object_id' => $postsIds]);
-        $query->groupBy(['object_id'])->cols(["COUNT( DISTINCT id) as count", "object_id"]);
+        $query->groupBy(['object_id'])->resetCols()->cols(["COUNT( DISTINCT id) as count", "object_id"]);
 
         foreach ($query->results() as $result) {
             if (isset($posts[$result->object_id])) {
@@ -268,6 +268,40 @@ class BlogHelper implements GetListInterface
     {
         $orderAdditionalData = [];
         return ExtenderFacade::execute(__METHOD__, $orderAdditionalData, func_get_args());
+    }
+
+    /**
+     * Метод проверяет доступность поста для показа в контроллере
+     * можно переопределить логику работы контроллера и отменить дальнейшие действия
+     * для этого после реализации другой логики необходимо вернуть true из экстендера
+     *
+     * @param object $post
+     * @return object
+     */
+    public function setPost($post)
+    {
+        if (empty($post) || (!$post->visible && empty($_SESSION['admin']))) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
+        }
+
+        return ExtenderFacade::execute(__METHOD__, null, func_get_args());
+    }
+
+    /**
+     * Метод проверяет доступность категории блога для показа в контроллере
+     * можно переопределить логику работы контроллера и отменить дальнейшие действия
+     * для этого после реализации другой логики необходимо вернуть true из экстендера
+     *
+     * @param object $category
+     * @return object
+     */
+    public function setBlogCategory($category)
+    {
+        if (empty($category) || (!$category->visible && empty($_SESSION['admin']))) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
+        }
+
+        return ExtenderFacade::execute(__METHOD__, null, func_get_args());
     }
     
 }

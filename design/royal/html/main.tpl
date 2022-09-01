@@ -27,42 +27,29 @@
     </div>
 </div>
 
-{* Discount products *}
-{get_discounted_products var=discounted_products limit=5}
-{if $discounted_products}
-    <div class="main-products main-products__new container">
-        <div class="block block--boxed main-block">
-            <div class="block__header block__header--promo">
-                <div class="block__title main-title" data-language="main_discount_products">{$lang->main_discount_products}
-                </div>
-                
-            </div>
-            <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $discounted_products as $product}
-                        <div class="product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
-                </div>
-            </div>
-        </div>
-    </div>
-{/if}
-
 {* Featured products *}
 {get_featured_products var=featured_products limit=5}
 {if $featured_products}
     <div class="main-products main-products__featured container">
-        <div class="block block--boxed main-block">
+        <div class="block block--boxed block--border">
             <div class="block__header block__header--promo">
-                <div class="block__title main-title" data-language="main_recommended_products">{$lang->main_recommended_products}
+                <div class="block__title">
+                    <span data-language="main_recommended_products">{$lang->main_recommended_products}</span>
                 </div>
-                
+                <div class="block__header_button">
+                    <a class="block__more d-flex align-items-center" href="{url_generator route='products' filtersUrl=['filter' => ['featured']]}">
+                        <span data-language="main_look_all">{$lang->main_look_all}</span>{include file="svg.tpl" svgId="arrow_right2"}
+                    </a>
+                </div>
             </div>
             <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $featured_products as $product}
-                        <div class="item product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
+                <div class="fn_products_slide products_list row no_gutters swiper-container">
+                    <div class="swiper-wrapper">
+                        {foreach $featured_products as $product}
+                            <div class="item product_item swiper-slide no_hover">{include "product_list.tpl"}</div>
+                        {/foreach}
+                    </div>
+                    <div class="swiper-pagination"></div>
                 </div>
             </div>
         </div>
@@ -73,193 +60,198 @@
 {get_new_products var=new_products limit=5}
 {if $new_products}
     <div class="main-products main-products__new container">
-        <div class="block block--boxed main-block">
+        <div class="block block--boxed block--border">
             <div class="block__header">
-                <div class="block__title main-title" data-language="main_new_products">{$lang->main_new_products}</div>
-            </div>
-            <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $new_products as $product}
-                        <div class="product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
+                <div class="block__title">
+                    <span data-language="main_new_products">{$lang->main_new_products}</span>
                 </div>
             </div>
-         </div>
+            <div class="block__body">
+                <div class="fn_products_slide products_list row no_gutters swiper-container">
+                    <div class="swiper-wrapper">
+                        {foreach $new_products as $product}
+                            <div class="product_item swiper-slide no_hover">{include "product_list.tpl"}</div>
+                        {/foreach}
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+        </div>
     </div>
 {/if}
 
 {* Last_posts *}
-{get_posts var=last_posts limit=4 type_post="blog"}
+{get_posts var=last_posts limit=4 category_id=2}
 {if $last_posts}
 
 
-<div class="main-blog container-fluid">
+    <div class="main-blog container-fluid">
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="main-blog--images-slider banner_group owl-carousel">
-                {foreach $last_posts as $post}
-                    {if $post->image}
-                        <div class="main-blog--images-slider--item">
-                            <img class="lazy" data-src="{$post->image|resize:960:575:false:$config->resized_blog_dir:center:center}" alt="{$post->name|escape}" title="{$post->name|escape}"/>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="main-blog--images-slider banner_group owl-carousel">
+                    {foreach $last_posts as $post}
+                        {if $post->image}
+                            <div class="main-blog--images-slider--item">
+                                <img class="lazy" data-src="{$post->image|resize:960:575:false:$config->resized_blog_dir:center:center}" alt="{$post->name|escape}" title="{$post->name|escape}"/>
+                            </div>
+
+                        {/if}
+                    {/foreach}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="main-blog--content-slider banner_group owl-carousel">
+
+                    {foreach $last_posts as $post}
+                        <div class="main-blog--content-slider-item">
+                            <div class="main-blog--content-slider--title">{$post->name|escape}</div>
+                            <div class="main-blog--content-slider--content">{$post->annotation}</div>
+                            <a href="{url_generator route='post' url=$post->url}" class="main-blog--content-slider--readmore">{$lang->main_article_read}</a>
                         </div>
-                        
-                    {/if}
-                {/foreach}
+                    {/foreach}
+                </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="main-blog--content-slider banner_group owl-carousel">
 
-                {foreach $last_posts as $post}
-                    <div class="main-blog--content-slider-item">
-                        <div class="main-blog--content-slider--title">{$post->name|escape}</div>
-                        <div class="main-blog--content-slider--content">{$post->annotation}</div>
-                        <a href="{url_generator route='post' url=$post->url}" class="main-blog--content-slider--readmore">{$lang->main_article_read}</a>
-                    </div>
-                {/foreach}
-            </div>
-        </div>
-    </div> 
+    </div>
 
-</div>
+    <script>
 
-<script>
+        document.addEventListener('DOMContentLoaded', function(){
 
-    document.addEventListener('DOMContentLoaded', function(){
-
-        var sync1 = $(".main-blog--images-slider");
-        var sync2 = $(".main-blog--content-slider");
-        var syncedSecondary = true;
+            var sync1 = $(".main-blog--images-slider");
+            var sync2 = $(".main-blog--content-slider");
+            var syncedSecondary = true;
 
 
-        sync1.owlCarousel({
-            items: 1,
-            slideSpeed: 5400,
-            nav: true,
-            autoplay: true, 
-            dots: false,
-            loop: true,
-            mouseDrag : 0,
-            touchDrag : 0
-        }).on('changed.owl.carousel', syncPosition);
-
-        sync2
-            .on('initialized.owl.carousel', function() {
-                sync2.find(".owl-item").eq(0).addClass("current");
-            })
-            .owlCarousel({
+            sync1.owlCarousel({
                 items: 1,
-                dots: true,
-                nav: false,
-                smartSpeed: 200,
-                slideSpeed: 500,
+                slideSpeed: 5400,
+                nav: true,
+                autoplay: true,
+                dots: false,
+                loop: true,
                 mouseDrag : 0,
                 touchDrag : 0
-            }).on('changed.owl.carousel', syncPosition2);
-
-        $('.owl-dot, .owl-prev, .owl-next').on('click', function(e) {
-            $(".main-blog--images-slider").trigger('stop.owl.autoplay');
-        });
-
-        function syncPosition(el) {
-            //if you set loop to false, you have to restore this next line
-            //var current = el.item.index;
-
-            //if you disable loop you have to comment this block
-            var count = el.item.count - 1;
-            var current = Math.round(el.item.index - (el.item.count / 2) - .5);
-
-            if (current < 0) {
-                current = count;
-            }
-            if (current > count) {
-                current = 0;
-            }
-
-            //end block
+            }).on('changed.owl.carousel', syncPosition);
 
             sync2
-                .find(".owl-item")
-                .removeClass("current")
-                .eq(current)
-                .addClass("current");
-            var onscreen = sync2.find('.owl-item.active').length - 1;
-            var start = sync2.find('.owl-item.active').first().index();
-            var end = sync2.find('.owl-item.active').last().index();
+                .on('initialized.owl.carousel', function() {
+                    sync2.find(".owl-item").eq(0).addClass("current");
+                })
+                .owlCarousel({
+                    items: 1,
+                    dots: true,
+                    nav: false,
+                    smartSpeed: 200,
+                    slideSpeed: 500,
+                    mouseDrag : 0,
+                    touchDrag : 0
+                }).on('changed.owl.carousel', syncPosition2);
 
-            if (current > end) {
-                sync2.data('owl.carousel').to(current, 100, true);
-            }
-            if (current < start) {
-                sync2.data('owl.carousel').to(current - onscreen, 100, true);
-            }
-        }
+            $('.owl-dot, .owl-prev, .owl-next').on('click', function(e) {
+                $(".main-blog--images-slider").trigger('stop.owl.autoplay');
+            });
 
-        function syncPosition2(el) {
-            if (syncedSecondary) {
-                var number = el.item.index;
-                sync1.data('owl.carousel').to(number, 100, true);
-            }
-        }
+            function syncPosition(el) {
+                //if you set loop to false, you have to restore this next line
+                //var current = el.item.index;
 
-        sync2.on("click", ".owl-item", function(e) {
-            // e.preventDefault();
-            var number = $(this).index();
-            sync1.data('owl.carousel').to(number, 300, true);
+                //if you disable loop you have to comment this block
+                var count = el.item.count - 1;
+                var current = Math.round(el.item.index - (el.item.count / 2) - .5);
+
+                if (current < 0) {
+                    current = count;
+                }
+                if (current > count) {
+                    current = 0;
+                }
+
+                //end block
+
+                sync2
+                    .find(".owl-item")
+                    .removeClass("current")
+                    .eq(current)
+                    .addClass("current");
+                var onscreen = sync2.find('.owl-item.active').length - 1;
+                var start = sync2.find('.owl-item.active').first().index();
+                var end = sync2.find('.owl-item.active').last().index();
+
+                if (current > end) {
+                    sync2.data('owl.carousel').to(current, 100, true);
+                }
+                if (current < start) {
+                    sync2.data('owl.carousel').to(current - onscreen, 100, true);
+                }
+            }
+
+            function syncPosition2(el) {
+                if (syncedSecondary) {
+                    var number = el.item.index;
+                    sync1.data('owl.carousel').to(number, 100, true);
+                }
+            }
+
+            sync2.on("click", ".owl-item", function(e) {
+                // e.preventDefault();
+                var number = $(this).index();
+                sync1.data('owl.carousel').to(number, 300, true);
+            });
+
         });
-        
-    });
 
-</script>
+    </script>
 
 {/if}
 
 
-{get_brands var=all_brands visible_brand=1 limit=40}
+{get_brands var=all_brands visible_brand=1 limit=9}
 {if $all_brands}
     <div class="container section_brands block--boxed">
 
         <div class="block__header block__header--promo">
             <div class="block__title main-title" data-language="main_brands">{$lang->main_brands}</div>
         </div>
-            <div class="f_row main_brands owl-carousel">
-                {foreach $all_brands as $b}
-                    <a class="d-flex align-items-center justify-content-center main_brands__link" aria-label="{$b->name|escape}" href="{url_generator route='brand' url=$b->url}" data-brand="{$b->id}">
-                        {if $b->image}
-                            <div class="d-flex align-items-center justify-content-center main_brands__image">
-                                <img class="main_brands_img lazy" data-src="{$b->image|resize:150:100:false:$config->resized_brands_dir}" alt="{$b->name|escape}" title="{$b->name|escape}">
-                            </div>
-                        {else}
-                            <div class="d-flex align-items-center justify-content-center main_brands__name">
-                                <span>{$b->name|escape}</span>
-                            </div>
-                        {/if}
-                    </a>
-                {/foreach}
-            </div>
+        <div class="f_row main_brands owl-carousel">
+            {foreach $all_brands as $b}
+                <a class="d-flex align-items-center justify-content-center main_brands__link" aria-label="{$b->name|escape}" href="{url_generator route='brand' url=$b->url}" data-brand="{$b->id}">
+                    {if $b->image}
+                        <div class="d-flex align-items-center justify-content-center main_brands__image">
+                            <img class="main_brands_img lazy" data-src="{$b->image|resize:150:100:false:$config->resized_brands_dir}" alt="{$b->name|escape}" title="{$b->name|escape}">
+                        </div>
+                    {else}
+                        <div class="d-flex align-items-center justify-content-center main_brands__name">
+                            <span>{$b->name|escape}</span>
+                        </div>
+                    {/if}
+                </a>
+            {/foreach}
+        </div>
 
-            <script>
+        <script>
 
-                document.addEventListener('DOMContentLoaded', function(){
-                    $('.main_brands').owlCarousel({
-                        loop:true,
-                        margin:10,
-                        nav:true,
-                        responsive:{
-                            0:{
-                                items:1
-                            },
-                            600:{
-                                items:3
-                            },
-                            1000:{
-                                items:5
-                            }
+            document.addEventListener('DOMContentLoaded', function(){
+                $('.main_brands').owlCarousel({
+                    loop:true,
+                    margin:10,
+                    nav:true,
+                    responsive:{
+                        0:{
+                            items:1
+                        },
+                        600:{
+                            items:3
+                        },
+                        1000:{
+                            items:5
                         }
-                    })
-                });
-            </script>
+                    }
+                })
+            });
+        </script>
 
     </div>
 {/if}

@@ -17,6 +17,7 @@ class PurchasesEntity extends Entity
         'variant_id',
         'product_name',
         'variant_name',
+        'undiscounted_price',
         'price',
         'amount',
         'sku',
@@ -29,6 +30,8 @@ class PurchasesEntity extends Entity
 
     protected static $table = '__purchases';
     protected static $tableAlias = 'p';
+    protected static $langTable;
+    protected static $langObject;
     private static $order;
     private $useCache = false;
     
@@ -154,6 +157,10 @@ class PurchasesEntity extends Entity
         
         if (!isset($purchase->variant_name) && !empty($variant)) {
             $purchase->variant_name = $variant->name;
+        }
+
+        if (!isset($purchase->undiscounted_price) && !empty($variant)) {
+            $purchase->undiscounted_price = $variant->price;
         }
         
         if (!isset($purchase->price) && !empty($variant)) {

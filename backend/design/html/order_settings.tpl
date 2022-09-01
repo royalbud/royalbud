@@ -8,6 +8,19 @@
     </div>
 </div>
 
+{if $message_error}
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="alert alert--center alert--icon alert--error">
+                <div class="alert__content">
+                    <div class="alert__title">
+                        {$message_error|escape}
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
 <div class="row">
     {*Блок статусов заказов*}
     <div class="col-lg-7 col-md-12 pr-0">
@@ -48,7 +61,7 @@
                                 {foreach $orders_statuses as $order_status}
                                     <div class="fn_row okay_list_body_item">
                                         <div class="okay_list_row fn_sort_item">
-                                            <input type="hidden" name="positions[{$order_status->id}]" value="{$order_status->position}">
+                                            <input type="hidden" name="positions[{$order_status->id}]" value="{$order_status->position|escape}">
                                             <input type="hidden" name="statuses[id][]" value="{$order_status->id}">
 
                                             <div class="okay_list_boding okay_list_drag move_zone">
@@ -79,8 +92,8 @@
                                             </div>
                                             {/if}
                                             <div class="okay_list_boding okay_list_order_stg_sts_label">
-                                                <input  name="statuses[color][]" value="{$order_status->color}" class="hidden">
-                                                <span data-hint="#{$order_status->color}" class="fn_color label_color_item hint-bottom-middle-t-info-s-small-mobile  hint-anim" style="background-color:#{$order_status->color};"></span>
+                                                <input  name="statuses[color][]" value="{$order_status->color|escape}" class="hidden">
+                                                <span data-hint="#{$order_status->color|escape}" class="fn_color label_color_item hint-bottom-middle-t-info-s-small-mobile  hint-anim" style="background-color:#{$order_status->color|escape};"></span>
                                             </div>
                                             <div class="okay_list_boding okay_list_close">
                                                 {if count($orders_statuses) > 1}
@@ -189,7 +202,7 @@
                             {foreach $labels as $label}
                                 <div class="fn_row okay_list_body_item">
                                     <div class="okay_list_row fn_sort_item">
-                                        <input type="hidden" name="positions[{$label->id}]" value="{$label->position}">
+                                        <input type="hidden" name="positions[{$label->id}]" value="{$label->position|escape}">
                                         <input type="hidden" name="labels[id][]" value="{$label->id}">
 
                                         <div class="cokay_list_boding okay_list_check hidden">
@@ -202,8 +215,8 @@
                                         </div>
 
                                         <div class="okay_list_boding okay_list_order_stg_sts_label">
-                                            <input  name="labels[color][]" value="{$label->color}" class="hidden">
-                                            <span data-hint="#{$label->color}" class="fn_color label_color_item hint-bottom-middle-t-info-s-small-mobile  hint-anim" style="background-color:#{$label->color};"></span>
+                                            <input  name="labels[color][]" value="{$label->color|escape}" class="hidden">
+                                            <span data-hint="#{$label->color|escape}" class="fn_color label_color_item hint-bottom-middle-t-info-s-small-mobile  hint-anim" style="background-color:#{$label->color|escape};"></span>
                                         </div>
 
                                         <div class="okay_list_boding okay_list_close">
@@ -276,13 +289,39 @@
 
         $(document).on("click", ".fn_add_Label", function () {
            clone_label = new_label.clone(true);
+           clone_label_classes = clone_label.addClass("fn_ancor_label");
            $(".fn_labels_list").append(clone_label);
+
+           setTimeout(function () {
+            setChanges2();
+            }, 100);
+
+            function setChanges2() {
+                $(clone_label_classes).each(function () {
+                    $('html, body').animate({
+                        scrollTop: clone_label_classes.offset().top - 70
+                    }, 2000);
+                });
+            }
         });
 
         $(document).on("click", ".fn_add_status", function () {
             clone_status = new_status.clone(true);
+            clone_status_classes = clone_status.addClass("fn_ancor_status");
             clone_status.find("select").selectpicker();
             $(".fn_status_list").append(clone_status);
+
+            setTimeout(function () {
+            setChanges();
+            }, 100);
+
+            function setChanges() {
+                $(clone_status_classes).each(function () {
+                    $('html, body').animate({
+                        scrollTop: clone_status_classes.offset().top - 70
+                    }, 2000);
+                });
+            }
         });
 
         $(document).on("mouseenter click", ".fn_color", function () {

@@ -122,7 +122,7 @@
                                 </div>
                             </div>
                         </div>
-                        {get_design_block block="category_heading"}
+                        {get_design_block block="blog_category_heading"}
                     </div>
                     <div class="col-lg-2 col-md-3 col-sm-12">
                         <div class="activity_of_switch">
@@ -142,12 +142,33 @@
                                 </div>
                             </div>
                         </div>
-                        {get_design_block block="category_switch_checkboxes"}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {*Дополнительные настройки*}
+    {$switch_checkboxes = {get_design_block block="blog_category_switch_checkboxes"}}
+    {if !empty($switch_checkboxes)}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        {$switch_checkboxes}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {/if}
 
     {*Параметры элемента*}
     <div class="row">
@@ -170,7 +191,7 @@
                                 <div class="fn_parent_image">
                                     <div class="category_image image_wrapper fn_image_wrapper text-xs-center">
                                         <a href="javascript:;" class="fn_delete_item remove_image"></a>
-                                        <img src="{$category->image|resize:300:120:false:$config->resized_categories_dir}" alt="" />
+                                        <img src="{$category->image|resize:300:120:false:$config->resized_blog_categories_dir}" alt="" />
                                     </div>
                                 </div>
                             {else}
@@ -187,7 +208,7 @@
                         </li>
                     </ul>
                 </div>
-                {get_design_block block="category_image"}
+                {get_design_block block="blog_category_image"}
             </div>
         </div>
         <div class="col-lg-8 col-md-12">
@@ -226,7 +247,7 @@
                                 {function name=category_select level=0}
                                     {foreach $cats as $cat}
                                         {if $category->id != $cat->id}
-                                            <option value='{$cat->id}' {if $category->parent_id == $cat->id}selected{/if}>{section name=sp loop=$level}--{/section}{$cat->name}</option>
+                                            <option value='{$cat->id}' {if $category->parent_id == $cat->id}selected{/if}>{section name=sp loop=$level}--{/section}{$cat->name|escape}</option>
                                             {category_select cats=$cat->subcategories level=$level+1}
                                         {/if}
                                     {/foreach}
@@ -236,7 +257,7 @@
                         </div>
                     </div>
                 </div>
-                {get_design_block block="category_parameters"}
+                {get_design_block block="blog_category_parameters"}
             </div>
         </div>
     </div>
@@ -278,12 +299,12 @@
                         <textarea name="meta_description" class="form-control okay_textarea fn_meta_field">{$category->meta_description|escape}</textarea>
                     </div>
                 </div>
-                {get_design_block block="category_meta_data"}
+                {get_design_block block="blog_category_meta_data"}
             </div>
         </div>
     </div>
 
-    {$block = {get_design_block block="category_custom_block"}}
+    {$block = {get_design_block block="blog_category_custom_block"}}
     {if !empty($block)}
         <div class="custom_block">
             {$block}

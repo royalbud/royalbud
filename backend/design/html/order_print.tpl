@@ -39,7 +39,7 @@
     }
     div#customer{
         margin-right: 50px;
-        height: 200px;
+        min-height: 200px;
         width: 300px;
         float: right;
     }
@@ -196,6 +196,9 @@
             <td>{$order->name|escape}</td>
         </tr>    
         <tr>
+            <td>{$order->last_name|escape}</td>
+        </tr>    
+        <tr>
             <td>{$order->phone|phone}</td>
         </tr>    
         <tr>
@@ -238,16 +241,29 @@
         <tr>
             <td>
                 <div class="view_purchase">
-                    {$purchase->product_name|escape} {$purchase->variant_name|escape} {if $purchase->sku} ({$btr->general_sku|escape} {$purchase->sku|escape}){/if}
+                    {if $purchase->product->name}
+                        {$purchase->product->name|escape}
+                    {else}
+                        {$purchase->product_name|escape}
+                    {/if}
+                    {if $purchase->variant->name}
+                        {$purchase->variant->name|escape}
+                    {else}
+                        {$purchase->variant_name|escape}
+                    {/if}
+                    {if $purchase->sku} 
+                        ({$btr->general_sku|escape} 
+                        {$purchase->sku|escape})
+                    {/if}
                     {get_design_block block="order_print_purchase_name" vars=['purchase'=>$purchase]}
                 </div>
             </td>
             <td class="align_right">
-                <span class=view_purchase>{$purchase->price}</span> {$currency->sign|escape}
+                <span class=view_purchase>{$purchase->price|escape}</span> {$currency->sign|escape}
             </td>
             <td class="align_right">            
                 <span class=view_purchase>
-                    {$purchase->amount} {if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}
+                    {$purchase->amount|escape} {if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}
                 </span>
             </td>
             <td class="align_right">
@@ -279,13 +295,13 @@
         {if $order->discount>0}
         <tr>
             <th>{$btr->general_discount|escape}</th>
-            <td>{$order->discount} %</td>
+            <td>{$order->discount|escape} %</td>
         </tr>
         {/if}
         {if $order->coupon_discount>0}
         <tr>
-            <th>{$btr->general_coupon|escape} {if $order->coupon_code} ({$order->coupon_code}){/if}</th>
-            <td>{$order->coupon_discount}&nbsp;{$currency->sign|escape}</td>
+            <th>{$btr->general_coupon|escape} {if $order->coupon_code} ({$order->coupon_code|escape}){/if}</th>
+            <td>{$order->coupon_discount|escape}&nbsp;{$currency->sign|escape}</td>
         </tr>
         {/if}
         <tr>
@@ -294,11 +310,11 @@
         </tr>
         {if $payment_method}
         <tr>
-            <td colspan="2">{$btr->order_print_payment|escape} {$payment_method->name}</td>
+            <td colspan="2">{$btr->order_print_payment|escape} {$payment_method->name|escape}</td>
         </tr>
         <tr>
             <th>{$btr->order_to_pay|escape}</th>
-            <td class="total">{$order->total_price|convert:$payment_method->currency_id}&nbsp;{$payment_currency->sign}</td>
+            <td class="total">{$order->total_price|convert:$payment_method->currency_id}&nbsp;{$payment_currency->sign|escape}</td>
         </tr>
         {/if}
         {get_design_block block="order_print_total_price_custom"}

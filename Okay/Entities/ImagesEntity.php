@@ -26,10 +26,11 @@ class ImagesEntity extends Entity
         'position',
     ];
 
-    protected static $table = '__images';
-    protected static $langObject = 'image';
+    protected static $table = 'images';
+    protected static $langTable;
+    protected static $langObject;
     protected static $tableAlias = 'i';
-    
+
     public function delete($ids)
     {
         foreach ((array)$ids as $id) {
@@ -45,14 +46,20 @@ class ImagesEntity extends Entity
                     $ext = pathinfo($filename, PATHINFO_EXTENSION);
 
                     // Удалить все ресайзы
-                    $rezisedImages = glob($this->config->root_dir.$this->config->resized_images_dir.$file.".*x*.".$ext);
-                    if(is_array($rezisedImages)) {
-                        foreach ($rezisedImages as $f) {
+                    $resizedImages = glob($this->config->root_dir . $this->config->resized_images_dir . $file . '.*x*.' . $ext);
+                    if(is_array($resizedImages)) {
+                        foreach ($resizedImages as $f) {
+                            @unlink($f);
+                        }
+                    }
+                    $resizedImagesWebp = glob($this->config->root_dir . $this->config->resized_images_dir . $file . '.*x*.' . $ext . '.webp');
+                    if(is_array($resizedImagesWebp)) {
+                        foreach ($resizedImagesWebp as $f) {
                             @unlink($f);
                         }
                     }
 
-                    @unlink($this->config->root_dir.$this->config->original_images_dir.$filename);
+                    @unlink($this->config->root_dir . $this->config->original_images_dir . $filename);
                 }
             }
         }

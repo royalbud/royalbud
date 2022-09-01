@@ -145,6 +145,51 @@
                         
                         {get_design_block block="settings_catalog_general"}
                     </div>
+
+                    <div class="row">
+                        <div class="fn_step-8 col-lg-4 col-md-6">
+                            <div class="heading_label">
+                                {$btr->settings_catalog_features_max_count_products|escape}
+                                <i class="fn_tooltips" title="{$btr->tooltip_settings_catalog_features_max_count_products|escape}">
+                                    {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                </i>
+                            </div>
+                            <div class="mb-1">
+                                <input name="features_max_count_products" class="form-control" type="number" value="{$settings->features_max_count_products|escape}" />
+                            </div>
+                        </div>
+                        <div class="fn_step-8 col-lg-4 col-md-6">
+                            <div class="heading_label">
+                                {$btr->settings_catalog_features_cache_ttl|escape} <span style="color: red">Beta</span>
+                                <i class="fn_tooltips" title="{$btr->tooltip_settings_catalog_features_cache_ttl|escape}">
+                                    {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                </i>
+                            </div>
+                            <div class="mb-1">
+                                <input name="features_cache_ttl" class="form-control" type="text" value="{$settings->features_cache_ttl|escape}" />
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 mt-2">
+                            <div class="fn_step-9">
+                                <div class="heading_label boxes_inline">
+                                    {$btr->settings_catalog_features_cache_deferred|escape}
+                                    <i class="fn_tooltips" title="{$btr->tooltip_settings_catalog_features_cache_deferred|escape}">
+                                        {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                    </i>
+                                </div>
+                                <div class="boxes_inline">
+                                    <div class="okay_switch clearfix">
+                                        <label class="switch switch-default">
+                                            <input class="switch-input" name="deferred_load_features" value='1' type="checkbox" {if $settings->deferred_load_features}checked=""{/if}/>
+                                            <span class="switch-label"></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-lg-4 col-md-6 mt-2">
                             <div class="fn_step-10">
@@ -185,11 +230,71 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="col-lg-4 col-md-6 mt-2">
+                            <div class="fn_step-10">
+                                <div class="heading_label boxes_inline">
+                                    {$btr->settings_enable_webp|escape}
+                                    <i class="fn_tooltips" title="{$btr->settings_enable_webp_notice|escape}"> 
+                                        {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                    </i>
+                                </div>
+                                <div class="boxes_inline">
+                                    <div class="okay_switch clearfix">
+                                        <label class="switch switch-default">
+                                            <input class="switch-input" name="support_webp" value='1' type="checkbox" {if $settings->support_webp}checked=""{/if}/>
+                                            <span class="switch-label"></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 col-md-6 mt-2">
+                            <div class="fn_step-10">
+                                <div class="heading_label boxes_inline">
+                                    {$btr->settings_hide_equal_compare_price|escape}
+                                    <i class="fn_tooltips" title="{$btr->settings_hide_equal_compare_price_notice|escape}"> 
+                                        {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                    </i>
+                                </div>
+                                <div class="boxes_inline">
+                                    <div class="okay_switch clearfix">
+                                        <label class="switch switch-default">
+                                            <input class="switch-input" name="hide_equal_compare_price" value='1' type="checkbox" {if $settings->hide_equal_compare_price}checked=""{/if}/>
+                                            <span class="switch-label"></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 col-md-6 mt-2">
+                            <div class="fn_step-10">
+                                <div class="heading_label boxes_inline">
+                                    {$btr->settings_increased_image_size|escape}
+                                    <i class="fn_tooltips" title="{$btr->settings_increased_image_size_notice|escape}"> 
+                                        {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                    </i>
+                                </div>
+                                <div class="boxes_inline">
+                                    <div class="okay_switch clearfix">
+                                        <label class="switch switch-default">
+                                            <input class="switch-input" name="increased_image_size" value='1' type="checkbox" {if $settings->increased_image_size}checked=""{/if}/>
+                                            <span class="switch-label"></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {get_design_block block="settings_catalog_general_row_2"}
                     </div>
 
-                    <div class="row">
+                    <div class="row mt-2">
                         <div class="col-lg-12 col-md-12 ">
                             <button type="submit" class="btn btn_small btn_blue float-md-right" type="submit" name="save" value="1">
                                 {include file='svg_icon.tpl' svgId='checked'}
@@ -271,7 +376,7 @@
                                         <input class="fn_accept_delete" name="delete_watermark" value="" type="hidden" />
                                         <div class="banner_image fn_image_wrapper text-xs-center">
                                             <a href="javascript:;" class="fn_delete_item remove_image"></a>
-                                            <img class="watermark_image" src="{$rootUrl}/{$config->watermark_file}" alt="" />
+                                            <img class="watermark_image" src="{$rootUrl}/{$config->watermark_file|escape}" alt="" />
                                         </div>
                                     </div>
                                 {else}

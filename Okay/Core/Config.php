@@ -4,6 +4,8 @@
 namespace Okay\Core;
 
 
+use Okay\Core\DebugBar\DebugBar;
+
 /**
  * Класс-обертка для конфигурационного файла с настройками магазина
  * В отличие от класса Settings, Config оперирует низкоуровневыми настройками, например найстройками базы данных.
@@ -12,7 +14,7 @@ class Config
 {
 
     /*Версия системы*/
-    public $version = '3.7.1';
+    public $version = '4.3.0';
     /*Тип системы*/
     public $version_type = 'pro';
     
@@ -22,6 +24,7 @@ class Config
 
     public $salt;
     private $vars = [];
+    private $masterVars = [];
     private $localVars = [];
 
     public function __construct($configFile, $configLocalFile)
@@ -111,7 +114,9 @@ class Config
         $ini = parse_ini_file($this->configFile);
         /*Записываем настройку как переменную класса*/
         foreach ($ini as $var=>$value) {
+            $this->masterVars[$var] = $value;
             $this->vars[$var] = $value;
+            DebugBar::setConfigValue($var, $value, 'core');
         }
 
         /*Заменяем настройки, если есть локальный конфиг*/
@@ -119,16 +124,17 @@ class Config
             $ini = parse_ini_file($this->configLocalFile);
             foreach ($ini as $var => $value) {
                 $this->localVars[$var] = $this->vars[$var] = $value;
+                DebugBar::setConfigValue($var, $value, 'local');
             }
         }
 
         // Вычисляем DOCUMENT_ROOT вручную, так как иногда в нем находится что-то левое
-        $localPath = getenv("SCRIPT_NAME");
-        $absolutePath = getenv("SCRIPT_FILENAME");
-        $_SERVER['DOCUMENT_ROOT'] = substr($absolutePath,0, strpos($absolutePath, $localPath));
+        if (($localPath = getenv("SCRIPT_NAME")) && ($absolutePath = getenv("SCRIPT_FILENAME"))) {
+            $_SERVER['DOCUMENT_ROOT'] = substr($absolutePath,0, strpos($absolutePath, $localPath));
+        }
 
         // Определяем корневую директорию сайта
-        $this->vars['root_dir'] =  dirname(dirname(__DIR__)).'/';
+        $this->vars['root_dir'] =  dirname(dirname(__DIR__)).DIRECTORY_SEPARATOR;
 
         // Максимальный размер загружаемых файлов
         $max_upload = (int)(ini_get('upload_max_filesize'));
@@ -154,11 +160,14 @@ class Config
 
         $ini = parse_ini_file($filename);
         foreach ($ini as $var => $value) {
-            if (isset($this->vars[$var])) {
+            if (isset($this->masterVars[$var])) {
                 throw new \Exception("Duplicate parameter \"{$var}\"");
             }
 
-            $this->vars[$var] = $value;
+            if (!isset($this->localVars[$var])) {
+                $this->vars[$var] = $value;
+                DebugBar::setConfigValue($var, $value, $filename);
+            }
         }
     }
     

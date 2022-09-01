@@ -27,16 +27,10 @@ abstract class Plugin
         if ($this instanceof Modifier) {
             $design->registerPlugin('modifier', $tag, function(...$params) use ($design, $module) {
                 if ($module->isModuleClass(static::class)) {
-                    $moduleTemplateDir = $module->generateModuleTemplateDir(
-                        $module->getVendorName(static::class),
-                        $module->getModuleName(static::class)
-                    );
-
-                    $design->setModuleTemplatesDir($moduleTemplateDir);
-                    $design->useModuleDir();
+                    $design->setModuleDir(static::class);
 
                     $result = call_user_func_array([$this, 'run'], $params);
-                    $design->useDefaultDir();
+                    $design->rollbackTemplatesDir();
                     return $result;
                 }
 
@@ -45,16 +39,10 @@ abstract class Plugin
         } elseif ($this instanceof Func) {
             $design->registerPlugin('function', $tag, function($params, $smarty = null) use ($design, $module) {
                 if ($module->isModuleClass(static::class)) {
-                    $moduleTemplateDir = $module->generateModuleTemplateDir(
-                        $module->getVendorName(static::class),
-                        $module->getModuleName(static::class)
-                    );
-
-                    $design->setModuleTemplatesDir($moduleTemplateDir);
-                    $design->useModuleDir();
+                    $design->setModuleDir(static::class);
 
                     $result = $this->run($params, $smarty);
-                    $design->useDefaultDir();
+                    $design->rollbackTemplatesDir();
                     return $result;
                 }
 

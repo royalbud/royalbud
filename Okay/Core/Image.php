@@ -7,11 +7,12 @@ namespace Okay\Core;
 use Okay\Core\Adapters\Resize\AbstractResize;
 use Okay\Core\Adapters\Resize\AdapterManager;
 use Okay\Core\Modules\Extender\ExtenderFacade;
+use WebPConvert\WebPConvert;
 
 class Image
 {
     
-    private $allowed_extensions = ['png', 'gif', 'jpg', 'jpeg', 'ico'];
+    private $allowedExtensions = ['png', 'gif', 'jpg', 'jpeg', 'ico', 'svg', 'webp'];
 
     private $rootDir;
     
@@ -121,7 +122,7 @@ class Image
      */
     public function resize($filename, $imageSizes, $originalImagesDir = null, $resizedImagesDir = null)
     {
-        list($sourceFile, $width , $height, $setWatermark, $cropParams) = $this->getResizeParams($filename);
+        list($sourceFile, $width , $height, $setWatermark, $cropParams, $pseudoWebp) = $this->getResizeParams($filename);
         $size = $width . 'x' . $height . ($setWatermark === true ? 'w' : '');
 
         if (!is_array($imageSizes)) {
@@ -138,7 +139,7 @@ class Image
         $this->originalsDir = $originalImagesDir;
         $this->resizedDir   = $resizedImagesDir;
         
-        // Если вайл удаленный (https?://), зальем его себе
+        // Если файл удаленный (https?://), зальем его себе
         if (preg_match("~^https?://~", $sourceFile)) {
             // Имя оригинального файла
             if (!$originalFile = $this->downloadImage($sourceFile)) {
@@ -151,6 +152,16 @@ class Image
         $resizedFile = $this->addResizeParams($originalFile, $width, $height, $setWatermark, $cropParams);
         
         if (!file_exists($originalsDir . $originalFile)) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
+        }
+
+        if (strtolower(pathinfo($originalFile, PATHINFO_EXTENSION)) == 'svg') {
+            copy($originalsDir . $originalFile, $previewDir . $resizedFile);
+            return ExtenderFacade::execute(__METHOD__, $previewDir . $resizedFile, func_get_args());
+        }
+        
+        // Если в настройках выключена поддержка webp, но просят такое изображение - кадием 404
+        if (!$this->settings->get('support_webp') && $pseudoWebp) {
             return ExtenderFacade::execute(__METHOD__, false, func_get_args());
         }
         
@@ -166,7 +177,16 @@ class Image
             $cropParams
         );
 
-        return ExtenderFacade::execute(__METHOD__, $previewDir . $resizedFile, func_get_args());
+        $destination = $previewDir . $resizedFile;
+        
+        // Если запросили псевдо webp, создаем еще дубль такого изображения в формате webp
+        if ($pseudoWebp) {
+            $source = $destination;
+            $destination = $source . '.webp';
+            WebPConvert::convert($source, $destination);
+        }
+        
+        return ExtenderFacade::execute(__METHOD__, $destination, func_get_args());
     }
 
     /**
@@ -253,7 +273,7 @@ class Image
     }
 
     /**
-     * Добавленяит параетров нарезки картинок по форматам ширины и высоты
+     * Добавление параетров нарезки картинок по форматам ширины и высоты
      *
      * @param string  $filename
      * @param int     $width
@@ -318,32 +338,24 @@ class Image
         
         $localFile = $this->rootDir.$this->config->get('original_images_dir').$newName;
 
-        // Перед долгим копированием займем это имя
-        fclose(fopen($localFile, 'w'));
-        if (copy($filename, $localFile) && filesize($localFile) > 0) {
-            $encodedFilename = rawurlencode($filename);
-            $update = $this->queryFactory->newUpdate();
-            $update->table('__images')
-                ->cols(['filename' => $newName])
-                ->where('filename=:encoded_filename')
-                ->orWhere('filename=:filename_original')
-                ->bindValues([
-                    'encoded_filename' => $encodedFilename,
-                    'filename_original' => $filename,
-                ]);
-            $this->db->query($update);
-            $_SESSION['resize_files'][$encodedFilename] = $newName;
-            return ExtenderFacade::execute(__METHOD__, $newName, func_get_args());
+        if (!touch($localFile)) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
         }
 
-        if ($this->isNotHttpsSource($filename)) {
-            @unlink($localFile);
-        }
+        $ch = curl_init($filename);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_ENCODING, "");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $file = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
 
-        $filenameHttp = preg_replace("~^https://~", "http://", $filename);
-        $headers      = @get_headers($filenameHttp);
+        if ($info['http_code'] === 200 && $info['size_download'] > 0) {
+            $fp = fopen($localFile, 'w+');
+            fwrite($fp, $file);
+            fclose($fp);
 
-        if ($this->responseSuccess($headers) && copy($filenameHttp, $localFile) && filesize($localFile) > 0) {
             $encodedFilename = rawurlencode($filename);
             $update = $this->queryFactory->newUpdate();
             $update->table('__images')
@@ -377,7 +389,7 @@ class Image
             $originalDir = $this->config->get('original_images_dir');
         }
         
-        if (!in_array(strtolower($ext), $this->allowed_extensions)) {
+        if (!in_array(strtolower($ext), $this->allowedExtensions)) {
             return ExtenderFacade::execute(__METHOD__, false, func_get_args());
         }
 
@@ -400,7 +412,7 @@ class Image
     private function getResizeParams($filename)
     {
         // Определаяем параметры ресайза
-        if (!preg_match('/(.+)\.([0-9]*)x([0-9]*)(w)?(\.(left|center|right)\.(top|center|bottom))?\.([^.]+)$/', $filename, $matches)) {
+        if (!preg_match('/(.+)\.([0-9]*)x([0-9]*)(w)?(\.(left|center|right)\.(top|center|bottom))?\.([^.]+)(\.webp)?$/', $filename, $matches)) {
             return false;
         }
 
@@ -409,7 +421,7 @@ class Image
         $height = $matches[3];               // высота будущего изображения
         $set_watermark = $matches[4] == 'w'; // ставить ли водяной знак
         $ext = $matches[8];                  // расширение файла
-
+        $pseudoWebp = !empty($matches[9]);   // признак что запрашивается webp, но оригинал в jpeg или png
         // crop params
         $crop_params = [];
         if (!empty($matches[5])) {
@@ -417,7 +429,7 @@ class Image
             $crop_params['y_pos'] = $matches[7];
         }
 
-        return array($file.'.'.$ext, $width, $height, $set_watermark, $crop_params);
+        return array($file.'.'.$ext, $width, $height, $set_watermark, $crop_params, $pseudoWebp);
     }
     
     /*Транслит названия изображения*/
@@ -440,7 +452,7 @@ class Image
      * @param $originalDir
      * @param null $resizedDir
      * @param int $langId
-     * @param string $langField
+     * @param string $langField поле в таблице ok_lang по которому происходит join
      * @return bool
      * @throws \Exception
      */
@@ -485,9 +497,15 @@ class Image
 
                     // Удалить все ресайзы
                     if (!empty($resizedDir)) {
-                        $rezisedImages = glob($this->rootDir . $resizedDir . $file . ".*x*." . $ext);
-                        if (is_array($rezisedImages)) {
-                            foreach ($rezisedImages as $f) {
+                        $resizedImages = glob($this->rootDir . $resizedDir . $file . '.*x*.' . $ext);
+                        if (is_array($resizedImages)) {
+                            foreach ($resizedImages as $f) {
+                                @unlink($f);
+                            }
+                        }
+                        $resizedImagesWebp = glob($this->rootDir . $resizedDir . $file . '.*x*.' . $ext . '.webp');
+                        if (is_array($resizedImagesWebp)) {
+                            foreach ($resizedImagesWebp as $f) {
                                 @unlink($f);
                             }
                         }
@@ -537,11 +555,17 @@ class Image
 
                     // Удалить все ресайзы
                     if (!empty($resizedDir)) {
-                        $rezisedImages = glob($this->rootDir . $resizedDir . $file . ".*x*." . $ext);
-                        if (is_array($rezisedImages)) {
-                            foreach ($rezisedImages as $f) {
+                        $resizedImages = glob($this->rootDir . $resizedDir . $file . '.*x*.' . $ext);
+                        if (is_array($resizedImages)) {
+                            foreach ($resizedImages as $f) {
                                 @unlink($f);
                             }
+                        }
+                    }
+                    $resizedImagesWebp = glob($this->rootDir . $resizedDir . $file . '.*x*.' . $ext . '.webp');
+                    if (is_array($resizedImagesWebp)) {
+                        foreach ($resizedImagesWebp as $f) {
+                            @unlink($f);
                         }
                     }
 
@@ -604,6 +628,7 @@ class Image
         return file_exists($this->rootDir.$this->originalsDir.urldecode($filename));
     }
 
+
     private function responseSuccess($responseHeaders)
     {
         if (empty($responseHeaders[0])) {
@@ -626,4 +651,14 @@ class Image
 
         return false;
     }
+
+    public function convertFilenameToWebp($filename)
+    {
+        if (pathinfo($filename, PATHINFO_EXTENSION) !== 'webp') {
+            $filename = $filename.'.webp';
+        }
+
+        return $filename;
+    }
+
 }

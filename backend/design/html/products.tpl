@@ -67,8 +67,10 @@
                                 <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='discounted'}" {if $filter == 'discounted'}selected{/if}>{$btr->products_discount|escape}</option>
                                 <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='visible'}" {if $filter == 'visible'}selected{/if}>{$btr->products_enable|escape}</option>
                                 <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='hidden'}" {if $filter == 'hidden'}selected{/if}>{$btr->products_disable|escape}</option>
+                                <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='instock'}" {if $filter == 'instock'}selected{/if}>{$btr->products_in_stock|escape}</option>
                                 <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='outofstock'}" {if $filter == 'outofstock'}selected{/if}>{$btr->products_out_of_stock|escape}</option>
                                 <option value="{url keyword=null brand_id=null category_id=null page=null limit=null filter='without_images'}" {if $filter == 'without_images'}selected{/if}>{$btr->products_without_photos|escape}</option>
+                                {get_design_block block="products_filter_custom_option"}
                             </select>
                         </div>
                     </div>
@@ -92,7 +94,7 @@
                             <option value="{url keyword=null brand_id=null page=null limit=null}" {if !$brand_id}selected{/if}>{$btr->general_all_brands|escape}</option>
                             <option value="{url keyword=null brand_id=-1 page=null limit=null}" {if $brand_id==-1}selected{/if}>{$btr->products_without_brand}</option>
                             {foreach $brands as $b}
-                                <option value="{url keyword=null page=null limit=null brand_id=$b->id}" brand_id="{$b->id}"  {if $brand_id == $b->id}selected{/if}>{$b->name}</option>
+                                <option value="{url keyword=null page=null limit=null brand_id=$b->id}" brand_id="{$b->id}"  {if $brand_id == $b->id}selected{/if}>{$b->name|escape}</option>
                             {/foreach}
                         </select>
                     </div>
@@ -197,7 +199,7 @@
                             {foreach $products as $product}
                                 <div class="fn_step-1 fn_row okay_list_body_item fn_sort_item">
                                     <div class="okay_list_row">
-                                        <input type="hidden" name="positions[{$product->id}]" value="{$product->position}">
+                                        <input type="hidden" name="positions[{$product->id}]" value="{$product->position|escape}">
 
                                         <div class="okay_list_boding okay_list_drag move_zone">
                                             {include file='svg_icon.tpl' svgId='drag_vertical'}
@@ -244,7 +246,7 @@
                                         </div>
                                         <div class="okay_list_boding okay_list_price">
                                             <div class="input-group">
-                                                <input class="form-control {if $product->variants[0]->compare_price > 0}text_warning{/if}" type="text" name="price[{$product->variants[0]->id}]" value="{$product->variants[0]->price}">
+                                                <input class="form-control {if $product->variants[0]->compare_price > $product->variants[0]->price}text_warning{/if}" type="text" name="price[{$product->variants[0]->id}]" value="{$product->variants[0]->price}">
                                                 <span class="input-group-addon">
                                                       {if isset($currencies[$product->variants[0]->currency_id])}
                                                           {$currencies[$product->variants[0]->currency_id]->code|escape}
@@ -317,7 +319,7 @@
                                                     </div>
                                                     <div class="okay_list_boding okay_list_price">
                                                         <div class="input-group">
-                                                            <input class="form-control" type="text" name="price[{$variant->id}]" value="{$variant->price}">
+                                                            <input class="form-control" type="text" name="price[{$variant->id}]" value="{$variant->price|escape}">
                                                             <span class="input-group-addon">
                                                                   {if isset($currencies[$variant->currency_id])}
                                                                       {$currencies[$variant->currency_id]->code}
@@ -327,7 +329,7 @@
                                                     </div>
                                                     <div class="okay_list_boding okay_list_count">
                                                         <div class="input-group">
-                                                            <input class="form-control" type="text" name="stock[{$variant->id}]" value="{if $variant->infinity}∞{else}{$variant->stock}{/if}"/>
+                                                            <input class="form-control" type="text" name="stock[{$variant->id}]" value="{if $variant->infinity}∞{else}{$variant->stock|escape}{/if}"/>
                                                             <span class="input-group-addon p-0">
                                                                  {if $variant->units}{$variant->units|escape}{else}{$settings->units|escape}{/if}
                                                             </span>
@@ -368,6 +370,7 @@
                                             <option value="move_to_page">{$btr->products_move_to_page|escape}</option>
                                         {/if}
                                         {if $categories|count>1}
+                                            <option value="add_second_category">{$btr->products_add_second_category|escape}</option>
                                             <option value="move_to_category">{$btr->products_move_to_category|escape}</option>
                                         {/if}
                                         {if $all_brands|count>0}
@@ -394,6 +397,17 @@
                                                 {/foreach}
                                             {/function}
                                             {category_select_btn categories=$categories}
+                                        </select>
+                                    </div>
+                                    <div class="fn_add_second_category col-lg-12 col-md-12 col-sm-12 hidden fn_hide_block">
+                                        <select name="target_second_category" class="selectpicker form-control dropup" data-live-search="true" data-size="10">
+                                            {function name=second_category_select_btn level=0}
+                                                {foreach $categories as $category}
+                                                    <option value='{$category->id}'>{section sp $level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$category->name|escape}</option>
+                                                    {second_category_select_btn categories=$category->subcategories selected_id=$selected_id level=$level+1}
+                                                {/foreach}
+                                            {/function}
+                                            {second_category_select_btn categories=$categories}
                                         </select>
                                     </div>
                                     <div class="fn_move_to_brand col-lg-12 col-md-12 col-sm-12 hidden fn_hide_block">

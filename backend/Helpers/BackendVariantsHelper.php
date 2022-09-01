@@ -20,11 +20,15 @@ class BackendVariantsHelper
     public function prepareUpdateVariants($productVariants)
     {
         foreach ($productVariants as $index => $variant) {
-            if ($variant->stock == '∞' || $variant->stock == '') {
+            if (property_exists($variant, 'stock') && ($variant->stock == '∞' || $variant->stock == '')) {
                 $variant->stock = null;
             }
-            $variant->price = $variant->price > 0 ? str_replace(',', '.', $variant->price) : 0;
-            $variant->compare_price = $variant->compare_price > 0 ? str_replace(',', '.', $variant->compare_price) : 0;
+            if (!empty($variant->price)) {
+                $variant->price = $variant->price > 0 ? str_replace(',', '.', $variant->price) : 0;
+            }
+            if (!empty($variant->compare_price)) {
+                $variant->compare_price = $variant->compare_price > 0 ? str_replace(',', '.', $variant->compare_price) : 0;
+            }
         }
 
         return ExtenderFacade::execute(__METHOD__, $productVariants, func_get_args());

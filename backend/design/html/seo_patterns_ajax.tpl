@@ -29,9 +29,9 @@
                         {foreach $features as $feature}
                             {if $feature->auto_name_id && $feature->auto_value_id}
                                 <li>
-                                    <span>"{$feature->name}": </span>
-                                    <span>{$btr->general_name|escape} - {literal}{${/literal}{$feature->auto_name_id}{literal}}{/literal};</span>
-                                    <span>{$btr->seo_patterns_ajax_value|escape} - {literal}{${/literal}{$feature->auto_value_id}{literal}}{/literal}</span>
+                                    <span>"{$feature->name|escape}": </span>
+                                    <span>{$btr->general_name|escape} - {literal}{${/literal}{$feature->auto_name_id|escape}{literal}}{/literal};</span>
+                                    <span>{$btr->seo_patterns_ajax_value|escape} - {literal}{${/literal}{$feature->auto_value_id|escape}{literal}}{/literal}</span>
                                 </li>
                             {/if}
                         {/foreach}
@@ -73,6 +73,14 @@
                      <textarea name="auto_meta_desc" class="form-control okay_textarea fn_ajax_area">{$category->auto_meta_desc|escape}</textarea>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="heading_label">{$btr->seo_patterns_ajax_products_annotation|escape}</div>
+        <div class="mb-1">
+            <textarea name="auto_annotation" class="form-control okay_textarea fn_ajax_area">{$category->auto_annotation|escape}</textarea>
         </div>
     </div>
 </div>

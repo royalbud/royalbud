@@ -6,17 +6,19 @@ namespace Okay\Core\Modules;
 
 use Okay\Admin\Controllers\IndexAdmin;
 use Okay\Core\DesignBlocks;
-use Okay\Core\Database;
+use Okay\Core\Discounts;
 use Okay\Core\Entity\Entity;
 use Okay\Core\EntityFactory;
 use Okay\Core\Image;
 use Okay\Core\Managers;
-use Okay\Core\QueryFactory;
+use Okay\Core\Scheduler\Schedule;
+use Okay\Core\Scheduler\Scheduler;
 use Okay\Core\ServiceLocator;
-use Okay\Core\TemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
 use Okay\Entities\ModulesEntity;
 use Okay\Core\ManagerMenu;
 use Okay\Core\Modules\Extender\ExtenderFacade;
+use Psr\Log\LoggerInterface;
 
 abstract class AbstractInit
 {
@@ -26,74 +28,43 @@ abstract class AbstractInit
         MODULE_TYPE_XML,
     ];
 
-    /**
-     * @var EntityFactory
-     */
+    /** @var EntityFactory */
     private $entityFactory;
 
-    /**
-     * @var Module
-     */
+    /** @var Module */
     private $module;
     
-    /**
-     * @var Modules
-     */
-    private $modules;
-    
-    /**
-     * @var Managers
-     */
+    /** @var Managers */
     private $managers;
     
-    /**
-     * @var Database
-     */
-    private $db;
-
-    /**
-     * @var QueryFactory
-     */
-    private $queryFactory;
-    
-    /**
-     * @var ModulesEntitiesFilters
-     */
+    /** @var ModulesEntitiesFilters */
     private $entitiesFilters;
 
-    /**
-     * @var EntityMigrator
-     */
+    /** @var EntityMigrator */
     private $entityMigrator;
 
-    /**
-     * @var UpdateObject
-     */
+    /** @var UpdateObject */
     private $updateObject;
 
-    /**
-     * @var ExtenderFacade
-     */
+    /** @var ExtenderFacade */
     private $extenderFacade;
 
-    /**
-     * @var ManagerMenu
-     */
+    /** @var ManagerMenu */
     private $managerMenu;
 
-    /**
-     * @var Image
-     */
+    /** @var Image */
     private $image;
 
-    /**
-     * @var TemplateConfig
-     */
-    private $templateConfig;
+    /** @var FrontTemplateConfig */
+    private $frontTemplateConfig;
 
-    /**
-     * @var int id модуля в базе
-     */
+    /** @var Discounts */
+    private $discounts;
+
+    /** @var Scheduler */
+    private $scheduler;
+
+    /** @var int id модуля в базе */
     private $moduleId;
     private $vendor;
     private $moduleName;
@@ -107,23 +78,22 @@ abstract class AbstractInit
             throw new \Exception('"$moduleId" must be integer');
         }
         
-        $serviceLocator        = ServiceLocator::getInstance();
-        $this->entityFactory   = $serviceLocator->getService(EntityFactory::class);
-        $this->queryFactory    = $serviceLocator->getService(QueryFactory::class);
-        $this->entityMigrator  = $serviceLocator->getService(EntityMigrator::class);
-        $this->module          = $serviceLocator->getService(Module::class);
-        $this->modules         = $serviceLocator->getService(Modules::class);
-        $this->managers        = $serviceLocator->getService(Managers::class);
-        $this->db              = $serviceLocator->getService(Database::class);
-        $this->entitiesFilters = $serviceLocator->getService(ModulesEntitiesFilters::class);
-        $this->updateObject    = $serviceLocator->getService(UpdateObject::class);
-        $this->extenderFacade  = $serviceLocator->getService(ExtenderFacade::class);
-        $this->managerMenu     = $serviceLocator->getService(ManagerMenu::class);
-        $this->image           = $serviceLocator->getService(Image::class);
-        $this->templateConfig  = $serviceLocator->getService(TemplateConfig::class);
-        $this->moduleId        = $moduleId;
-        $this->vendor          = $vendor;
-        $this->moduleName      = $moduleName;
+        $serviceLocator            = ServiceLocator::getInstance();
+        $this->entityFactory       = $serviceLocator->getService(EntityFactory::class);
+        $this->entityMigrator      = $serviceLocator->getService(EntityMigrator::class);
+        $this->module              = $serviceLocator->getService(Module::class);
+        $this->managers            = $serviceLocator->getService(Managers::class);
+        $this->entitiesFilters     = $serviceLocator->getService(ModulesEntitiesFilters::class);
+        $this->updateObject        = $serviceLocator->getService(UpdateObject::class);
+        $this->extenderFacade      = $serviceLocator->getService(ExtenderFacade::class);
+        $this->managerMenu         = $serviceLocator->getService(ManagerMenu::class);
+        $this->image               = $serviceLocator->getService(Image::class);
+        $this->frontTemplateConfig = $serviceLocator->getService(FrontTemplateConfig::class);
+        $this->discounts           = $serviceLocator->getService(Discounts::class);
+        $this->scheduler           = $serviceLocator->getService(Scheduler::class);
+        $this->moduleId            = $moduleId;
+        $this->vendor              = $vendor;
+        $this->moduleName          = $moduleName;
     }
 
     /**
@@ -146,7 +116,7 @@ abstract class AbstractInit
         $modulesEntity = $this->entityFactory->get(ModulesEntity::class);
         $modulesEntity->update($this->moduleId, ['system' => 1]);
     }
-
+    
     /**
      * Регистрация блока в админке. Чтобы узнать имя блока, к которому хотите зацепиться,
      * нужно в конфиге включить директиву dev_mode = true,
@@ -156,13 +126,16 @@ abstract class AbstractInit
      *
      * @param string $blockName название блока
      * @param string $blockTplFile имя tpl файла блока из директории Backend/design/html модуля
+     * @param callable $callback ф-ция которую нужно вызвать перед отрисовкой шортблока. Может использоваться для 
+     * передачи в дизайн данных, нужных для отрисовки шортблока. Можно указывать как аргументы с указанием 
+     * type hint Services, Entities etc.
      * @throws \Exception
      */
-    protected function addBackendBlock($blockName, $blockTplFile)
+    protected function addBackendBlock($blockName, $blockTplFile, $callback = null)
     {
         $blockTplFile = pathinfo($blockTplFile, PATHINFO_BASENAME);
         $blockTplFile = $this->module->getModuleDirectory($this->vendor, $this->moduleName) . 'Backend/design/html/' . $blockTplFile;
-        $this->addDesignBlock($blockName, $blockTplFile);
+        $this->addDesignBlock($blockName, $blockTplFile, $callback);
     }
 
     /**
@@ -174,19 +147,22 @@ abstract class AbstractInit
      *
      * @param string $blockName название блока
      * @param string $blockTplFile имя tpl файла блока из директории Backend/design/html модуля
+     * @param callable $callback ф-ция которую нужно вызвать перед отрисовкой шортблока. Может использоваться для
+     * передачи в дизайн данных, нужных для отрисовки шортблока. Можно указывать как аргументы с указанием
+     * type hint Services, Entities etc.
      * @throws \Exception
      */
-    protected function addFrontBlock($blockName, $blockTplFile)
+    protected function addFrontBlock($blockName, $blockTplFile, $callback = null)
     {
         $blockTplFile = pathinfo($blockTplFile, PATHINFO_BASENAME);
-        $themeModuleHtmlDir = __DIR__.'/../../../design/'.$this->templateConfig->getTheme().'/modules/'.$this->vendor.'/'.$this->moduleName.'/html/';
+        $themeModuleHtmlDir = __DIR__.'/../../../design/'.$this->frontTemplateConfig->getTheme().'/modules/'.$this->vendor.'/'.$this->moduleName.'/html/';
         if (file_exists($themeModuleHtmlDir.$blockTplFile)) {
             $blockTplFile = $themeModuleHtmlDir.$blockTplFile;
         } else {
             $blockTplFile = $this->module->getModuleDirectory($this->vendor, $this->moduleName) . 'design/html/' . $blockTplFile;
         }
 
-        $this->addDesignBlock($blockName, $blockTplFile);
+        $this->addDesignBlock($blockName, $blockTplFile, $callback);
     }
     
     /**
@@ -377,6 +353,33 @@ abstract class AbstractInit
     }
 
     /**
+     * @param $entityClassName
+     * @param $fieldName
+     * 
+     * Регистрация дополнительных полей к существующим сущностям.
+     * Это поле не обязательно должно быть в таблице сущности, это может быть дополнительный запрос и результат как колонка сущности
+     */
+    protected function registerEntityAdditionalField($entityClassName, $fieldName)
+    {
+        $entityClassName::addAdditionalField($fieldName);
+    }
+
+    /**
+     * Регистрация ленговой таблицы для указанного Entity. Нужно в случае, если стандартный Entity был не мультиязычна, 
+     * а нужно чтобы он стал мультиязычным.
+     * 
+     * @param $entityClassName
+     * @param $langTable
+     * @param $langObject
+     */
+    protected function registerEntityLangInfo($entityClassName, $langTable, $langObject)
+    {
+        /** @var Entity $entityClassName */
+        $entityClassName::setLangTable($langTable);
+        $entityClassName::setLangObject($langObject);
+    }
+
+    /**
      * Добавление дополнительных полей в БД к существующим сущностям
      * Вызывать метод стоит в методе install()
      *
@@ -528,14 +531,46 @@ abstract class AbstractInit
      *
      * @param $blockName
      * @param $blockTplFile
+     * @param $callback
      * @throws \Exception
      */
-    private function addDesignBlock($blockName, $blockTplFile)
+    private function addDesignBlock($blockName, $blockTplFile, $callback = null)
     {
         $serviceLocator = ServiceLocator::getInstance();
 
         /** @var DesignBlocks $designBlocks */
         $designBlocks = $serviceLocator->getService(DesignBlocks::class);
-        $designBlocks->registerBlock($blockName, $blockTplFile);
+        $designBlocks->registerBlock($blockName, $blockTplFile, $callback);
+    }
+
+    /**
+     * Регистрация скидки для товара в заказе
+     *
+     * @param string $sign
+     * @param string $name
+     * @param string $description
+     * @throws \Exception
+     */
+    public function registerPurchaseDiscountSign(string $sign, string $name, string $description)
+    {
+        $this->discounts->registerPurchaseSign($sign, $name, $description);
+    }
+
+    /**
+     * Регистрация скидки для всего заказа
+     *
+     * @param string $sign
+     * @param string $name
+     * @param string $description
+     * @throws \Exception
+     */
+    public function registerCartDiscountSign(string $sign, string $name, string $description)
+    {
+        $this->discounts->registerCartSign($sign, $name, $description);
+    }
+
+    public function registerSchedule(Schedule $schedule): void
+    {
+        $this->scheduler->registerSchedule($schedule);
     }
 }

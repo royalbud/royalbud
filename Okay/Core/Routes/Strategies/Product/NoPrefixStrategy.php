@@ -15,7 +15,7 @@ class NoPrefixStrategy extends AbstractRouteStrategy
     /** @var ProductsEntity */
     private $productsEntity;
     
-    private $mockRouteParams = ['{$url}', ['{$url}' => ''], ['{$url}' => '']];
+    private $mockRouteParams = ['{$url}/?{$variantId}', ['{$url}' => '', '{$variantId}' => '(\d*)'], []];
 
     public function __construct()
     {
@@ -25,26 +25,31 @@ class NoPrefixStrategy extends AbstractRouteStrategy
         $this->productsEntity = $entityFactory->get(ProductsEntity::class);
     }
     
-    public function generateRouteParams($url)
+    public function generateRouteParams($url) : array
     {
-        $productUrl = $this->matchProductUrl($url);
-        $product    = $this->productsEntity->get((string) $productUrl);
+        list($productUrl, $variantId) = $this->matchProductUrlFromUri($url);
+        $productId = $this->productsEntity->col('id')->get((string) $productUrl);
 
-        if (empty($product)) {
+        if (empty($productId)) {
             return $this->mockRouteParams;
         }
 
-        return ['{$url}', ['{$url}' => $productUrl], ['{$url}' => $productUrl]];
+        return [
+            '{$url}/?{$variantId}',
+            [
+                '{$url}' => $productUrl,
+                '{$variantId}' => $variantId,
+            ],
+            [
+                '{$url}' => $productUrl,
+                '{$variantId}' => $variantId,
+            ]
+        ];
     }
 
-    private function matchProductUrl($url)
+    private function matchProductUrlFromUri($url) : array
     {
-        preg_match("/([^\/]+)/ui", $url, $matches);
-
-        if (isset($matches[1])) {
-            return $matches[1];
-        }
-
-        return '';
+        $urlParams = explode('/', trim($url, '/'));
+        return array_pad($urlParams, 2, '');
     }
 }

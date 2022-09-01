@@ -24,13 +24,14 @@ class OrderHistoryEntity extends Entity
 
     protected static $table = 'order_history';
     protected static $tableAlias = 'oh';
+    protected static $langTable;
+    protected static $langObject;
     
     public function getOrdersLastChanges($ordersIds)
     {
         $this->setUp();
         $this->select->distinct(true);
         $this->select->cols($this->getAllFields());
-        $this->select->cache();
         
         $this->select->where('order_id in (:order_id)')
             ->bindValues([

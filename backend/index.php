@@ -12,7 +12,6 @@ use Okay\Core\Response;
 use Okay\Core\Managers;
 use Okay\Core\ManagerMenu;
 use Okay\Core\Config;
-use OkayLicense\License;
 use Okay\Core\Entity\Entity;
 use Okay\Core\Languages;
 use Okay\Entities\LanguagesEntity;
@@ -94,16 +93,11 @@ $design = $DI->get(Design::class);
 /** @var Module $module */
 $module = $DI->get(Module::class);
 
-/** @var License $license */
-$license = $DI->get(License::class);
-$license->check();
-
 // Запускаем все модули
 $modules->startAllModules();
 
-$license->registerSmartyPlugins();
-
-$license->bindModulesRoutes();
+$modules->registerSmartyPlugins();
+$modules->indexingNotInstalledModules();
 
 $smartyPlugins = include_once 'Okay/Core/SmartyPlugins/SmartyPlugins.php';
 
@@ -158,21 +152,41 @@ if (($controllerParams = $module->getBackendControllerParams($backendControllerN
     $moduleName = $controllerParams['module'];
     $controllerName = $controllerParams['controller'];
     
-    $design->useModuleDir();
     $design->setModuleTemplatesDir($module->getModuleDirectory($vendor, $moduleName) . 'Backend/design/html');
+    $design->useModuleDir();
     $controllerName = $module->getBackendControllersNamespace($vendor, $moduleName) . '\\' . $controllerName;
 } else {
-    $design->setTemplatesDir('backend/design/html');
+    
     $backendControllerName = preg_replace("/[^A-Za-z0-9]+/", "", $backendControllerName);
-    $controllerName = '\\Okay\\Admin\\Controllers\\' . $backendControllerName;
 
-    if (!class_exists($controllerName)) {
-        $backendControllerName = array_search(reset($manager->permissions), $managers->getControllersPermissions());
+    // Всегда открываем контроллер, который стоит в меню первым
+    if (!class_exists('\\Okay\\Admin\\Controllers\\' . $backendControllerName)) {
+        if ($menu = $managerMenu->getMenu($manager)) {
+            $subMenu = reset($menu);
+            $backendControllerName = reset($subMenu);
+            $backendControllerName = $backendControllerName['controller'];
+        }
     }
-    $controllerName = '\\Okay\\Admin\\Controllers\\' . $backendControllerName;
+    if (($controllerParams = $module->getBackendControllerParams($backendControllerName)) && in_array($backendControllerName, $modulesBackendControllers)) {
+
+        $vendor = $controllerParams['vendor'];
+        $moduleName = $controllerParams['module'];
+        $controllerName = $controllerParams['controller'];
+
+        $design->useModuleDir();
+        $design->setModuleTemplatesDir($module->getModuleDirectory($vendor, $moduleName) . 'Backend/design/html');
+        $controllerName = $module->getBackendControllersNamespace($vendor, $moduleName) . '\\' . $controllerName;
+    } else {
+        // если у менеджера вообще никуда нет прав, выведем на этом контроллере ему сообщение
+        if (empty($backendControllerName)) {
+            $backendControllerName = 'ProductsAdmin';
+        }
+        $design->setTemplatesDir('backend/design/html');
+        $controllerName = '\\Okay\\Admin\\Controllers\\' . $backendControllerName;
+    }
 }
 
-$backend = new $controllerName($manager, $backendControllerName);
+$backend = new $controllerName($manager, $backendControllerName, $methodName);
 
 $access = call_user_func_array([$backend, 'onInit'], getMethodParams($backend, 'onInit'));
 if ($access) {
@@ -191,13 +205,14 @@ function getMethodParams($controllerName, $methodName)
     $reflectionMethod = new \ReflectionMethod($controllerName, $methodName);
     foreach ($reflectionMethod->getParameters() as $parameter) {
 
-        if ($parameter->getClass() !== null) {
+        if (($parameterType = $parameter->getType()) !== null) {
             
+            $parameterName = $parameterType->getName();
             // Определяем это Entity или сервис из DI
-            if (is_subclass_of($parameter->getClass()->name, Entity::class)) {
-                $methodParams[] = $entityFactory->get($parameter->getClass()->name);
+            if (is_subclass_of($parameterName, Entity::class)) {
+                $methodParams[] = $entityFactory->get($parameterName);
             } else {
-                $methodParams[] = $serviceLocator->getService($parameter->getClass()->name);
+                $methodParams[] = $serviceLocator->getService($parameterName);
             }
         }
     }

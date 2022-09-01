@@ -12,14 +12,13 @@ use Okay\Core\ServiceLocator;
 use Okay\Core\WishList;
 use Okay\Core\Design;
 use Okay\Core\EntityFactory;
-use Okay\Core\Languages;
 use Okay\Core\Request;
 use Okay\Core\Response;
 use Okay\Core\Settings;
-use Okay\Core\TemplateConfig;
 use Okay\Helpers\MainHelper;
 use Okay\Helpers\MetadataHelpers\MetadataInterface;
 use Okay\Helpers\CommonHelper;
+use Okay\Helpers\UserHelper;
 
 class AbstractController
 {
@@ -47,9 +46,6 @@ class AbstractController
     /** @var Config */
     protected $config;
 
-    /** @var TemplateConfig */
-    protected $templateConfig;
-
     /** @var EntityFactory */
     protected $entityFactory;
     
@@ -76,6 +72,15 @@ class AbstractController
     {
         $this->metadataHelper = $metadataHelper;
     }
+
+    /*
+     * Метод, который вызывается всегда перед вызовом методов контроллера.
+     * В методе можно принимать аргументы, с указанием типа данных, они автоматически через DI сюда передадутся
+     */
+    final public function beforeController(MainHelper $mainHelper)
+    {
+        $mainHelper->commonBeforeControllerProcedure();
+    }
     
     /*
      * Метод, который вызывается всегда перед вызовом метода контроллера.
@@ -94,7 +99,8 @@ class AbstractController
         Comparison $comparison,
         WishList $wishList,
         MainHelper $mainHelper,
-        CommonHelper $commonHelper
+        CommonHelper $commonHelper,
+        UserHelper $userHelper
     ) {
         $this->design       = $design;
         $this->request      = $request;
@@ -109,8 +115,14 @@ class AbstractController
         $this->serviceLocator = ServiceLocator::getInstance();
 
         $mainHelper->activatePRG();
+        $mainHelper->init();
         $mainHelper->activateDynamicJs();// метод должен быть в начале
 
+        $userHelper->mergeCart(true);
+        $userHelper->mergeWishlist(true);
+        $userHelper->mergeComparison(true);
+        $userHelper->mergeBrowsedProducts(true);
+        
         // Передаем на фронт все, что может там понадобиться
         $mainHelper->setDesignDataProcedure();
         

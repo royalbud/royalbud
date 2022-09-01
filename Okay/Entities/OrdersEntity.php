@@ -19,18 +19,17 @@ class OrdersEntity extends Entity
         'paid',
         'payment_date',
         'closed',
-        'discount',
-        'coupon_code',
-        'coupon_discount',
         'date',
         'user_id',
         'name',
+        'last_name',
         'address',
         'phone',
         'email',
         'comment',
         'status_id',
         'url',
+        'undiscounted_total_price',
         'total_price',
         'note',
         'ip',
@@ -64,7 +63,13 @@ class OrdersEntity extends Entity
     {
         $this->select->join('LEFT', '__orders_labels AS ol', 'o.id=ol.order_id');
         $this->select->join('LEFT', '__orders_status AS os', 'o.status_id=os.id');
-        $this->select->groupBy(['id']);
+        
+        // Устанавливаем группировку по id только если эта колонка есть в запросе
+        $selectFields = $this->getAllFieldsKeyLabel();
+        if (in_array('id', $selectFields)) {
+            $this->select->groupBy(['id']);
+        }
+        
         return parent::find($filter);
     }
 
@@ -74,23 +79,37 @@ class OrdersEntity extends Entity
         return parent::count($filter);
     }
 
-    public function update($id, $order)
+    public function update($ids, $order)
     {
+        $ids = (array)$ids;
+        
         if (is_object($order)) {
             $order = (array)$order;
         }
 
-        if (!empty($order['paid'])) {
-            $currentPaid = $this->cols(['paid'])->findOne(['id' => $id]);
+        if (isset($order['paid'])) {
+            $currentPaid = $this->col('paid')->findOne(['id' => $ids]);
             if ($order['paid'] != $currentPaid) {
+                $this->markedPaid($ids, (bool)$order['paid']);
                 $order['payment_date'] = 'now()';
             }
         }
         
-        parent::update($id, $order);
-        return $id;
+        parent::update($ids, $order);
+        return $ids;
     }
 
+    /**
+     * Метод вызывается при отметке заказов как оплаченых.
+     * 
+     * @param array $ids
+     * @param bool $state
+     */
+    private function markedPaid(array $ids, $state)
+    {
+        ExtenderFacade::execute(__METHOD__, null, func_get_args());
+    }
+    
     public function delete($ids)
     {
         $ids = (array)$ids;
@@ -294,18 +313,57 @@ class OrdersEntity extends Entity
 
     public function updateTotalPrice($orderId)
     {
+        /** @var DiscountsEntity $discountsEntity */
+        $discountsEntity = $this->entity->get(DiscountsEntity::class);
+
+        /** @var PurchasesEntity $purchasesEntity */
+        $purchasesEntity = $this->entity->get(PurchasesEntity::class);
+
         $order = $this->get(intval($orderId));
         if (empty($order)) {
             return ExtenderFacade::execute([static::class, __FUNCTION__], false, func_get_args());
         }
 
-        $update = $this->queryFactory->newUpdate();
-        $update->table('__orders AS o')
-            ->set('o.total_price', 'IFNULL((SELECT SUM(p.price*p.amount)*(100-o.discount)/100 FROM __purchases p WHERE p.order_id=o.id), 0)+o.delivery_price*(1-IFNULL(o.separate_delivery, 0))-o.coupon_discount')
-            ->where('o.id=:id')
-            ->bindValue('id', $order->id);
+        $purchases = $purchasesEntity->find(['order_id' => $order->id]);
+        $undiscountedTotalPrice = 0;
+        $totalPrice = 0;
+        if (!empty($purchases)) {
+            foreach ($purchases as $purchase) {
+                $undiscountedTotalPrice += $purchase->price * $purchase->amount;
+            }
 
-        $this->db->query($update);
+            $totalPrice = $undiscountedTotalPrice;
+            $cartDiscounts = $discountsEntity->order('position')->find([
+                'entity' => 'order',
+                'entity_id' => $orderId
+            ]);
+            if (!empty($cartDiscounts)) {
+                foreach ($cartDiscounts as $discount) {
+                    switch ($discount->type) {
+                        case 'absolute':
+                            $totalPrice -= $discount->value;
+                            break;
+
+                        case 'percent':
+                            if ($discount->from_last_discount) {
+                                $totalPrice -= $totalPrice * ($discount->value / 100);
+                            } else {
+                                $totalPrice -= $undiscountedTotalPrice * ($discount->value / 100);
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
+        if (!$order->separate_delivery) {
+            $totalPrice += $order->delivery_price;
+        }
+
+        $this->update($order->id, [
+            'undiscounted_total_price' => $undiscountedTotalPrice,
+            'total_price' => $totalPrice
+        ]);
         return ExtenderFacade::execute([static::class, __FUNCTION__], $order->id, func_get_args());
     }
 
@@ -320,7 +378,9 @@ class OrdersEntity extends Entity
     public function findOtherOfClient($order, $page = 1, $perPage = 10)
     {
         $offset       = $this->calculateOffset($page, $perPage);
-        $orderMatches = $this->determineOrderMatchParams($order, $page, $perPage);
+        if (!$orderMatches = $this->determineOrderMatchParams($order, $page, $perPage)) {
+            return [];
+        }
 
         $filter       = [];
         $filter['id'] = array_keys($orderMatches);
@@ -453,6 +513,7 @@ class OrdersEntity extends Entity
             $this->select->where("(
                 o.id LIKE :keyword_id_{$keyNum}
                 OR o.name LIKE :keyword_name_{$keyNum}
+                OR o.last_name LIKE :keyword_last_name_{$keyNum}
                 OR REPLACE(o.phone, '-', '') LIKE :keyword_phone_{$keyNum}
                 OR o.address LIKE :keyword_address_{$keyNum}
                 OR o.email LIKE :keyword_email_{$keyNum}
@@ -462,6 +523,7 @@ class OrdersEntity extends Entity
             $this->select->bindValues([
                 "keyword_id_{$keyNum}"           => '%' . $keyword . '%',
                 "keyword_name_{$keyNum}"         => '%' . $keyword . '%',
+                "keyword_last_name_{$keyNum}"         => '%' . $keyword . '%',
                 "keyword_phone_{$keyNum}"        => '%' . $keyword . '%',
                 "keyword_address_{$keyNum}"      => '%' . $keyword . '%',
                 "keyword_email_{$keyNum}"        => '%' . $keyword . '%',

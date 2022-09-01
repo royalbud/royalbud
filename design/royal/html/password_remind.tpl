@@ -1,7 +1,4 @@
-{* Password remind page *}
-
-{* The canonical address of the page *}
-{$canonical="{url_generator route="password_remind" absolute=1}" scope=global}
+<!-- Password remind page -->
 
 {* The page title *}
 {$meta_title = $lang->password_remind_title scope=global}

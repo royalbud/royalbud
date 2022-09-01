@@ -1,16 +1,21 @@
+<!-- Author page -->
 <div class="clearfix">
     {* Sidebar with blog *}
     <div class="fn_mobile_toogle sidebar sidebar--right position_sticky d-lg-flex flex-lg-column">
         {include 'blog_sidebar.tpl'}
     </div>
     <div class="blog_container blog_container--left d-flex flex-column">
-
-
         <div class="blog_container__boxed author_card">
             <div class="author_card__image">
                 {if $author->image}
                 <a data-fancybox="author_image" href="{$author->image|resize:800:800:false:$config->resized_authors_dir}">
-                    <img class="lazy" data-src="{$author->image|resize:320:500:false:$config->resized_authors_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$author->name}" />
+                    <picture>
+                        {if $settings->support_webp}
+                            <source type="image/webp" data-srcset="{$author->image|resize:320:500:false:$config->resized_authors_dir|webp}">
+                        {/if}
+                        <source data-srcset="{$author->image|resize:320:500:false:$config->resized_authors_dir}">
+                        <img class="lazy" data-src="{$author->image|resize:320:500:false:$config->resized_authors_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$author->name|escape}" title="{$author->name|escape}"/>
+                    </picture>
                 </a>
                 {else}
                 <div class="author_card__no_image d-flex align-items-start">
@@ -22,13 +27,11 @@
                 <h1 class="author_card__name h1">
                     <span data-author="{$author->id}">{$h1|escape}</span>
                 </h1>
-
                 {if $author->position_name}
                 <div class="author_card__position">
                     {$author->position_name|escape}
                 </div>
                 {/if}
-
                 {if is_array($author->socials)}
                 <div class="author_card__social">
                     {foreach $author->socials as $social}
@@ -38,15 +41,11 @@
                     {/foreach}
                 </div>
                 {/if}
-
                 {if $description}
                 <div class="author_card__description">{$description}</div>
                 {/if}
-
-
             </div>
         </div>
-
         <div class="block block--boxed block--border">
             <div class="block__header">
                 <div class="block__title">

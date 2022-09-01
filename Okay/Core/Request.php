@@ -20,9 +20,15 @@ class Request
      */
     private $pageUrl;
     
+    private static $domain;
+    private static $protocol;
+    private static $subDir;
+    
     public function __construct()
     {
-        $this->setBasePath($_SERVER['REQUEST_URI']);
+        if (!empty($_SERVER['REQUEST_URI'])) {
+            $this->setBasePath($_SERVER['REQUEST_URI']);
+        }
 
         if ($this->get('lang_id', 'integer')) {
             $this->langId = $this->get('lang_id', 'integer');
@@ -62,6 +68,26 @@ class Request
     {
         return self::getDomainWithProtocol() . $_SERVER['REQUEST_URI'];
     }
+
+    /**
+     * Return the query url, without QUERY_STRING
+     * 
+     * @return string
+     */
+    public static function getCurrentQueryPath()
+    {
+        return self::getDomainWithProtocol() . rtrim(str_replace($_SERVER['QUERY_STRING'], '', $_SERVER['REQUEST_URI']), '?');
+    }
+
+    /**
+     * Return current QUERY_STRING
+     * 
+     * @return string
+     */
+    public static function getCurrentQueryString() : string
+    {
+        return (!empty($_SERVER['QUERY_STRING']) ? '?' : '') . $_SERVER['QUERY_STRING'];
+    }
     
     public function getStartTime()
     {
@@ -73,7 +99,7 @@ class Request
     
     public function setStartTime($time)
     {
-        $this->startTime = (int)$time;
+        $this->startTime = (float)$time;
     }
     
     public function getBasePathWithDomain()
@@ -280,6 +306,10 @@ class Request
 
     public static function getSubDir()
     {
+        if (self::$subDir !== null) {
+            return self::$subDir;
+        }
+        
         $scriptDir1 = realpath(dirname(dirname(__DIR__)));
         $scriptDir2 = realpath($_SERVER['DOCUMENT_ROOT']);
         $subDir = trim(substr($scriptDir1, strlen($scriptDir2)), "/\\");
@@ -290,21 +320,43 @@ class Request
 
         return $subDir;
     }
+
+    public static function setSubDir($subDir)
+    {
+        self::$subDir = '/' . trim($subDir, '/');
+    }
     
     public static function getDomain()
     {
-        return rtrim(str_replace("www.", "", $_SERVER['HTTP_HOST']));
+        return !empty(self::$domain) ? self::$domain : rtrim($_SERVER['HTTP_HOST']);;
+    }
+    
+    public static function setDomain($domain)
+    {
+        self::$domain = $domain;
+    }
+    
+    public static function setProtocol($protocol)
+    {
+        self::$protocol = $protocol;
     }
 
     private static function getProtocol()
     {
+        
+        if (!empty(self::$protocol)) {
+            return self::$protocol;
+        }
+        
         $protocol = strtolower(substr($_SERVER["SERVER_PROTOCOL"],0,5)) == 'https' ? 'https' : 'http';
-        if($_SERVER["SERVER_PORT"] == 443)
+        if ($_SERVER["SERVER_PORT"] == 443) {
             $protocol = 'https';
-        elseif (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1')))
+        } elseif (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))){
             $protocol = 'https';
-        elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'){
             $protocol = 'https';
+        }
+        
         return $protocol;
     }
     
@@ -330,9 +382,14 @@ class Request
      */
     public function url($params = [])
     {
-
         $query = [];
         $url = @parse_url($_SERVER["REQUEST_URI"]);
+
+        if (isset($params['path'])) {
+            $url['path'] = @parse_url($params['path'], PHP_URL_PATH);
+            unset($params['path']);
+        }
+
         if (!empty($url['query'])) {
             parse_str($url['query'], $query);
         }
@@ -340,7 +397,6 @@ class Request
         foreach($params as $name=>$value) {
             $query[$name] = $value;
         }
-
         
         $queryIsEmpty = true;
         foreach ($query as $name=>$value) {
@@ -357,131 +413,4 @@ class Request
 
         return http_build_url(null, $url);
     }
-    
 }
-
-/*Обьявление функции построения ссылки*/
-if (!function_exists('http_build_url')) {
-    define('HTTP_URL_REPLACE', 1);                // Replace every part of the first URL when there's one of the second URL
-    define('HTTP_URL_JOIN_PATH', 2);            // Join relative paths
-    define('HTTP_URL_JOIN_QUERY', 4);            // Join query strings
-    define('HTTP_URL_STRIP_USER', 8);            // Strip any user authentication information
-    define('HTTP_URL_STRIP_PASS', 16);            // Strip any password authentication information
-    define('HTTP_URL_STRIP_AUTH', 32);            // Strip any authentication information
-    define('HTTP_URL_STRIP_PORT', 64);            // Strip explicit port numbers
-    define('HTTP_URL_STRIP_PATH', 128);            // Strip complete path
-    define('HTTP_URL_STRIP_QUERY', 256);        // Strip query string
-    define('HTTP_URL_STRIP_FRAGMENT', 512);        // Strip any fragments (#identifier)
-    define('HTTP_URL_STRIP_ALL', 1024);            // Strip anything but scheme and host
-    
-    // Build an URL
-    // The parts of the second URL will be merged into the first according to the flags argument.
-    //
-    // @param    mixed            (Part(s) of) an URL in form of a string or associative array like parse_url() returns
-    // @param    mixed            Same as the first argument
-    // @param    int                A bitmask of binary or'ed HTTP_URL constants (Optional)HTTP_URL_REPLACE is the default
-    // @param    array            If set, it will be filled with the parts of the composed url like parse_url() would return
-    function http_build_url($url, $parts=[], $flags=HTTP_URL_REPLACE, &$new_url=false) {
-        $keys = array('user','pass','port','path','query','fragment');
-        
-        // HTTP_URL_STRIP_ALL becomes all the HTTP_URL_STRIP_Xs
-        if ($flags & HTTP_URL_STRIP_ALL) {
-            $flags |= HTTP_URL_STRIP_USER;
-            $flags |= HTTP_URL_STRIP_PASS;
-            $flags |= HTTP_URL_STRIP_PORT;
-            $flags |= HTTP_URL_STRIP_PATH;
-            $flags |= HTTP_URL_STRIP_QUERY;
-            $flags |= HTTP_URL_STRIP_FRAGMENT;
-        }
-        // HTTP_URL_STRIP_AUTH becomes HTTP_URL_STRIP_USER and HTTP_URL_STRIP_PASS
-        else if ($flags & HTTP_URL_STRIP_AUTH) {
-            $flags |= HTTP_URL_STRIP_USER;
-            $flags |= HTTP_URL_STRIP_PASS;
-        }
-        
-        // Parse the original URL
-        $parse_url = parse_url($url);
-        
-        // Scheme and Host are always replaced
-        if (isset($parts['scheme'])) {
-            $parse_url['scheme'] = $parts['scheme'];
-        }
-        if (isset($parts['host'])) {
-            $parse_url['host'] = $parts['host'];
-        }
-        
-        // (If applicable) Replace the original URL with it's new parts
-        if ($flags & HTTP_URL_REPLACE) {
-            foreach ($keys as $key) {
-                if (isset($parts[$key])) {
-                    $parse_url[$key] = $parts[$key];
-                }
-            }
-        } else {
-            // Join the original URL path with the new path
-            if (isset($parts['path']) && ($flags & HTTP_URL_JOIN_PATH)) {
-                if (isset($parse_url['path'])) {
-                    $parse_url['path'] = rtrim(str_replace(basename($parse_url['path']), '', $parse_url['path']), '/') . '/' . ltrim($parts['path'], '/');
-                } else {
-                    $parse_url['path'] = $parts['path'];
-                }
-            }
-            
-            // Join the original query string with the new query string
-            if (isset($parts['query']) && ($flags & HTTP_URL_JOIN_QUERY)) {
-                if (isset($parse_url['query'])) {
-                    $parse_url['query'] .= '&' . $parts['query'];
-                } else {
-                    $parse_url['query'] = $parts['query'];
-                }
-            }
-        }
-        
-        // Strips all the applicable sections of the URL
-        // Note: Scheme and Host are never stripped
-        foreach ($keys as $key) {
-            if ($flags & (int)constant('HTTP_URL_STRIP_' . strtoupper($key))) {
-                unset($parse_url[$key]);
-            }
-        }
-        
-        $new_url = $parse_url;
-        
-        return
-             ((isset($parse_url['scheme'])) ? $parse_url['scheme'] . '://' : '')
-            .((isset($parse_url['user'])) ? $parse_url['user'] . ((isset($parse_url['pass'])) ? ':' . $parse_url['pass'] : '') .'@' : '')
-            .((isset($parse_url['host'])) ? $parse_url['host'] : '')
-            .((isset($parse_url['port'])) ? ':' . $parse_url['port'] : '')
-            .((isset($parse_url['path'])) ? $parse_url['path'] : '')
-            .((isset($parse_url['query'])) ? '?' . $parse_url['query'] : '')
-            .((isset($parse_url['fragment'])) ? '#' . $parse_url['fragment'] : '')
-        ;
-    }
-}
-
-if(!function_exists('http_build_query')) {
-    function http_build_query($data,$prefix=null,$sep='',$key='') {
-        $ret = [];
-        foreach((array)$data as $k => $v) {
-            $k    = urlencode($k);
-            if(is_int($k) && $prefix != null) {
-                $k    = $prefix.$k;
-            };
-            if(!empty($key)) {
-                $k    = $key."[".$k."]";
-            };
-            
-            if(is_array($v) || is_object($v)) {
-                array_push($ret,http_build_query($v,"",$sep,$k));
-            } else {
-                array_push($ret,$k."=".urlencode($v));
-            };
-        };
-        
-        if(empty($sep)) {
-            $sep = ini_get("arg_separator.output");
-        };
-        
-        return    implode($sep, $ret);
-    };
-};

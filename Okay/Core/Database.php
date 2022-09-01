@@ -6,8 +6,8 @@ namespace Okay\Core;
 
 use Aura\Sql\ExtendedPdo;
 use Aura\SqlQuery\QueryInterface;
-use OkayLicense\License;
 use Psr\Log\LoggerInterface;
+use PDOStatement;
 
 class Database
 {
@@ -21,11 +21,6 @@ class Database
      * @var ExtendedPdo
      */
     private $pdo;
-
-    /**
-     * @var License
-     */
-    private $license;
 
     /**
      * @var QueryFactory
@@ -43,17 +38,15 @@ class Database
     /**
      * Database constructor.
      * @param $pdo ExtendedPdo
-     * @param $license License
      * @param $logger LoggerInterface
      * @param $dbParams array
      * @param $queryFactory QueryFactory
      * @throws \Exception
      */
-    public function __construct(ExtendedPdo $pdo, License $license, LoggerInterface $logger, $dbParams, QueryFactory $queryFactory)
+    public function __construct(ExtendedPdo $pdo, LoggerInterface $logger, $dbParams, QueryFactory $queryFactory)
     {
         
         $this->pdo          = $pdo;
-        $this->license      = $license;
         $this->logger       = $logger;
         $this->dbParams     = (object)$dbParams;
         $this->queryFactory = $queryFactory;
@@ -110,7 +103,11 @@ class Database
             $this->affectedRows = $this->result->rowCount();
 
             if ($debug === true) {
-                print $this->debug($bind) . PHP_EOL . PHP_EOL;
+                if ($queryString = $this->debug($this->result, $bind)) {
+                    print "<pre>" . $queryString . "</pre>" . PHP_EOL . PHP_EOL;
+                } else {
+                    print 'Error in query' . PHP_EOL . PHP_EOL;
+                }
             }
         } catch (\Exception $e) {
             $log = 'Sql query error: "' . $e->getMessage() . '"' . PHP_EOL;
@@ -134,13 +131,22 @@ class Database
         return $result;
     }
 
+    public function prepare(QueryInterface $query, $values)
+    {
+        return $this->pdo->prepareWithValues(
+            $this->tablePrefix($query), 
+            $values
+        );
+    }
+    
     /**
+     * @param PDOStatement $preparedQuery
      * @param array $bindValues
      * @return string
      * ВНИМАНИЕ: данный метод не возвращает запрос, который выполнял MySQL сервер
      * он лиш имитирует такой же запрос, не исключено что в определенных ситуациях это будут разные запросы
      */
-    private function debug($bindValues = [])
+    public function debug(PDOStatement $preparedQuery, $bindValues = [])
     {
         $binded = [];
         if (!empty($bindValues)) {
@@ -151,7 +157,7 @@ class Database
                 if (is_array($b)) {
                     $placeholderNum = 0;
                     foreach ($b as $kv => $v) {
-                        $this->result->bindValue($k . '_' . ($placeholderNum), $v);
+                        //$preparedQuery->bindValue($k . '_' . ($placeholderNum), $v);
                         $binded[$k . '_' . ($placeholderNum)] = $v;
                         $placeholderNum++;
                     }
@@ -165,8 +171,7 @@ class Database
                 $binded[':' . $k] = $this->escape($b);
             }
         }
-        
-        return strtr($this->result->queryString, $binded);
+        return strtr($preparedQuery->queryString, $binded);
     }
     
     public function customQuery($query)
@@ -211,7 +216,7 @@ class Database
         $this->result->setFetchMode(ExtendedPdo::FETCH_OBJ);
         
         foreach ($this->result->fetchAll() as $row) {
-            if (isset($row->$mapped)) {
+            if (property_exists($row, $mapped)) {
                 $mappedValue = $row->$mapped;
             } elseif (!empty($mapped)) {
                 throw new \Exception("Field named \"{$mapped}\" uses for mapped is not exists");
@@ -221,11 +226,6 @@ class Database
                 throw new \Exception("Field named \"{$field}\" uses for select single column is not exists");
             } elseif (!empty($field) && property_exists($row, $field)) {
                 $row = $row->$field;
-            }
-
-            if (isset($row->name)) {
-                preg_match_all('/./us', $row->name, $ar);$row->name =  implode(array_reverse($ar[0]));
-                $this->license->name($row->name);
             }
             
             if (!empty($mapped) && !empty($mappedValue)) {
@@ -251,11 +251,6 @@ class Database
         }
         
         $row = $this->result->fetchObject();
-
-        if (isset($row->name)) {
-            preg_match_all('/./us', $row->name, $ar);$row->name =  implode(array_reverse($ar[0]));
-            $this->license->name($row->name);
-        }
         
         if (!empty($field) && isset($row->$field)) {
             return $row->$field;

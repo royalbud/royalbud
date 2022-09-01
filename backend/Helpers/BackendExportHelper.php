@@ -282,10 +282,10 @@ class BackendExportHelper
         $f = fopen($exportFilesDir.$filename, 'ab');
 
         foreach($products as &$product) {
-            $variants = $product['variants'];
-            unset($product['variants']);
+            if(isset($product['variants'])) {
+                $variants = $product['variants'];
+                unset($product['variants']);
 
-            if(isset($variants)) {
                 foreach($variants as $variant) {
                     $res = [];
                     $result =  $product;
@@ -313,7 +313,28 @@ class BackendExportHelper
         }
 
         $data = ['end' => true, 'page' => $page, 'totalpages' => $totalProducts/$productsCount];
-        file_put_contents($exportFilesDir.$filename, iconv( "utf-8", "windows-1251//IGNORE", file_get_contents($exportFilesDir.$filename)));
+
+        mb_substitute_character('');
+        file_put_contents(
+            $exportFilesDir.$filename,
+            mb_convert_encoding(file_get_contents($exportFilesDir.$filename), 'Windows-1251')
+        );
+
         return $data;
     }
+
+    public function getBrandsForExportFilter($brandsCount)
+    {
+        $brands = [];
+        $brands = $this->brandsEntity->find(['limit'=>$brandsCount]);
+        return ExtenderFacade::execute(__METHOD__, $brands, func_get_args());
+    }
+
+    public function getCategoriesForExportFilter()
+    {
+        $categories = [];
+        $categories = $this->categoriesEntity->getCategoriesTree();
+        return ExtenderFacade::execute(__METHOD__, $categories, func_get_args());
+    }
+
 }

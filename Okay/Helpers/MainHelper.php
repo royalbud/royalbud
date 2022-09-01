@@ -7,6 +7,7 @@ namespace Okay\Helpers;
 use Okay\Core\Cart;
 use Okay\Core\Comparison;
 use Okay\Core\Config;
+use Okay\Core\DebugBar\DebugBar;
 use Okay\Core\Design;
 use Okay\Core\EntityFactory;
 use Okay\Core\FrontTranslations;
@@ -20,10 +21,9 @@ use Okay\Core\Response;
 use Okay\Core\Router;
 use Okay\Core\ServiceLocator;
 use Okay\Core\Settings;
-use Okay\Core\TemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
 use Okay\Core\UserReferer\UserReferer;
 use Okay\Core\WishList;
-use Okay\Entities\AdvantagesEntity;
 use Okay\Entities\BlogCategoriesEntity;
 use Okay\Entities\CategoriesEntity;
 use Okay\Entities\CurrenciesEntity;
@@ -52,6 +52,11 @@ class MainHelper
     public function __construct()
     {
         $this->SL = ServiceLocator::getInstance();
+    }
+
+    public function init()
+    {
+        
         /** @var EntityFactory $entityFactory */
         $entityFactory = $this->SL->getService(EntityFactory::class);
         /** @var Request $request */
@@ -100,6 +105,8 @@ class MainHelper
             if (!empty($user)) {
                 $this->currentUser = $user;
                 $this->currentUserGroup = $userGroupsEntity->get($this->currentUser->group_id);
+            } else {
+                unset($_SESSION['user_id']);
             }
         }
 
@@ -109,6 +116,14 @@ class MainHelper
             $userReferer = $this->SL->getService(UserReferer::class);
             $userReferer->parse();
         }
+    }
+
+    /**
+     * Метод, который можно расширять модулями. Выполняется перед работой контроллера
+     */
+    public function commonBeforeControllerProcedure()
+    {
+        ExtenderFacade::execute(__METHOD__, null, func_get_args());
     }
 
     /**
@@ -127,7 +142,7 @@ class MainHelper
             /** @var MetadataInterface $metadataHelper */
             $metadataHelper = $this->SL->getService(CommonMetadataHelper::class);
         }
-
+        
         if ($design->getVar('h1') === null) {
             $design->assign('h1', $metadataHelper->getH1());
         }
@@ -142,6 +157,10 @@ class MainHelper
         
         if ($design->getVar('meta_description') === null) {
             $design->assign('meta_description', $metadataHelper->getMetaDescription());
+        }
+        
+        if ($design->getVar('annotation') === null) {
+            $design->assign('annotation', $metadataHelper->getAnnotation());
         }
         
         if ($design->getVar('description') === null) {
@@ -172,6 +191,8 @@ class MainHelper
         $router = $this->SL->getService(Router::class);
         /** @var Phone $phone */
         $phone = $this->SL->getService(Phone::class);
+        /** @var FilterHelper $filterHelper */
+        $filterHelper = $this->SL->getService(FilterHelper::class);
         /** @var EntityFactory $entityFactory */
         $entityFactory = $this->SL->getService(EntityFactory::class);
         /** @var CategoriesEntity $categoriesEntity */
@@ -183,11 +204,17 @@ class MainHelper
 
         $pages = $pagesEntity->find(['visible'=>1]);
         $design->assign('pages', $pages);
-        
+
+        // Передаём в дизайн DebugBarRenderer
+        $design->assign('debug_bar_renderer', DebugBar::getRenderer());
+
         // Передаем стили и скрипты в шаблон
-        $templateConfig = $this->SL->getService(TemplateConfig::class);
-        $design->assign('ok_head', $templateConfig->head());
-        $design->assign('ok_footer', $templateConfig->footer());
+        /** @var FrontTemplateConfig $frontTemplateConfig */
+        $frontTemplateConfig = $this->SL->getService(FrontTemplateConfig::class);
+        
+        $frontTemplateConfig->compileFiles();
+        $design->assign('ok_head', $frontTemplateConfig->head());
+        $design->assign('ok_footer', $frontTemplateConfig->footer());
 
         // Передаем в дизайн название текущего роута
         $design->assign('route_name', $router->getCurrentRouteName());
@@ -216,13 +243,17 @@ class MainHelper
         
         $design->assign('currencies', $this->getAllCurrencies());
         $design->assign('currency',   $this->getCurrentCurrency());
+        $design->assignJsVar('currency_cents', $this->getCurrentCurrency()->cents);
 
         $design->assign('user',       $this->getCurrentUser());
         $design->assign('group',      $this->getCurrentUserGroup());
 
         $design->assign('payment_methods', $this->getPaymentMethods());
         $design->assign('phone_example', $phone->getPhoneExample());
-        
+
+        $design->assign('keyword', $filterHelper->getKeyword());
+        $design->assign('keyword', $filterHelper->getKeyword(), true);
+
         if (!empty($settings->get('site_social_links'))) {
             $socials = [];
             foreach ($settings->get('site_social_links') as $k=>$socialUrl) {
@@ -233,7 +264,7 @@ class MainHelper
                 $social['url'] = $socialUrl;
                 $socials[] = $social;
             }
-            
+
             $design->assign('site_social', $socials);
         }
         
@@ -272,13 +303,8 @@ class MainHelper
             }
         }
 
-        /** @var AdvantagesEntity $advantagesEntity */
-        $advantagesEntity = $entityFactory->get(AdvantagesEntity::class);
-        $design->assign('advantages', $advantagesEntity->find());
-
         // Передаем текущий контроллер
         if ($route = $router->getRouteByName($router->getCurrentRouteName())) {
-            //$reflector = new \ReflectionClass($route['params']['controller']);
             $design->assign('controller', $route['params']['controller']);
         }
 
@@ -305,7 +331,9 @@ class MainHelper
     public function getAllLanguages()
     {
         foreach ($this->allLanguages as $l) {
-            $l->url = $this->getLangUrl($l->id);
+            if ($url = $this->getLangUrl($l->id)) {
+                $l->url = $url;
+            }
         }
         return ExtenderFacade::execute(__METHOD__, $this->allLanguages, func_get_args());
     }
@@ -318,7 +346,9 @@ class MainHelper
      */
     public function getCurrentLanguage()
     {
-        $this->currentLanguage->url = $this->getLangUrl($this->currentLanguage->id);
+        if ($url = $this->getLangUrl($this->currentLanguage->id)) {
+            $this->currentLanguage->url = $url;
+        }
         return ExtenderFacade::execute(__METHOD__, $this->currentLanguage, func_get_args());
     }
 
@@ -379,10 +409,13 @@ class MainHelper
      * @return string
      * @throws \Exception
      */
-    private function getLangUrl($langId)
+    private function getLangUrl(int $langId) : string
     {
         /** @var Router $router */
         $router = $this->SL->getService(Router::class);
+        if (empty($router->getCurrentRouteName())) {
+            return false;
+        }
         $routeParams = $router->getCurrentRouteRequiredParams();
         $route = $router->generateUrl($router->getCurrentRouteName(), $routeParams, true, $langId);
         return ExtenderFacade::execute(__METHOD__, $route, func_get_args());
@@ -425,13 +458,12 @@ class MainHelper
      */
     public function activatePRG()
     {
+        
         /** @var Request $request */
         $request = $this->SL->getService(Request::class);
-        /** @var Response $response */
-        $response = $this->SL->getService(Response::class);
 
         if ($prgSeoHide = $request->post("prg_seo_hide")) {
-            $response->redirectTo($prgSeoHide);
+            Response::redirectTo($prgSeoHide);
             exit;
         }
         return ExtenderFacade::execute(__METHOD__, null, func_get_args());
@@ -482,10 +514,10 @@ class MainHelper
      * Подсчет количества видимых дочерних элементов
      * 
      * @param array $items
-     * @param $allItems
-     * @param string $subItemsName
+     * @param array $allItems
+     * @param string [$subItemsName = subcategories]
      */
-    private function countVisible(array $items, $allItems, $subItemsName = 'subcategories')
+    public function countVisible(array $items, array $allItems, $subItemsName = 'subcategories')
     {
         foreach ($items as $item) {
             if (isset($allItems[$item->parent_id]) && !isset($allItems[$item->parent_id]->count_children_visible)) {

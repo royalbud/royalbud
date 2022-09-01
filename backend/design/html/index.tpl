@@ -5,7 +5,7 @@
     <META HTTP-EQUIV="Pragma" CONTENT="no-cache"/>
     <META HTTP-EQUIV="Expires" CONTENT="-1"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <title>{$meta_title|escape}</title>
+    <title>{$meta_title|escape} | OkayCMS v.{$config->version|escape}</title>
 
     {literal}
     <script>
@@ -62,44 +62,29 @@
     </script>
     {/literal}
 
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300i,700|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i&subset=cyrillic,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">
+
+    {$ok_head}
 
     <link rel="icon" href="design/images/favicon.png" type="image/x-icon" />
-    <script src="design/js/jquery/jquery.js"></script>
-    <script src="design/js/jquery.scrollbar.min.js"></script>
-    <script src="design/js/bootstrap.min.js"></script>
-    <script src="design/js/bootstrap-select.js"></script>
-    <script src="design/js/jquery/jquery-ui.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="design/js/jquery/jquery-ui.min.css" />
-    <link href="design/css/okay.css" rel="stylesheet" type="text/css" />
-    <link href="design/css/media.css" rel="stylesheet" type="text/css" />
-    <script src="design/js/jquery.dd.min.js"></script>
-    <link href="design/js//fancybox/jquery.fancybox.min.css" rel="stylesheet" type="text/css" />
-    <script src="design/js/fancybox/jquery.fancybox.min.js"></script>
-
-    <link href="design/js/intro_js/introjs.css" rel="stylesheet" type="text/css" />
-    <script src="design/js/intro_js/intro.js"></script>
-    <script src="design/js/intro_js/intro_okay.js"></script>
-
 
     {if in_array($smarty.get.controller, array("OrdersAdmin", "PostAdmin", "ReportStatsAdmin", "CouponsAdmin", "CategoryStatsAdmin"))}
-        <script src="design/js/jquery/datepicker/jquery.ui.datepicker-{$manager->lang}.js"></script>
-        <script src="design/js/jquery/datepicker/jquery.datepicker.extension.range.min.js"></script>
+        {js file="jquery/datepicker/jquery.ui.datepicker-{$manager->lang|escape}.js" admin=true}
+        {js file="jquery/datepicker/jquery.datepicker.extension.range.min.js" admin=true}
     {/if}
-    <script src="design/js/toastr.min.js"></script>
-    <script src="design/js/Sortable.js"></script>
-    <!-- Google Tag Manager -->
+
     {if $settings->gather_enabled}
         {literal}
+        <!-- Google Tag Manager -->
         <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
                     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
                     })(window,document,'script','dataLayer','GTM-P6T2LJP');
         </script>
+        <!-- End Google Tag Manager -->
         {/literal}
     {/if}
-    <!-- End Google Tag Manager -->
-
 </head>
 <body class="navbar-fixed {if $manager->menu_status && $is_mobile === false && $is_tablet === false}menu-pin{/if}">
     <!-- Google Tag Manager (noscript) -->
@@ -123,6 +108,21 @@
             <div class="admin_switches admin_switches_two hidden-sm-down">
                 {include file="video_help.tpl"}
             </div>
+            <div class="admin_switches admin_switches_three">
+                <div class="box_adswitch">
+                    {if !empty($has_new_version)}
+                        <a class="btn_admin btn_version_old hint-bottom-middle-t-info-s-small-mobile  hint-anim" data-hint="{$btr->index_btn_version_old|escape} {$has_new_version.version|escape}" {if $has_new_version.info_href}target="_blank" href="{$has_new_version.info_href|escape}"{else}href="javascript:;"{/if}>
+                            {include file='svg_icon.tpl' svgId='no_icon'}
+                            <span class="">Version {$config->version|escape}</span>
+                        </a>
+                    {else}
+                        <div class="btn_admin btn_version_new hint-bottom-middle-t-info-s-small-mobile  hint-anim" data-hint="{$btr->index_btn_version_new|escape}">
+                            {include file='svg_icon.tpl' svgId='yes_icon'}
+                            <span class="">Version {$config->version|escape}</span>
+                        </div>
+                    {/if}
+                </div>
+            </div>
             <div id="mobile_menu_right" class="fn_mobile_menu_right hidden-md-up  text_white float-xs-right">
                 {include file='svg_icon.tpl' svgId='mobile_menu2'}
             </div>
@@ -131,40 +131,27 @@
                         <span class="fn_switch_quickview menu_switch">
                             <span class="menu_hamburger"></span>
                         </span>
-                    <a class="logo_box">
+                    <a href="index.php?controller={$manager_main_controller}" class="logo_box">
                         <img src="design/images/logo_title.png" alt="OkayCMS"/>
                     </a>
                 </div>
-                <div class="admin_exit hidden-sm-down">
+                <div class="admin_exit hidden-sm-down hint-bottom-right-t-info-s-small-mobile  hint-anim" data-hint="{$btr->index_exit|escape}">
                     <a href="{$rootUrl}?logout">
-                        <span class="hidden-lg-down">{$btr->index_exit|escape}</span>
+                        {*<span class="hidden-lg-down">{$btr->index_exit|escape}</span>*}
                         {include file='svg_icon.tpl' svgId='exit'}
                     </a>
                 </div>
-                {*Техподдержка*}
-                <div class="admin_techsupport">
-                    <div class="techsupport_inner">
-                        <a {if $support_info->public_key} data-hint="{$support_info->balance|balance}"{else} data-hint="Not active" {/if}  class="hint-bottom-middle-t-info-s-small-mobile  hint-anim"  href="index.php?controller=SupportAdmin">
-                            <span class="quickview_hidden">{$btr->index_support|escape}</span>
-                            {include file='svg_icon.tpl' svgId='techsupport'}
-                            {if $support_info->public_key}
-                            <span class="counter">{$support_info->new_messages}</span>
-                            {/if}
-                        </a>
-                        <div class="techsupport_toggle hidden-md-up">
-                            {if $support_info->public_key}
-                            <span>{$support_info->balance|balance}</span>
-                            {else}
-                            <span>Not active</span>
-                            {/if}
-                        </div>
-                    </div>
+                <div class="admin_name hint-bottom-middle-t-info-s-small-mobile  hint-anim" data-hint="{$manager->login|escape}">
+                    <a href="index.php?controller=ManagerAdmin&id={$manager->id}">
+                        {*<span class="">{$manager->login|escape}</span>*}
+                        {include file='svg_icon.tpl' svgId='user2_icon'}
+                    </a>
                 </div>
                 {*Счетчики уведомлений*}
                 <div class="admin_notification">
                     <div class="notification_inner">
                             <span class="notification_title" href="">
-                                <span class="quickview_hidden">{$btr->index_notifications|escape}</span>
+                                {*<span class="quickview_hidden">{$btr->index_notifications|escape}</span>*}
                                 {include file='svg_icon.tpl' svgId='notify'}
                                 {if $all_counter}
                                     <span class="counter">{$all_counter}</span>
@@ -223,6 +210,25 @@
                         </div>
                     </div>
                 </div>
+                {*Техподдержка*}
+                <div class="admin_techsupport">
+                    <div class="techsupport_inner">
+                        <a {if $support_info->public_key} data-hint="{$support_info->balance|balance}"{else} data-hint="Not active" {/if}  class="hint-bottom-middle-t-info-s-small-mobile  hint-anim"  href="index.php?controller=SupportAdmin">
+                            <span class="quickview_hidden">{$btr->index_support|escape}</span>
+                            {include file='svg_icon.tpl' svgId='techsupport'}
+                            {if $support_info->public_key}
+                            <span class="counter">{$support_info->new_messages|escape}</span>
+                            {/if}
+                        </a>
+                        <div class="techsupport_toggle hidden-md-up">
+                            {if $support_info->public_key}
+                            <span>{$support_info->balance|balance}</span>
+                            {else}
+                            <span>Not active</span>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
                 <div class="admin_languages" >
                     <div class="languages_inner">
                         <span class="languages_title hidden-md-up">{$btr->general_languages|escape}</span>
@@ -243,7 +249,7 @@
         <div class="sidebar_header">
             <a href="javascript:;" id="fix_logo" class="hidden-lg-down"></a>
 
-            <a class="logo_box">
+            <a href="index.php?controller={$manager_main_controller}" class="logo_box">
                 <img src="design/images/logo_title.png" alt="OkayCMS"/>
             </a>
             {if $is_mobile === false && $is_tablet === false}
@@ -266,7 +272,6 @@
                         <input type="hidden" name="id" value="{$manager->id}" />
                         <ul id="fn_sort_menu_section" class="menu_items">
                             {foreach $left_menu as $section=>$items}
-                                {if empty($items)}{continue}{/if}
                                 <li class="{if isset($items.$menu_selected)}open active{/if} {if $items|count > 1} fn_item_sub_switch nav-dropdown{/if}">
                                     {if $items|count == 1}
                                         <input type="hidden" value="{$items|reset}" name="manager_menu[{$section|escape}][{$items|key}]" />
@@ -276,7 +281,7 @@
                                         <div class="fn_backend_menu_section" data-section_name="{$section}">{$section}</div>
                                     {/if}
 
-                                    <a class="fn_learning_{$section} nav-link {if $items|count > 1}fn_item_switch nav-dropdown-toggle{/if}" href="{if $items|count > 1}javascript:;{else}index.php?controller={$items|reset}{/if}">
+                                    <a class="fn_learning_{$section} nav-link {if $items|count > 1}fn_item_switch nav-dropdown-toggle{/if}" href="{if $items|count > 1}javascript:;{else}index.php?controller={$items|reset|reset}{/if}">
                                         <span class="{$section} title">{$btr->getTranslation({$section})}</span>
                                         <span class="icon-thumbnail">
                                             {if !empty($additional_section_icons[$section])}
@@ -306,10 +311,10 @@
                                     </a>
                                     {if $items|count > 1}
                                         <ul class="fn_submenu_toggle submenu fn_sort_menu_item">
-                                            {foreach $items as $title=>$mod}
-                                                <li class="{if $title == $menu_selected}active{/if}">
-                                                    <input type="hidden" name="manager_menu[{$section|escape}][{$title|escape}]" value="{$mod|escape}" />
-                                                    <a class="fn_learning_{$mod} nav-link" href="index.php?controller={$mod}">
+                                            {foreach $items as $title=>$item}
+                                                <li class="{if in_array($controller_selected, $item.controllers_block)}active{/if}">
+                                                    <input type="hidden" name="manager_menu[{$section|escape}][{$title|escape}]" value="{$item.controller|escape}" />
+                                                    <a class="fn_learning_{$item.controller} nav-link" href="index.php?controller={$item.controller}{if !empty($item.method)}@{$item.method}{/if}">
                                                         <span class="icon-thumbnail">
                                                             {if (isset($menu_counters[$title]) && !empty($menu_counters[$title])) || $config->dev_mode}
                                                                 <span class="menu_counter">
@@ -358,19 +363,18 @@
                 </div>
                 <footer id="footer" class="">
                     <div class="col-md-12 font_12 text_white">
-                        <a href="https://okay-cms.com">OkayCMS </a> &copy; {$smarty.now|date_format:"%Y"} v.{$config->version} | {$btr->index_logged|escape}  {$manager->login|escape}
+                        <a href="https://okay-cms.com">OkayCMS</a> &copy; {$smarty.now|date_format:"%Y"} v.{$config->version|escape} | {$btr->index_logged|escape}
+                        <a href="index.php?controller=ManagerAdmin&id={$manager->id}">{$manager->login|escape}</a>
+                        (<a href="{$rootUrl}?logout">{$btr->index_exit|escape}</a>)
                         <div class="float-md-right">
-                            {if $is_valid_license}
-                            <a href='index.php?controller=LicenseAdmin' class="text_success">{$btr->index_valid|escape} </a>
-                            {else}
-                            <a href='index.php?controller=LicenseAdmin' class="text_warning">{$btr->index_not_valid|escape}</a>
-                            {/if},
+                            <a href='index.php?controller=LicenseAdmin' class="text_white">{$btr->license_text|escape} </a>
+                            ,
                             {if $support_info->public_key}
-                            <a class="text_success" href="index.php?controller=SupportAdmin">{$btr->index_support_active|escape} ({$support_info->new_messages})</a>
+                                <a class="text_success" href="index.php?controller=SupportAdmin">{$btr->index_support_active|escape} ({$support_info->new_messages|escape})</a>
                             {else}
-                            <a href="index.php?controller=SupportAdmin">
-                                <span class="text_warning">{$btr->index_support_not_active|escape}</span>
-                            </a>
+                                <a href="index.php?controller=SupportAdmin">
+                                    <span class="text_warning">{$btr->index_support_not_active|escape}</span>
+                                </a>
                             {/if}
                         </div>
                     </div>
@@ -425,6 +429,8 @@
     </div>
 {/if}
 
+{$ok_footer}
+
 <script>
     $(function(){
 
@@ -477,7 +483,7 @@
             }
 
         {/if}
-        
+
         /* Initializing the scrollbar */
         if($('.scrollbar-inner').size()>0){
             $('.scrollbar-inner').scrollbar({
@@ -513,7 +519,7 @@
 
             if($('form.fn_fast_button').size()>0){
             {literal}
-            
+
             // Связка селектов массовых действий
             $(document).on('change', '.fn_action_block:not(.fn_fast_action_block) select', function(e, trigger) {
                 if (!trigger) {
@@ -522,7 +528,7 @@
                     $('.fn_fast_save select[name="' + name + '"]').val(selected).trigger('change', {trigger: true});
                 }
             });
-            
+
             $(document).on('change', '.fn_fast_save select', function(e, trigger) {
                 if (!trigger) {
                     var name = $(this).attr('name'),
@@ -531,7 +537,7 @@
                 }
             });
             {/literal}
-            
+
             if ($('.fn_action_block').size()>0) {
                 var action_block = $('.okay_list_option').clone(true);
                 $('.fn_fast_action_block .action').html(action_block);
@@ -540,7 +546,7 @@
                     $('.fn_fast_action_block .additional_params').html(additional_params);
                 }
             }
-            
+
             $('input,textarea,select, .dropdown-toggle, .fn_sort_item, .fn_category_item').bind('keyup change dragover',function(){
                $('.fn_fast_save').show();
             });
@@ -552,7 +558,6 @@
                 $('body').find("form.fn_fast_button").trigger('submit');
             });
         }
-
 
         /* Check */
         if($('.fn_check_all').size()>0){
@@ -577,7 +582,6 @@
         $( function(){
             $( ".fn_tooltips" ).tooltip();
         });
-
 
         /* Catalog items toggle */
         if($('.fn_item_switch').size()>0){
@@ -655,7 +659,7 @@
                     save_menu();
                 }
             });
-    
+
             if($(".fn_sort_menu_item").size()>0) {
                 $(".fn_sort_menu_item").each(function() {
                     Sortable.create(this, {
@@ -671,7 +675,7 @@
                     });
                 });
             }
-    
+
             function save_menu() {
                 $.ajax({
                     type: "POST",
@@ -696,7 +700,7 @@
                     dragClass: "sortable-drag",  // Class name for the dragging item
                     scrollSensitivity: 100, // px, how near the mouse must be to an edge to start scrolling.
                     scrollSpeed: 10, // px
-                    
+
                     // Changed sorting within list
                     onUpdate: function (evt) {
                         if ($(".product_images_list").size() > 0) {
@@ -713,10 +717,10 @@
         }
 
         if($(".sort_extended").size()>0) {
-            
+
             /*Явно указываем высоту списка, иначе когда скрипт удаляет элемент и ставит на его место заглушку, страница подпрыгивает*/
             $(".fn_sort_list").css('min-height', $(".fn_sort_list").outerHeight());
-            
+
             $(".sort_extended").sortable({
                 items: ".fn_sort_item",
                 tolerance: "pointer",
@@ -760,7 +764,7 @@
                 }
             });
         }
-        
+
         $(".fn_pagination a.droppable").droppable({
             activeClass: "drop_active",
             hoverClass: "drop_hover",
@@ -773,7 +777,7 @@
                 return false;
             }
         });
-        
+
         /* Call an ajax entity update */
         if($(".fn_ajax_action").size()>0){
             $(document).on("click",".fn_ajax_action",function () {
@@ -826,7 +830,6 @@
             }
         }
     });
-
 
     $(document).on('click', '.fn_light_remove', function () {
         $(this).closest(".fn_row").remove();
@@ -923,6 +926,8 @@
     /*
     * функции генерации мета данных
     * */
+    $(document).on('input', 'input[name="meta_title"]', function() { $('#fn_meta_title_counter').text( '('+$('input[name="meta_title"]').val().length+')' ); });
+    $(document).on('input', 'textarea[name="meta_description"]', function() { $('#fn_meta_description_counter').text( '('+$('textarea[name="meta_description"]').val().replace(/\n/g, "\r\n").length+')' ); });
     var is_translit_alpha = $(".fn_is_translit_alpha");
     var translit_pairs = [];
     {foreach $translit_pairs as $i=>$pair}
@@ -974,8 +979,6 @@
             }
         });
 
-
-
         function set_meta() {
             if(!meta_title_touched)
                 $('input[name="meta_title"]').val(generate_meta_title());
@@ -995,7 +998,7 @@
 
         function generate_meta_keywords() {
             let result = $('input[name="name"]').val();
-            
+
             if ($(".fn_meta_brand").size() > 0) {
                 let brand = $('select[name="brand_id"] option:selected').data('brand_name');
                 if (typeof(brand) == 'string' && brand != '')
@@ -1081,7 +1084,7 @@
                 cur_nav.children().removeClass('selected');
                 cur_nav.children('[href="#{$smarty.get.active_tab|escape}"]').addClass('selected');
             {/if}
-            
+
             if (cur_nav.children('.selected').size() > 0) {
                 cur_tab = $(cur_nav.children('.selected').attr("href"));
             } else {
@@ -1124,6 +1127,21 @@
         });
 
         /*
+        * скрипт отображения загрузки модуля
+        * */
+        $(document).on("click", ".fn_switch_add_module", function () {
+            if ($(this).hasClass('active')) {
+                $(this).removeClass('active');
+            }
+            else {
+                $(this).addClass('active');
+            }
+
+            $(".fn_hide_add_module").slideToggle(500);
+        return false;
+        });
+
+        /*
         * Блокировка автоформирования ссылки
         * */
         $(document).on("click", ".fn_disable_url", function () {
@@ -1142,9 +1160,7 @@
         }
     });
 
-
 </script>
-
 
 {$block = {get_design_block block="main_custom_block_after_js"}}
 {if !empty($block)}

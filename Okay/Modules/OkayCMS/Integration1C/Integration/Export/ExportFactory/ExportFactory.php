@@ -15,6 +15,9 @@ class ExportFactory extends AbstractFactory
         $exportType = strtolower($exportType);
         switch ($exportType) {
             case 'orders':
+                if (class_exists(\Okay\Modules\OkayCMS\Integration1C\Integration\Export\Overrides\ExportOrders::class)) {
+                    return new \Okay\Modules\OkayCMS\Integration1C\Integration\Export\Overrides\ExportOrders($this->integration1C);
+                }
                 return new Export\ExportOrders($this->integration1C);
                 break;
             default:

@@ -22,19 +22,22 @@ class CommonHelper
     private $design;
     private $commonRequest;
     private $entityFactory;
+    private $userHelper;
 
     public function __construct(
         ValidateHelper $validateHelper,
         Notify $notify,
         Design $design,
         CommonRequest $commonRequest,
-        EntityFactory $entityFactory
+        EntityFactory $entityFactory,
+        UserHelper $userHelper
     ) {
         $this->validateHelper = $validateHelper;
         $this->notify = $notify;
         $this->design = $design;
         $this->commonRequest = $commonRequest;
         $this->entityFactory = $entityFactory;
+        $this->userHelper = $userHelper;
     }
     
     public function rootPostProcedure()
@@ -53,32 +56,6 @@ class CommonHelper
                 $this->notify->emailCallbackAdmin($callbackId);
             } else {
                 $this->design->assign('call_error', 'unknown error', true);
-            }
-        }
-
-        // Если прилетел токен, вероятно входят через соц. сеть
-        if (($token = $this->commonRequest->uLoginToken()) !== null) {
-            /** @var UsersEntity $usersEntity */
-            $usersEntity = $this->entityFactory->get(UsersEntity::class);
-
-            $uLoginData = $usersEntity->getULoginUser($token);
-            if (!empty($uLoginData)) {
-                $user = new \stdClass();
-                $user->last_ip = $_SERVER['REMOTE_ADDR'];
-                $user->name    = $uLoginData['last_name'] . ' ' . $uLoginData['first_name'];
-                $user->email   = $uLoginData['email'];
-                
-                // Проверим, может такой пользователь уже существует
-                if ($tmpUser = $usersEntity->get((string)$user->email)) {
-                    $_SESSION['user_id'] = $tmpUser->id;
-                    Response::redirectTo(Router::generateUrl('user', [], true));
-                } elseif (empty($usersEntity->count(['email' => (string)$user->email]))) {
-                    $user->password = $usersEntity->generatePass(6);
-                    $userId = $usersEntity->add($user);
-                    $_SESSION['user_id'] = $userId;
-                    // Перенаправляем пользователя в личный кабинет
-                    Response::redirectTo(Router::generateUrl('user', [], true));
-                }
             }
         }
 

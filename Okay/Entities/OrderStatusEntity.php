@@ -31,26 +31,4 @@ class OrderStatusEntity extends Entity
     protected static $langTable = 'orders_status';
     protected static $tableAlias = 'os';
     
-    public function delete($ids)
-    {
-        $ids = (array) $ids;
-
-        if (empty($ids)) {
-            return ExtenderFacade::execute([static::class, __FUNCTION__], null, func_get_args());
-        }
-            
-        /** @var OrdersEntity $ordersEntity */
-        $ordersEntity = $this->entity->get(OrdersEntity::class);
-        
-        foreach ($ids as $id) {
-            $checkCnt = $ordersEntity->count(['status_id' => $id]);
-
-            if ($checkCnt == 0) {
-                parent::delete($ids);
-            }
-        }
-
-        return ExtenderFacade::execute([static::class, __FUNCTION__], null, func_get_args());
-    }
-
 }

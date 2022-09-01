@@ -99,6 +99,39 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {*Дополнительные настройки*}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        <div class="activity_of_switch_item"> {* row block *}
+                            <div class="okay_switch clearfix">
+                                <label class="switch_label">
+                                    {$btr->payment_method_auto_submit|escape}
+                                    <i class="fn_tooltips" title="{$btr->payment_method_auto_submit_tooltip|escape}">
+                                        {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                                    </i>
+                                </label>
+                                <label class="switch switch-default">
+                                    <input class="switch-input" name="auto_submit" value='1' type="checkbox" {if $payment_method->auto_submit}checked=""{/if}/>
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
+                        </div>
                         {get_design_block block="payment_switch_checkboxes"}
                     </div>
                 </div>
@@ -187,9 +220,9 @@
                                                     <div class="form-group clearfix">
                                                         <div class="heading_label" >{$setting->name|escape}</div>
                                                         <div class="">
-                                                            <select name="payment_settings[{$setting->variable}]" class="selectpicker form-control">
+                                                            <select name="payment_settings[{$setting->variable|escape}]" class="selectpicker form-control">
                                                                 {foreach $setting->options as $option}
-                                                                    <option value="{$option->value}" {if isset($payment_method->payment_settings[$setting->variable]) && $option->value==$payment_method->payment_settings[$setting->variable]}selected{/if}>{$option->name|escape}</option>
+                                                                    <option value="{$option->value|escape}" {if isset($payment_method->payment_settings[$setting->variable]) && $option->value==$payment_method->payment_settings[$setting->variable]}selected{/if}>{$option->name|escape}</option>
                                                                 {/foreach}
                                                             </select>
                                                         </div>
@@ -200,18 +233,18 @@
                                                 <div class="col-lg-6">
                                                     <div class="form-group clearfix">
                                                         <div class="boxes_inline">
-                                                            <input name="payment_settings[{$setting->variable}]" class="hidden_check" type="checkbox" value="{$option->value|escape}" {if $option->value==$payment_method->payment_settings[$setting->variable]}checked{/if} id="{$setting->variable}" />
-                                                            <label class="okay_ckeckbox" for="{$setting->variable}"></label>
+                                                            <input name="payment_settings[{$setting->variable|escape}]" class="hidden_check" type="checkbox" value="{$option->value|escape}" {if $option->value==$payment_method->payment_settings[$setting->variable]}checked{/if} id="{$setting->variable|escape}" />
+                                                            <label class="okay_ckeckbox" for="{$setting->variable|escape}"></label>
                                                         </div>
-                                                        <div class="heading_label boxes_inline" for="{$setting->variable}">{$setting->name|escape}</div>
+                                                        <div class="heading_label boxes_inline" for="{$setting->variable|escape}">{$setting->name|escape}</div>
                                                     </div>
                                                 </div>
                                             {else}
                                                 <div class="col-lg-6">
                                                     <div class="form-group clearfix">
-                                                        <div class="heading_label" for="{$setting->variable}">{$setting->name|escape}</div>
+                                                        <div class="heading_label" for="{$setting->variable|escape}">{$setting->name|escape}</div>
                                                         <div class="">
-                                                            <input name="payment_settings[{$setting->variable}]" class="form-control" type="text" value="{if isset($payment_method->payment_settings[$setting->variable])}{$payment_method->payment_settings[$setting->variable]|escape}{/if}" id="{$setting->variable}"/>
+                                                            <input name="payment_settings[{$setting->variable|escape}]" class="form-control" type="text" value="{if isset($payment_method->payment_settings[$setting->variable])}{$payment_method->payment_settings[$setting->variable]|escape}{/if}" id="{$setting->variable|escape}"/>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -6,16 +6,22 @@ namespace Okay\Core;
 
 use Monolog\Handler\ChromePHPHandler;
 use Monolog\Handler\RotatingFileHandler;
+use Okay\Core\Console\Application AS ConsoleApplication;
 use Okay\Core\Entity\UrlUniqueValidator;
 use Okay\Core\Modules\ModuleDesign;
 use Okay\Core\Modules\ModulesEntitiesFilters;
 use Okay\Core\OkayContainer\Reference\ParameterReference as PR;
 use Okay\Core\OkayContainer\Reference\ServiceReference as SR;
-
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Okay\Core\Routes\RouteFactory;
-use OkayLicense\License;
+use Okay\Core\Scheduler\Scheduler;
+use Okay\Core\TemplateConfig\BackendTemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
+use Okay\Helpers\MainHelper;
+use Okay\Helpers\DiscountsHelper;
+use Okay\Helpers\NotifyHelper;
+use Okay\Core\TplMod\TplMod;
+use Okay\Helpers\OrdersHelper;
 use Psr\Log\LoggerInterface;
 use Bramus\Router\Router as BRouter;
 use Smarty;
@@ -37,13 +43,11 @@ use Okay\Core\Modules\Extender\QueueExtender;
 use Okay\Core\Modules\Extender\ExtenderFacade;
 use Okay\Core\UserReferer\UserReferer;
 use Snowplow\RefererParser\Parser;
+use Okay\Core\TplMod\Parser as TplParser;
 
 $services = [
     BRouter::class => [
         'class' => BRouter::class,
-    ],
-    License::class => [
-        'class' => License::class,
     ],
     PHPMailer::class => [
         'class' => PHPMailer::class,
@@ -60,11 +64,12 @@ $services = [
             new SR(BRouter::class),
             new SR(Request::class),
             new SR(Response::class),
-            new SR(License::class),
             new SR(EntityFactory::class),
             new SR(Languages::class),
             new SR(RouteFactory::class),
             new SR(Modules::class),
+            new SR(LoggerInterface::class),
+            new SR(Config::class),
         ],
     ],
     Config::class => [
@@ -78,7 +83,6 @@ $services = [
         'class' => Database::class,
         'arguments' => [
             new SR(ExtendedPdo::class),
-            new SR(License::class),
             new SR(LoggerInterface::class),
             new PR('db'),
             new SR(QueryFactory::class),
@@ -117,7 +121,7 @@ $services = [
         'class' => Response::class,
         'arguments' => [
             new SR(Adapters\Response\AdapterManager::class),
-            new SR(License::class),
+            new PR('config.version'),
         ],
     ],
     Languages::class => [
@@ -143,8 +147,22 @@ $services = [
             new SR(QueryFactory::class),
         ],
     ],
-    TemplateConfig::class => [
-        'class' => TemplateConfig::class,
+    FrontTemplateConfig::class => [
+        'class' => FrontTemplateConfig::class,
+        'arguments' => [
+            new SR(Modules::class),
+            new SR(Module::class),
+            new SR(Settings::class),
+            new SR(Config::class),
+            new PR('root_dir'),
+            new PR('template_config.scripts_defer'),
+            new PR('template_config.them_settings_filename'),
+            new PR('template_config.compile_css_dir'),
+            new PR('template_config.compile_js_dir'),
+        ],
+    ],
+    BackendTemplateConfig::class => [
+        'class' => BackendTemplateConfig::class,
         'arguments' => [
             new SR(Modules::class),
             new SR(Module::class),
@@ -154,30 +172,23 @@ $services = [
             new PR('template_config.compile_css_dir'),
             new PR('template_config.compile_js_dir'),
         ],
-        'calls' => [
-            [
-                'method' => 'configure',
-                'arguments' => [
-                    new PR('theme.name'),
-                    new PR('theme.admin_theme_name'),
-                    new PR('theme.admin_theme_managers'),
-                ]
-            ],
-        ]
     ],
     Design::class => [
         'class' => Design::class,
         'arguments' => [
             new SR(Smarty::class),
             new SR(Mobile_Detect::class),
-            new SR(TemplateConfig::class),
+            new SR(FrontTemplateConfig::class),
             new SR(Module::class),
+            new SR(Modules::class),
+            new SR(TplMod::class),
             new PR('design.smarty_cache_lifetime'),
             new PR('design.smarty_compile_check'),
             new PR('design.smarty_html_minify'),
             new PR('design.smarty_debugging'),
             new PR('design.smarty_security'),
             new PR('design.smarty_caching'),
+            new PR('design.smarty_force_compile'),
             new PR('root_dir'),
         ],
     ],
@@ -202,12 +213,13 @@ $services = [
             new SR(Languages::class),
             new SR(EntityFactory::class),
             new SR(Design::class),
-            new SR(TemplateConfig::class),
-            new SR(\Okay\Helpers\OrdersHelper::class),
+            new SR(FrontTemplateConfig::class),
+            new SR(OrdersHelper::class),
             new SR(BackendTranslations::class),
             new SR(FrontTranslations::class),
             new SR(PHPMailer::class),
             new SR(LoggerInterface::class),
+            new SR(NotifyHelper::class),
             new PR('root_dir'),
         ],
     ],
@@ -316,8 +328,16 @@ $services = [
             new SR(EntityFactory::class),
             new SR(Settings::class),
             new SR(ProductsHelper::class),
-            new SR(\Okay\Helpers\MoneyHelper::class),
+            new SR(MoneyHelper::class),
+            new SR(MainHelper::class),
+            new SR(Discounts::class),
+            new SR(DiscountsHelper::class),
         ],
+        'calls' => [
+            [
+                'method' => 'init'
+            ]
+        ]
     ],
     Comparison::class => [
         'class' => Comparison::class,
@@ -325,14 +345,23 @@ $services = [
             new SR(EntityFactory::class),
             new SR(Settings::class),
             new SR(MoneyHelper::class),
+            new SR(MainHelper::class),
         ],
     ],
     WishList::class => [
         'class' => WishList::class,
         'arguments' => [
             new SR(EntityFactory::class),
-            new SR(Settings::class),
-            new SR(MoneyHelper::class),
+            new SR(MainHelper::class),
+            new SR(ProductsHelper::class),
+        ],
+    ],
+    BrowsedProducts::class => [
+        'class' => BrowsedProducts::class,
+        'arguments' => [
+            new SR(ProductsHelper::class),
+            new SR(MainHelper::class),
+            new SR(EntityFactory::class),
         ],
     ],
     ModulesEntitiesFilters::class => [
@@ -348,7 +377,7 @@ $services = [
         'class' => ModuleDesign::class,
         'arguments' => [
             new SR(Module::class),
-            new SR(TemplateConfig::class),
+            new SR(FrontTemplateConfig::class),
             new SR(Config::class),
         ],
     ],
@@ -356,7 +385,6 @@ $services = [
         'class' => Modules::class,
         'arguments' => [
             new SR(EntityFactory::class),
-            new SR(License::class),
             new SR(Module::class),
             new SR(QueryFactory::class),
             new SR(Database::class),
@@ -395,10 +423,26 @@ $services = [
         'class' => UpdateObject::class,
     ],
     QueueExtender::class => [
-        'class' => QueueExtender::class
+        'class' => QueueExtender::class,
+        'calls' => [
+            [
+                'method' => 'setDeprecated',
+                'arguments' => [
+                    new PR('config.deprecated_methods'),
+                ]
+            ],
+        ],
     ],
     ChainExtender::class => [
-        'class' => ChainExtender::class
+        'class' => ChainExtender::class,
+        'calls' => [
+            [
+                'method' => 'setDeprecated',
+                'arguments' => [
+                    new PR('config.deprecated_methods'),
+                ]
+            ],
+        ],
     ],
     ExtenderFacade::class => [
         'class' => ExtenderFacade::class,
@@ -411,6 +455,7 @@ $services = [
         'class' => DesignBlocks::class,
         'arguments' => [
             new SR(Design::class),
+            new SR(EntityFactory::class),
         ],
     ],
     UrlUniqueValidator::class => [
@@ -447,6 +492,39 @@ $services = [
         'arguments' => [
             new SR(Settings::class),
         ],
+    ],
+    TplParser::class => [
+        'class' => TplParser::class,
+    ],
+    TplMod::class => [
+        'class' => TplMod::class,
+        'arguments' => [
+            new SR(TplParser::class),
+            new SR(Config::class),
+        ],
+    ],
+    TemplateConfig::class => [
+        'class' => TemplateConfig::class,
+        'arguments' => [
+            new SR(FrontTemplateConfig::class),
+        ],
+    ],
+    Discounts::class => [
+        'class' => Discounts::class,
+        'arguments' => [
+            new SR(EntityFactory::class),
+        ]
+    ],
+    ConsoleApplication::class => [
+        'class' => ConsoleApplication::class,
+        'arguments' => [
+        ]
+    ],
+    Scheduler::class => [
+        'class' => Scheduler::class,
+        'arguments' => [
+            new PR('logger.dir'),
+        ]
     ],
 ];
 

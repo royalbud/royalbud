@@ -26,6 +26,7 @@
 return [
     'root_dir' => '{$root_dir}',
     'logger' => [
+        'dir' => __DIR__ . '/../../log',
         'file' => __DIR__ . '/../../log/app.log',
         'max_files_rotation' => 10,
     ],
@@ -42,6 +43,8 @@ return [
     'config' => [
         'config_file' => __DIR__ . '/../../../config/config.php',
         'config_local_file' => __DIR__ . '/../../../config/config.local.php',
+        'deprecated_methods' => include(__DIR__ . '/deprecated_methods.php'),
+        'version' => '{$version}',
     ],
     'manager_menu' => [
         'dev_mode' => '{$dev_mode}',
@@ -73,11 +76,6 @@ return [
         'decimals_point' => '{%decimals_point%}',
         'thousands_separator' => '{%thousands_separator%}',
     ],
-    'theme' => [
-        'name' => '{%theme%}',
-        'admin_theme_name' => '{%admin_theme%}',
-        'admin_theme_managers' => '{%admin_theme_managers%}',
-    ],
     'plugins' => [
         'date' => [
             'date_format' => '{%date_format%}',
@@ -90,6 +88,32 @@ return [
         'smarty_compile_check'  => '{$smarty_compile_check}',
         'smarty_security'       => '{$smarty_security}',
         'smarty_cache_lifetime' => '{$smarty_cache_lifetime}',
+        'smarty_force_compile'  => '{$smarty_force_compile}',
         'debug_translation'     => '{$debug_translation}',
+    ],
+    'seo' => [
+        'canonical' => [
+            'catalog_pagination' => '{%canonical_catalog_pagination%}',
+            'catalog_page_all' => '{%canonical_catalog_page_all%}',
+            'category_brand' => '{%canonical_category_brand%}',
+            'category_features' => '{%canonical_category_features%}',
+            'catalog_other_filter' => '{%canonical_catalog_other_filter%}',
+            'catalog_filter_pagination' => '{%canonical_catalog_filter_pagination%}',
+        ],
+        'robots' => [
+            'catalog_pagination' => '{%robots_catalog_pagination%}',
+            'catalog_page_all' => '{%robots_catalog_page_all%}',
+            'category_brand' => '{%robots_category_brand%}',
+            'category_features' => '{%robots_category_features%}',
+            'catalog_other_filter' => '{%robots_catalog_other_filter%}',
+            'catalog_filter_pagination' => '{%robots_catalog_filter_pagination%}',
+        ],
+        'filter' => [
+            'max_brands_filter_depth' => '{%max_brands_filter_depth%}',
+            'max_other_filter_depth' => '{%max_other_filter_depth%}',
+            'max_features_filter_depth' => '{%max_features_filter_depth%}',
+            'max_features_values_filter_depth' => '{%max_features_values_filter_depth%}',
+            'max_filter_depth' => '{%max_filter_depth%}',
+        ],
     ],
 ];

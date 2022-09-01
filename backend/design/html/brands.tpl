@@ -2,9 +2,9 @@
 {$meta_title=$btr->brands_brands scope=global}
 
 {*Название страницы*}
-<div class="row">
-    <div class="col-lg-12 col-md-12">
-        <div class="wrap_heading">
+<div class="main_header">
+    <div class="main_header__item">
+        <div class="main_header__inner">
             <div class="box_heading heading_page">
                 {$btr->brands_brands|escape} - {$brands_count}
             </div>
@@ -14,6 +14,19 @@
                     <span>{$btr->brands_add_brand|escape}</span>
                 </a>
             </div>
+        </div>
+    </div>
+    <div class="main_header__item">
+        <div class="main_header__inner">
+            <form class="search" method="get">
+                <input type="hidden" name="controller" value="BrandsAdmin">
+                <div class="input-group input-group--search">
+                    <input name="keyword" class="form-control" placeholder="{$btr->brands_search|escape}" type="text" value="{$keyword|escape}" >
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn_blue"><i class="fa fa-search"></i> <span class="hidden-md-down"></span></button>
+                    </span>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -40,6 +53,13 @@
                                     <option value="{url limit=50}" {if $current_limit == 50}selected{/if}>{$btr->general_show_by|escape} 50</option>
                                     <option value="{url limit=100}" {if $current_limit == 100}selected=""{/if}>{$btr->general_show_by|escape} 100</option>
                                 </select>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm 12">
+                                <form method="post">
+                                    <button data-hint="{$btr->general_sort_brands_alphabet_hint|escape}" class="btn btn_mini btn_border_light text_400 hint-right-middle-t-info-s-small-mobile hint-anim" type="submit" name="alphabet_sort_brands" value="{$btr->general_sort_brands_alphabet|escape}">
+                                        {$btr->general_sort_brands_alphabet|escape}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -83,7 +103,7 @@
                     {foreach $brands as $brand}
                         <div class="fn_step-1 fn_row okay_list_body_item fn_sort_item">
                             <div class="okay_list_row ">
-                                <input type="hidden" name="positions[{$brand->id}]" value="{$brand->position}" />
+                                <input type="hidden" name="positions[{$brand->id}]" value="{$brand->position|escape}" />
 
                                 <div class="okay_list_boding okay_list_drag move_zone">
                                     {include file='svg_icon.tpl' svgId='drag_vertical'}

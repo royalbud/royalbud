@@ -1,7 +1,6 @@
 {if $deliveries}
    	<div class="block form form_cart">
-                              
-		{* Delivery *}
+        {* Delivery *}
 		<div class="form__header">
 			<div class="form__title">
 				{include file="svg.tpl" svgId="delivery_icon"}
@@ -36,7 +35,13 @@
 						</span>
 						{if $delivery->image}
 							<span class="delivery__image">
-								<img src="{$delivery->image|resize:80:30:false:$config->resized_deliveries_dir}" alt="{$delivery->name|escape}"/>
+								<picture>
+									{if $settings->support_webp}
+										<source type="image/webp" data-srcset="{$delivery->image|resize:80:30:false:$config->resized_deliveries_dir|webp}">
+									{/if}
+									<source data-srcset="{$delivery->image|resize:80:30:false:$config->resized_deliveries_dir}">
+									<img class="lazy" data-src="{$delivery->image|resize:80:30:false:$config->resized_deliveries_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$delivery->name|escape}" title="{$delivery->name|escape}"/>
+								</picture>
 							</span>
 						{/if}
 					</label>
@@ -71,7 +76,7 @@
 					{foreach $payment_methods as $payment_method}
 						<div class="payment_method__item fn_payment_method__item fn_payment_method__item_{$payment_method->id}"{if !in_array($payment_method->id, $active_delivery->payment_methods_ids)} style="display: none;" {/if}>
 							<label class="checkbox delivery__label{if $active_payment->id==$payment_method->id} active{/if}" for="payment_{$payment_method->id}">
-								<input class="checkbox__input delivery__input" id="payment_{$payment_method->id}" type="radio" name="payment_method_id" data-currency_id="{$payment_method->currency_id}" value="{$payment_method->id}"{if $active_payment->id==$payment_method->id} checked{/if} />
+								<input class="checkbox__input delivery__input" id="payment_{$payment_method->id}" type="radio" name="payment_method_id" data-currency_id="{$payment_method->currency_id}" data-auto_submit="{$payment_method->auto_submit}" value="{$payment_method->id}"{if $active_payment->id==$payment_method->id} checked{/if} />
 								<svg class="checkbox__icon" viewBox="0 0 20 20">
 									<path class="checkbox__mark" fill="none" d="M4 10 l5 4 8-8.5"></path>
 								</svg>
@@ -82,14 +87,26 @@
 								</span>
 								{if $payment_method->image}
 									<span class="delivery__image">
-										<img src="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}" alt="{$payment_method->name|escape}"/>
+										<picture>
+											{if $settings->support_webp}
+												<source type="image/webp" data-srcset="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir|webp}">
+											{/if}
+											<source data-srcset="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}">
+											<img class="lazy" data-src="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$payment_method->name|escape}" title="{$payment_method->name|escape}"/>
+										</picture>
 									</span>
 								{/if}
 							</label>
-							
-							{if $payment_method->description}
+
+							{$block = {get_design_block block='front_cart_payment' vars=['payment_method' => $payment_method]}}
+							{if $payment_method->description || $block}
 								<div class="delivery__description">
 									{$payment_method->description}
+									{if $block}
+										<div class="fn_payment_module_html">
+											{$block}
+										</div>
+									{/if}
 								</div>
 							{/if}
 						</div>

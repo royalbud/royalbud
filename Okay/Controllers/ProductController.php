@@ -4,6 +4,8 @@
 namespace Okay\Controllers;
 
 
+use Okay\Core\BrowsedProducts;
+use Okay\Core\Router;
 use Okay\Entities\ProductsEntity;
 use Okay\Entities\BrandsEntity;
 use Okay\Entities\CategoriesEntity;
@@ -28,7 +30,9 @@ class ProductController extends AbstractController
         CommentsHelper $commentsHelper,
         RelatedProductsHelper $relatedProductsHelper,
         ProductMetadataHelper $productMetadataHelper,
-        $url
+        BrowsedProducts $browsedProducts,
+        $url,
+        $variantId = ''
     ) {
         
         if (empty($url)) {
@@ -37,11 +41,10 @@ class ProductController extends AbstractController
         
         // Выбираем товар из базы
         $product = $productsEntity->get((string)$url);
-        if (empty($product) || (!$product->visible && empty($_SESSION['admin']))) {
-            return false;
+        //метод можно расширять и отменить либо переопределить дальнейшую логику работы контроллера
+        if (($setProduct = $productsHelper->setProduct($product)) !== null) {
+            return $setProduct;
         }
-        
-        $this->setMetadataHelper($productMetadataHelper);
         
         //lastModify
         $this->response->setHeaderLastModify($product->last_modify);
@@ -49,21 +52,23 @@ class ProductController extends AbstractController
         $product = $productsHelper->attachProductData($product);
         
         // Вариант по умолчанию
-        if (($vId = $this->request->get('variant', 'integer'))>0 && isset($product->variants[$vId])) {
+        if (!empty($variantId)) {
+            if (!isset($product->variants[$variantId])) {
+                return false;
+            }
+            $product->variant = $product->variants[$variantId];
+        } elseif (($vId = $this->request->get('variant', 'integer')) > 0 && isset($product->variants[$vId])) {
             $product->variant = $product->variants[$vId];
         } else {
             $product->variant = reset($product->variants);
         }
 
-        // Автозаполнение имени для формы комментария
-        if (!empty($this->user)) {
-            $this->design->assign('comment_name', $this->user->name); // todo что с этим?
-            $this->design->assign('comment_email', $this->user->email);
-        }
-
         // Комментарии к товару
         $commentsHelper->addCommentProcedure('product', $product->id);
-        $comments = $commentsHelper->getCommentsList('product', $product->id);
+        $commentsFilter = $commentsHelper->getCommentsFilter('product', $product->id);
+        $commentsSort = $commentsHelper->getCurrentSort();
+        $comments = $commentsHelper->getList($commentsFilter, $commentsSort);
+        $comments = $commentsHelper->attachAnswers($comments);
         $this->design->assign('comments', $comments);
         
         // Связанные товары
@@ -98,8 +103,13 @@ class ProductController extends AbstractController
             $this->design->assign('next_product', $neighborsProducts['next']);
             $this->design->assign('prev_product', $neighborsProducts['prev']);
         }
-        
-        $productsHelper->setBrowsedProduct($product->id);
+
+        $browsedProducts->addItem($product->id);
+
+        $this->design->assign('canonical', Router::generateUrl('product', ['url' => $product->url], true));
+
+        $productMetadataHelper->setUp($product, $category, $brand);
+        $this->setMetadataHelper($productMetadataHelper);
 
         $this->response->setContent('product.tpl');
     }

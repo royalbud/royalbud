@@ -7,7 +7,11 @@
         <div class="main_header__inner">
             <div class="box_heading heading_page">
                 {if $orders_count}
-                    {$btr->general_orders|escape} - {$orders_count}
+                    {$btr->general_orders|escape}
+                    {if !empty($order_user)}
+                        {$btr->general_orders_user|escape} {$order_user->name|escape} {$order_user->last_name|escape}
+                    {/if}
+                    - {$orders_count}
                 {else}
                     {$btr->orders_no|escape}
                 {/if}
@@ -126,7 +130,7 @@
                 <div class="view_info_visited__item">
                     <div class="view_info_visited__inner">
                         <div class="view_info_visited__left">
-                            <a href="{url status=$s->id}" class="view_info_visited__status" style="color: #{$s->color};">{$s->name|escape}</a>
+                            <a href="{url status=$s->id}" class="view_info_visited__status" style="color: #{$s->color|escape};">{$s->name|escape}</a>
                             <div class="view_info_visited__percent">{round($ordersCount->count / $count_orders_for_statuses * 100, 1)}%</div>
                         </div>
                         <div class="view_info_visited__right">
@@ -230,7 +234,7 @@
                         {*Параметры элемента*}
                         <div class="okay_list_body">
                             {foreach $orders as $order}
-                            <div class="fn_step-1 fn_row okay_list_body_item " style="border-left: 5px solid #{$order->status_color};">
+                            <div class="fn_step-1 fn_row okay_list_body_item " style="border-left: 5px solid #{$order->status_color|escape};">
                                 <div class="okay_list_row">
                                     <div class="okay_list_boding okay_list_check">
                                         <input class="hidden_check" type="checkbox" id="id_{$order->id}" name="check[]" value="{$order->id}"/>
@@ -253,24 +257,24 @@
                                         {if $order->referer_channel}
                                             <div class="order_paid">
                                                 {if $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_EMAIL}
-                                                    <span class="tag tag-chanel_email" title="{$order->referer_source}">
-                                                        {include file='svg_icon.tpl' svgId='tag_email'} {$order->referer_channel}
+                                                    <span class="tag tag-chanel_email" title="{$order->referer_source|escape}">
+                                                        {include file='svg_icon.tpl' svgId='tag_email'} {$order->referer_channel|escape}
                                                     </span>
                                                 {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_SEARCH}
-                                                    <span class="tag tag-chanel_search" title="{$order->referer_source}">
-                                                        {include file='svg_icon.tpl' svgId='tag_search'} {$order->referer_channel}
+                                                    <span class="tag tag-chanel_search" title="{$order->referer_source|escape}">
+                                                        {include file='svg_icon.tpl' svgId='tag_search'} {$order->referer_channel|escape}
                                                     </span>
                                                 {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_SOCIAL}
-                                                    <a href="{$order->referer_source|escape}" target="_blank" class="tag tag-chanel_social" title="{$order->referer_source}">
-                                                        {include file='svg_icon.tpl' svgId='tag_social'} {$order->referer_channel}
-                                                    </a>
+                                                    <span class="tag tag-chanel_social" title="{$order->referer_source|escape}">
+                                                        {include file='svg_icon.tpl' svgId='tag_social'} {$order->referer_channel|escape}
+                                                    </span>
                                                 {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_REFERRAL}
-                                                    <a href="{$order->referer_source|escape}" target="_blank" class="tag tag-chanel_referral" title="{$order->referer_source}">
-                                                        {include file='svg_icon.tpl' svgId='tag_referral'} {$order->referer_channel}
+                                                    <a href="https://{$order->referer_source|escape}" target="_blank" class="tag tag-chanel_referral" title="{$order->referer_source|escape}">
+                                                        {include file='svg_icon.tpl' svgId='tag_referral'} {$order->referer_channel|escape}
                                                     </a>
                                                 {else}
-                                                    <span class="tag tag-ind_unknown" title="{$order->referer_source}">
-                                                        {include file='svg_icon.tpl' svgId='tag_unknown'} {$order->referer_channel}
+                                                    <span class="tag tag-ind_unknown" title="{$order->referer_source|escape}">
+                                                        {include file='svg_icon.tpl' svgId='tag_unknown'} {$order->referer_channel|escape}
                                                     </span>
                                                 {/if}
                                             </div>
@@ -278,9 +282,9 @@
                                     </div>
 
                                     <div class="okay_list_boding okay_list_orders_name">
-                                        <a href="{url controller=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}" class="text_400 mb-q">{$order->name|escape}</a>
+                                        <a href="{url controller=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}" class="text_400 mb-q">{$order->name|escape} {$order->last_name|escape}</a>
                                         <div class="hidden-lg-up mb-h">
-                                            <div class="text_600 font_12" style="color: #{$order->status_color};">{$orders_status[$order->status_id]->name|escape}</div>
+                                            <div class="text_600 font_12" style="color: #{$order->status_color|escape};">{$orders_status[$order->status_id]->name|escape}</div>
                                         </div>
                                         <div class="font_12 text_500 text_grey mb-q"><span class="hidden-md-down">{$btr->orders_order_in|escape}</span>
                                         <span class="font_12 text_500 text_grey mb-q">{$order->date|date} | {$order->date|time}</span></div>
@@ -292,7 +296,7 @@
                                     </div>
 
                                     <div class="okay_list_boding okay_list_order_status">
-                                        <div class="text_600 font_14" style="color: #{$order->status_color};">{$orders_status[$order->status_id]->name|escape}</div>
+                                        <div class="text_600 font_14" style="color: #{$order->status_color|escape};">{$orders_status[$order->status_id]->name|escape}</div>
                                     </div>
 
                                     <div class="okay_list_boding okay_list_order_product_count">
@@ -372,7 +376,7 @@
                                                                 {if $purchase->variant_name}({$purchase->variant_name|escape}){/if}
                                                             </div>
                                                             <div class="purchases_bodyng purchases_table_orders_price">{$purchase->price|convert} {$currency->sign|escape}</div>
-                                                            <div class="purchases_bodyng purchases_table_orders_unit"> {$purchase->amount}{if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}</div>
+                                                            <div class="purchases_bodyng purchases_table_orders_unit"> {$purchase->amount|escape}{if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}</div>
                                                             <div class="purchases_bodyng purchases_table_orders_total"> {($purchase->amount*$purchase->price)|convert} {$currency->sign|escape}</div>
 
                                                          </div>
@@ -487,76 +491,76 @@ $(function() {
         return `${day}-${month}-${year}`;
     }
 
-    if($(window).width() >= 1199 ){
-        $('.fn_last_week').on('click', function() {
-            const date   = new Date();
-            const dateTo = compileDateString(date);
-            $('.fn_to_date').val(dateTo);
+    $('.fn_last_week').on('click', function() {
+        const date   = new Date();
+        const day = date.getDay();
+        const dateTo = compileDateString(date);
+        $('.fn_to_date').val(dateTo);
 
-            date.setDate(date.getDate() - date.getDay() + 1);
-            const dateFrom = compileDateString(date);
-            $('.fn_from_date').val(dateFrom);
+        date.setDate(date.getDate() - (day ? day : 7) + 1);
+        const dateFrom = compileDateString(date);
+        $('.fn_from_date').val(dateFrom);
 
-            $('.fn_date_filter').submit();
-        });
+        $('.fn_date_filter').submit();
+    });
 
-        $('.fn_30_days').on('click', function() {
-            const date   = new Date();
-            const dateTo = compileDateString(date);
-            $('.fn_to_date').val(dateTo);
+    $('.fn_30_days').on('click', function() {
+        const date   = new Date();
+        const dateTo = compileDateString(date);
+        $('.fn_to_date').val(dateTo);
 
-            date.setDate(date.getDate() - 30);
-            const dateFrom = compileDateString(date);
-            $('.fn_from_date').val(dateFrom);
+        date.setDate(date.getDate() + 1);
+        date.setMonth(date.getMonth() - 1);
+        const dateFrom = compileDateString(date);
+        $('.fn_from_date').val(dateFrom);
 
-            $('.fn_date_filter').submit();
-        });
+        $('.fn_date_filter').submit();
+    });
 
-        $('.fn_7_days').on('click', function() {
-            const date   = new Date();
-            const dateTo = compileDateString(date);
-            $('.fn_to_date').val(dateTo);
+    $('.fn_7_days').on('click', function() {
+        const date   = new Date();
+        const dateTo = compileDateString(date);
+        $('.fn_to_date').val(dateTo);
 
-            date.setDate(date.getDate() - 7);
-            const dateFrom = compileDateString(date);
-            $('.fn_from_date').val(dateFrom);
+        date.setDate(date.getDate() - 6);
+        const dateFrom = compileDateString(date);
+        $('.fn_from_date').val(dateFrom);
 
-            $('.fn_date_filter').submit();
-        });
+        $('.fn_date_filter').submit();
+    });
 
-        $('.fn_yesterday').on('click', function() {
-            const date   = new Date();
-            date.setDate(date.getDate() - 1);
+    $('.fn_yesterday').on('click', function() {
+        const date   = new Date();
+        date.setDate(date.getDate() - 1);
 
-            const dateTo = compileDateString(date);
-            $('.fn_to_date').val(dateTo);
+        const dateTo = compileDateString(date);
+        $('.fn_to_date').val(dateTo);
 
-            const dateFrom = compileDateString(date);
-            $('.fn_from_date').val(dateFrom);
+        const dateFrom = compileDateString(date);
+        $('.fn_from_date').val(dateFrom);
 
-            $('.fn_date_filter').submit();
-        });
+        $('.fn_date_filter').submit();
+    });
 
-        $('.fn_calendar').on('click', function() {
-            $(".fn_calendar_pixel").focus();
-        });
+    $('.fn_calendar').on('click', function() {
+        $(".fn_calendar_pixel").focus();
+    });
 
-        $(".fn_calendar_pixel").datepicker({
-            dateFormat: 'dd-mm-yy',
-            range_multiple_max: 2,
-            range: 'period',
-            onSelect: function(_, __, range){
-                $('.fn_from_date').val(range.startDateText);
-                $('.fn_to_date').val(range.endDateText);
-            }
-        });
+    $(".fn_calendar_pixel").datepicker({
+        dateFormat: 'dd-mm-yy',
+        range_multiple_max: 2,
+        range: 'period',
+        onSelect: function(_, __, range){
+            $('.fn_from_date').val(range.startDateText);
+            $('.fn_to_date').val(range.endDateText);
+        }
+    });
 
-        $('.fn_reset_date_filter').on('click', function() {
-            $('.fn_to_date').val('');
-            $('.fn_from_date').val('');
-            $('.fn_date_filter').submit();
-        });
-    }
+    $('.fn_reset_date_filter').on('click', function() {
+        $('.fn_to_date').val('');
+        $('.fn_from_date').val('');
+        $('.fn_date_filter').submit();
+    });
 
 
     $(document).on("change", ".fn_change_orders", function () {

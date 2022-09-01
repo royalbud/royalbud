@@ -1,6 +1,4 @@
-{* The main page template *}
-{* The canonical address of the page *}
-{$canonical="{url_generator route="main" absolute=1}" scope=global}
+<!-- The main page template -->
 
 {* Featured products *}
 {get_featured_products var=featured_products limit=5}
@@ -12,16 +10,19 @@
                     <span data-language="main_recommended_products">{$lang->main_recommended_products}</span>
                 </div>
                 <div class="block__header_button">
-                    <a class="block__more d-flex align-items-center" href="{url_generator route='bestsellers'}">
+                    <a class="block__more d-flex align-items-center" href="{url_generator route='products' filtersUrl=['filter' => ['featured']]}">
                         <span data-language="main_look_all">{$lang->main_look_all}</span>{include file="svg.tpl" svgId="arrow_right2"}
                     </a>
                 </div>
             </div>
             <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $featured_products as $product}
-                        <div class="item product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
+                <div class="fn_products_slide products_list row no_gutters swiper-container">
+                    <div class="swiper-wrapper">
+                        {foreach $featured_products as $product}
+                            <div class="item product_item swiper-slide no_hover">{include "product_list.tpl"}</div>
+                        {/foreach}
+                    </div> 
+                    <div class="swiper-pagination"></div>
                 </div>
             </div>
         </div>
@@ -39,10 +40,13 @@
                 </div>
             </div>
             <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $new_products as $product}
-                        <div class="product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
+                <div class="fn_products_slide products_list row no_gutters swiper-container">
+                    <div class="swiper-wrapper">
+                        {foreach $new_products as $product}
+                            <div class="product_item swiper-slide no_hover">{include "product_list.tpl"}</div>
+                        {/foreach}
+                    </div>
+                    <div class="swiper-pagination"></div>
                 </div>
             </div>
          </div>
@@ -59,15 +63,19 @@
                     <span data-language="main_discount_products">{$lang->main_discount_products}</span>
                 </div>
                 <div class="block__header_button">
-                    <a class="block__more d-flex align-items-center" href="{url_generator route='discounted'}">
-                        <span data-language="main_look_all">{$lang->main_look_all} </span>{include file="svg.tpl" svgId="arrow_right2"}</a>
+                    <a class="block__more d-flex align-items-center" href="{url_generator route='products' filtersUrl=['filter' => ['discounted']]}">
+                        <span data-language="main_look_all">{$lang->main_look_all} </span>{include file="svg.tpl" svgId="arrow_right2"}
+                    </a>
                 </div>
             </div>
             <div class="block__body">
-                <div class="fn_products_slide products_list row no_gutters owl-carousel">
-                    {foreach $discounted_products as $product}
-                        <div class="product_item no_hover">{include "product_list.tpl"}</div>
-                    {/foreach}
+                <div class="fn_products_slide products_list row no_gutters swiper-container">
+                    <div class="swiper-wrapper">
+                        {foreach $discounted_products as $product}
+                            <div class="product_item swiper-slide no_hover">{include "product_list.tpl"}</div>
+                        {/foreach}
+                    </div>
+                    <div class="swiper-pagination"></div>
                 </div>
             </div>
         </div>
@@ -112,7 +120,13 @@
                                         <a class="d-flex align-items-center justify-content-center main_brands__link" aria-label="{$b->name|escape}" href="{url_generator route='brand' url=$b->url}" data-brand="{$b->id}">
                                             {if $b->image}
                                                 <div class="d-flex align-items-center justify-content-center main_brands__image">
-                                                    <img class="main_brands_img lazy" data-src="{$b->image|resize:100:50:false:$config->resized_brands_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$b->name|escape}" title="{$b->name|escape}">
+                                                    <picture>
+                                                        {if $settings->support_webp}
+                                                            <source type="image/webp" data-srcset="{$b->image|resize:100:50:false:$config->resized_brands_dir|webp}">
+                                                        {/if}
+                                                        <source data-srcset="{$b->image|resize:100:50:false:$config->resized_brands_dir}">
+                                                        <img class="main_brands_img lazy" data-src="{$b->image|resize:100:50:false:$config->resized_brands_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$b->name|escape}" title="{$b->name|escape}"/>
+                                                    </picture>
                                                 </div>
                                             {else}
                                                 <div class="d-flex align-items-center justify-content-center main_brands__name">

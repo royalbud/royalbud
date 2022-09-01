@@ -7,7 +7,6 @@ namespace Okay\Core\Modules;
 use Monolog\Logger;
 use Okay\Core\EntityFactory;
 use Okay\Core\ServiceLocator;
-use Okay\Core\TemplateConfig;
 use Okay\Entities\ModulesEntity;
 
 /**
@@ -34,6 +33,34 @@ class Module
     }
 
     private static $modulesIds;
+
+    /**
+     * Метод возвращает параметры модуля описанные в module.json
+     * 
+     * @param $vendor
+     * @param $moduleName
+     * @return object|null
+     */
+    public function getModuleParams($vendor, $moduleName)
+    {
+        $moduleJsonFileFile = __DIR__ . '/../../Modules/' . $vendor . '/' . $moduleName . '/Init/module.json';
+
+        if (file_exists($moduleJsonFileFile)) {
+            $moduleParams = json_decode(file_get_contents($moduleJsonFileFile));
+        } else {
+            $moduleParams = new \stdClass();
+        }
+
+        if (empty($moduleParams->version)) {
+            $moduleParams->version = '1.0.0';
+        }
+
+        if ($mathVersion = $this->getMathVersion($moduleParams->version)) {
+            $moduleParams->math_version = $mathVersion;
+        }
+
+        return $moduleParams;
+    }
     
     /**
      * Получить базовую область видимости для указанного модуля
@@ -148,6 +175,24 @@ class Module
     public function getServices($vendor, $moduleName)
     {
         $file = $this->getModuleDirectory($vendor, $moduleName) . '/Init/services.php';
+
+        if (!file_exists($file)) {
+            return [];
+        }
+
+        return include($file);
+    }
+
+    /**
+     * Получить список параметров модуля
+     * @param string $vendor
+     * @param string $moduleName
+     * @throws \Exception
+     * @return array
+     */
+    public function getParameters($vendor, $moduleName)
+    {
+        $file = $this->getModuleDirectory($vendor, $moduleName) . '/Init/parameters.php';
 
         if (!file_exists($file)) {
             return [];
@@ -326,5 +371,26 @@ class Module
     private function fileHasAllowImageExtension($file)
     {
         return preg_match('/\.(jpeg|jpg|png|gif|svg)$/ui', $file);
+    }
+
+    /**
+     * Метод возвращает математическое представление версии, которое можно передавать операторам сравнения
+     * 
+     * @param $version
+     * @return int
+     */
+    public function getMathVersion($version) : int
+    {
+        $parts = explode('.', $version);
+        
+        if (count($parts) != 3) {
+            return 0;
+        }
+        
+        foreach ($parts as &$part) {
+            $part += 100;
+        }
+        unset($part);
+        return (int)implode('' , $parts);
     }
 }

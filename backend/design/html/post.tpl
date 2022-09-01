@@ -131,23 +131,42 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="fn_step-3 activity_of_switch_item"> {* row block *}
-                                <div class="okay_switch clearfix">
-                                    <label class="switch_label">{$btr->general_show_table_content|escape}</label>
-                                    <label class="switch switch-default">
-                                        <input class="switch-input" name="show_table_content" value='1' type="checkbox" {if $post->show_table_content}checked=""{/if}/>
-                                        <span class="switch-label"></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            {get_design_block block="post_switch_checkboxes"}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {*Дополнительные настройки*}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        <div class="activity_of_switch_item"> {* row block *}
+                            <div class="okay_switch clearfix">
+                                <label class="switch_label">{$btr->general_show_table_content|escape}</label>
+                                <label class="switch switch-default">
+                                    <input class="switch-input" name="show_table_content" value='1' type="checkbox" {if $post->show_table_content}checked=""{/if}/>
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
+                        </div>
+                        {get_design_block block="post_switch_checkboxes"}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {*Параметры элемента*}
     <div class="row">
         <div class="col-lg-4 col-md-12 pr-0">
@@ -274,7 +293,7 @@
                 name='related_products'
                 products=$related_products
                 label=$btr->general_recommended_add
-                placeholder=$btr->general_recommended_add
+                placeholder=$btr->general_add_product
                 }
                 {get_design_block block="post_related_products"}
             </div>
@@ -287,11 +306,11 @@
                 <div class="toggle_body_wrap on fn_card">
                     <div class="heading_label">
                         {$btr->product_rating_value|escape}
-                        <span class="font-weight-bold fn_show_rating">{$post->rating}</span>
+                        <span class="font-weight-bold fn_show_rating">{$post->rating|escape}</span>
                     </div>
                     <div class="raiting_boxed">
-                        <input class="fn_rating_value" type="hidden" value="{$post->rating}" name="rating" />
-                        <input class="fn_rating range_input" type="range" min="1" max="5" step="0.1" value="{$post->rating}" />
+                        <input class="fn_rating_value" type="hidden" value="{$post->rating|escape}" name="rating" />
+                        <input class="fn_rating range_input" type="range" min="1" max="5" step="0.1" value="{$post->rating|escape}" />
 
                         <div class="raiting_range_number">
                             <span class="float-xs-left">1</span>
@@ -300,7 +319,7 @@
                     </div>
                     <div class="heading_label">
                         {$btr->product_rating_number|escape}
-                        <input type="text" class="form-control" name="votes" value="{$post->votes}">
+                        <input type="text" class="form-control" name="votes" value="{$post->votes|escape}">
                     </div>
                 </div>
                 {get_design_block block="post_rationg"}
@@ -395,44 +414,6 @@
         $(window).on("load", function() {
             $('input[name="date"]').datepicker();
             $('input[name="updated_date"]').datepicker();
-
-            // Удаление товара
-        $(document).on( "click", ".fn_remove_item", function() {
-            $(this).closest(".fn_row").fadeOut(200, function() { $(this).remove(); });
-            return false;
-        });
-
-        // Добавление связанного товара
-        var new_related_product = $('#new_related_product').clone(true);
-        $('#new_related_product').remove().removeAttr('id');
-
-        $("input#related_products").devbridgeAutocomplete({
-            serviceUrl:'ajax/search_products.php',
-            minChars:0,
-            orientation:'auto',
-            noCache: false,
-            onSelect:
-                function(suggestion){
-                    $("input#related_products").val('').focus().blur();
-                    new_item = new_related_product.clone().appendTo('.related_products');
-                    new_item.removeAttr('id');
-                    new_item.find('a.related_product_name').html(suggestion.data.name);
-                    new_item.find('a.related_product_name').attr('href', 'index.php?controller=ProductAdmin&id='+suggestion.data.id);
-                    new_item.find('input[name*="related_products"]').val(suggestion.data.id);
-                    if(suggestion.data.image)
-                        new_item.find('img.product_icon').attr("src", suggestion.data.image);
-                    else
-                        new_item.find('img.product_icon').remove();
-                    new_item.show();
-                },
-            formatResult:
-                function(suggestions, currentValue){
-                    var reEscape = new RegExp('(\\' + ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\'].join('|\\') + ')', 'g');
-                    var pattern = '(' + currentValue.replace(reEscape, '\\$1') + ')';
-                    return "<div>" + (suggestions.data.image?"<img align=absmiddle src='"+suggestions.data.image+"'> ":'') + "</div>" +  "<span>" + suggestions.value.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>') + "</span>";
-                }
-
-        });
 
             var clone_cat = $(".fn_new_category_item").clone();
             $(".fn_new_category_item").remove();

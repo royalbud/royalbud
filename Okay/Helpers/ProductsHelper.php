@@ -7,24 +7,92 @@ namespace Okay\Helpers;
 use Okay\Core\EntityFactory;
 use Okay\Core\Routes\ProductRoute;
 use Okay\Core\Settings;
+use Okay\Entities\BrandsEntity;
+use Okay\Entities\CategoriesEntity;
 use Okay\Entities\ProductsEntity;
 use Okay\Entities\VariantsEntity;
 use Okay\Entities\ImagesEntity;
 use Okay\Entities\FeaturesValuesEntity;
 use Okay\Entities\FeaturesEntity;
 use Okay\Core\Modules\Extender\ExtenderFacade;
+use Okay\Helpers\MetadataHelpers\ProductMetadataHelper;
 
 class ProductsHelper implements GetListInterface
 {
+    /** @var EntityFactory */
     private $entityFactory;
+
+    /** @var MoneyHelper */
     private $moneyHelper;
+
+    /** @var Settings */
     private $settings;
 
-    public function __construct(EntityFactory $entityFactory, MoneyHelper $moneyHelper, Settings $settings)
+    /** @var ProductMetadataHelper */
+    private $productMetadataHelper;
+
+    /** @var CatalogHelper */
+    private $catalogHelper;
+
+    /** @var FilterHelper */
+    private $filterHelper;
+
+
+    /** @var FeaturesEntity */
+    private $featuresEntity;
+
+    /** @var CategoriesEntity */
+    private $categoriesEntity;
+
+    public function __construct(
+        EntityFactory         $entityFactory,
+        MoneyHelper           $moneyHelper,
+        Settings              $settings,
+        ProductMetadataHelper $productMetadataHelper,
+        CatalogHelper         $catalogHelper,
+        FilterHelper          $filterHelper
+    ) {
+        $this->entityFactory         = $entityFactory;
+        $this->moneyHelper           = $moneyHelper;
+        $this->settings              = $settings;
+        $this->productMetadataHelper = $productMetadataHelper;
+        $this->catalogHelper         = $catalogHelper;
+        $this->filterHelper          = $filterHelper;
+
+        $this->featuresEntity   = $entityFactory->get(FeaturesEntity::class);
+        $this->categoriesEntity = $entityFactory->get(CategoriesEntity::class);
+    }
+
+    public function assignFilterProcedure(
+        array   $productsFilter,
+        array   $catalogFeatures,
+        ?string $keyword = null
+    ): void {
+        if (isset($productsFilter['keyword'])) {
+            $catalogCategories = $this->categoriesEntity->find(['product_keyword' => $productsFilter['keyword']]);
+        } else {
+            $catalogCategories = [];
+        }
+
+        $this->catalogHelper->assignCatalogDataProcedure(
+            $productsFilter,
+            $catalogFeatures,
+            $catalogCategories,
+            null,
+            (int) $this->settings->get('features_max_count_products')
+        );
+
+        ExtenderFacade::execute(__METHOD__, null, func_get_args());
+    }
+
+    public function getCatalogFeatures(): array
     {
-        $this->entityFactory = $entityFactory;
-        $this->moneyHelper = $moneyHelper;
-        $this->settings = $settings;
+        return ExtenderFacade::execute(__METHOD__, $this->catalogHelper->getCatalogFeatures(), func_get_args());
+    }
+
+    public function isFilterPage(array $filter): bool
+    {
+        return ExtenderFacade::execute(__METHOD__, $this->filterHelper->isFilterPage($filter), func_get_args());
     }
 
     public function attachProductData($product)
@@ -114,26 +182,6 @@ class ProductsHelper implements GetListInterface
         
         return ExtenderFacade::execute(__METHOD__, $orderAdditionalData, func_get_args());
     }
-    
-    public function setBrowsedProduct($productId)
-    {
-        // Добавление в историю просмотров товаров
-        $maxVisitedProducts = 100; // Максимальное число хранимых товаров в истории
-        $expire = time()+60*60*24*30; // Время жизни - 30 дней
-        if (!empty($_COOKIE['browsed_products'])) {
-            $browsedProducts = explode(',', $_COOKIE['browsed_products']);
-            // Удалим текущий товар, если он был
-            if (($exists = array_search($productId, $browsedProducts)) !== false) {
-                unset($browsedProducts[$exists]);
-            }
-        }
-        // Добавим текущий товар
-        $browsedProducts[] = $productId;
-        $cookieVal = implode(',', array_slice($browsedProducts, -$maxVisitedProducts, $maxVisitedProducts));
-        setcookie("browsed_products", $cookieVal, $expire, "/");
-
-        ExtenderFacade::execute(__METHOD__, null, func_get_args());
-    }
 
     public function attachVariants(array $products, array $variantsFilter = [])
     {
@@ -199,6 +247,8 @@ class ProductsHelper implements GetListInterface
         } else {
             $featuresFilter['id'] = $featuresIds;
         }
+
+        $featuresFilter['visible'] = true;
         
         foreach ($featuresEntity->find($featuresFilter) as $f) {
             $features[$f->id] = $f;
@@ -291,4 +341,73 @@ class ProductsHelper implements GetListInterface
         return ExtenderFacade::execute(__METHOD__, $copyProducts, func_get_args());
     }
 
+    /**
+     * @param array $products
+     * @return array
+     * @throws \Exception
+     */
+    public function attachDescriptionByTemplate(array $products): array
+    {
+        if (!empty($products)) {
+            /** @var CategoriesEntity $categoriesEntity */
+            $categoriesEntity = $this->entityFactory->get(CategoriesEntity::class);
+
+            $brandIds = array_reduce($products, function ($carry, $product) {
+                if ($product->brand_id) {
+                    $carry[] = $product->brand_id;
+                }
+                return $carry;
+            }, []);
+
+            if (!empty($brandIds)) {
+                $brandsEntity = $this->entityFactory->get(BrandsEntity::class);
+                $brands = $brandsEntity->find(['id' => $brandIds]);
+            } else {
+                $brands = [];
+            }
+
+            foreach ($products as $product) {
+                $this->productMetadataHelper->setUp(
+                    $product,
+                    $categoriesEntity->findOne(['id' => $product->main_category_id]),
+                    $brands[$product->brand_id] ?? null
+                );
+
+                if (isset($product->annotation)) {
+                    $product->annotation = $this->productMetadataHelper->getAnnotation();
+                }
+                if (isset($product->description)) {
+                    $product->description = $this->productMetadataHelper->getDescription();;
+                }
+            }
+        }
+
+        return ExtenderFacade::execute(__METHOD__, $products, func_get_args());
+    }
+
+    /**
+     * Метод проверяет доступность товара для показа в контроллере
+     * можно переопределить логику работы контроллера и отменить дальнейшие действия
+     * для этого после реализации другой логики необходимо вернуть true из экстендера
+     *
+     * @param object $product
+     * @return object
+     */
+    public function setProduct($product)
+    {
+        if (empty($product) || (!$product->visible && empty($_SESSION['admin']))) {
+            return ExtenderFacade::execute(__METHOD__, false, func_get_args());
+        }
+
+        return ExtenderFacade::execute(__METHOD__, null, func_get_args());
+    }
+
+    public function getProductsFilter(?string $filtersUrl = null, array $filter = []): ?array
+    {
+        if (($filter = $this->catalogHelper->getProductsFilter($filtersUrl, $filter)) === null) {
+            return ExtenderFacade::execute(__METHOD__, null, func_get_args());
+        }
+
+        return ExtenderFacade::execute(__METHOD__, $filter, func_get_args());
+    }
 }

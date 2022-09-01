@@ -3,8 +3,9 @@
 <script>
     $(function(){
         tinyMCE.init({literal}{{/literal}
-            selector: "textarea.editor_large, textarea.editor_small",
+            selector: "textarea.editor_large, textarea.editor_small, textarea#format-custom",
             height: 600,
+            relative_urls : false,
             plugins: [
                 "advlist autolink quickbars lists link image preview anchor responsivefilemanager emoticons",
                 "hr visualchars codesample autosave noneditable searchreplace wordcount visualblocks",
@@ -14,7 +15,7 @@
             toolbar_mode: 'floating',
             mobile: 'false',
             toolbar_items_size : 'small',
-            menubar:false,
+            menubar:'file edit insert view format table tools',
             toolbar1: "undo redo|styleselect| fontselect |fontsizeselect |forecolor backcolor blocks | bold italic underline strikethrough blockquote | alignleft aligncenter alignright | numlist bullist checklist | table | link unlink| image media emoticons  | fullscreen preview codesample code",
 
                 {literal}
@@ -29,6 +30,7 @@
                 {title: 'image_zoom', value: 'fn_img_zoom'},
                 {title: 'image_slider', value: 'fn_img_slider'},
                 {title: 'image_gallery', value: 'fn_img_gallery'},
+                {title: 'image_gallery 2', value: 'fn_img_gallery_2'},
                 {title: 'image_style', value: 'fn_image_style'}
             ],
             link_class_list: [
@@ -54,8 +56,6 @@
             "Times New Roman=times new roman,times;"+
             "Trebuchet MS=trebuchet ms,geneva;"+
             "Verdana=verdana,geneva;",
-
-
             image_advtab: true,
             external_filemanager_path:"{$rootUrl}/backend/design/js/filemanager/",
             filemanager_title:"{$btr->tinymce_init_filemanager|escape}" ,
@@ -81,8 +81,10 @@
                 { title: 'Blocks', items: [
                         { title: 'Paragraph', format: 'p' },
                         { title: 'Blockquote', format: 'blockquote' },
-                        { title: 'Div', format: 'div' },
-                        { title: 'Pre', format: 'pre' }
+                        { title: 'Notice_info', block: 'div', format: 'p', classes: 'tmce_notice_info' },
+                        { title: 'Notice_error', block: 'div', format: 'p', classes: 'tmce_notice_error' },
+                        { title: 'Notice_success', block: 'div', format: 'p', classes: 'tmce_notice_success' },
+                        { title: 'Div', format: 'div' }
                     ]}
             ],
 
@@ -99,7 +101,7 @@
                 $("[type='submit']").trigger("click");
                 {literal}}{/literal},
 
-            language : "{$manager->lang}",
+            language : "{$manager->lang|escape}",
             /* Замена тега P на BR при разбивке на абзацы
              force_br_newlines : true,
              force_p_newlines : false,

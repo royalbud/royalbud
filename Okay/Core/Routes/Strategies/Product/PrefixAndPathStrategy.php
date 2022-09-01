@@ -55,7 +55,7 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
         $this->cacheEntity      = $entityFactory->get(RouterCacheEntity::class);
     }
 
-    public function generateSlugUrl($url)
+    public function generateSlugUrl($url) : string
     {
         if (empty($url)) {
             return '';
@@ -76,7 +76,7 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
             $this->logger->warning('Missing "main_category_id" for product "'.$url.'"');
         } else {
             $category = $this->categoriesEntity->get((int) $product->main_category_id);
-            $slug = substr($category->path_url, 1).'/'.$product->url;
+            $slug = $category->path_url.'/'.$product->url;
         }
 
         // Запоминаем в оперативке slug для этого урла
@@ -92,14 +92,14 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
         return $slug;
     }
 
-    public function generateRouteParams($url)
+    public function generateRouteParams($url) : array
     {
         $prefix = $this->getPrefix();
         if ($this->prefixIsFailed($prefix, $url)) {
             return $this->getMockRouteParams($prefix);
         }
 
-        $noPrefixUrl            = substr($url, strlen($prefix) + 1);
+        $noPrefixUrl            = ltrim(substr($url, strlen($prefix) + 1), '/');
         $matchedCategories      = $this->matchCategories($noPrefixUrl);
         $mappedParentCategories = $this->mapCategoriesByParents($matchedCategories);
 
@@ -109,35 +109,39 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
 
         $mainCategoryId = $this->findMostNestedCategoryId($mappedParentCategories);
         $category   = $this->categoriesEntity->get((int) $mainCategoryId);
+        $category->path_url = ltrim($category->path_url, '/');
 
         if ($this->uriNoContainsValidCategoryPathUrl($noPrefixUrl, $category->path_url)) {
             return $this->getMockRouteParams($prefix);
         }
 
-        $productUrl = $this->matchProductUrlFromUri($noPrefixUrl, $category->path_url);
-        $product    = $this->productsEntity->findOne([
+        list($productUrl, $variantId) = $this->matchProductUrlFromUri($noPrefixUrl, $category->path_url);
+        $productId    = $this->productsEntity->col('id')->findOne([
             'url'              => $productUrl,
             'main_category_id' => $mainCategoryId
         ]);
+        $productPath = $category->path_url . '/' . $productUrl;
 
-        if (empty($product)) {
+        if (empty($productId)) {
             return $this->getMockRouteParams($prefix);
         }
 
         return [
-            $prefix.'/{$url}',
+            $prefix.'/{$url}/?{$variantId}',
             [
-                '{$url}' => $noPrefixUrl
+                '{$url}' => $productPath,
+                '{$variantId}' => $variantId,
             ],
             [
-                '{$url}' => $productUrl
+                '{$url}' => $productUrl,
+                '{$variantId}' => $variantId,
             ]
         ];
     }
 
-    private function getMockRouteParams($prefix)
+    private function getMockRouteParams($prefix) : array
     {
-        return [$prefix.'/{$url}', ['{$url}' => ''], []];
+        return [$prefix.'/{$url}/?{$variantId}', ['{$url}' => '', '{$variantId}' => '(\d*)'], []];
     }
 
     private function matchProductUrlFromUri($url, $categoryPathUrl)
@@ -148,21 +152,23 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
             $noCategoryPathUri = substr($noCategoryPathUri, 1);
         }
 
-        return explode('/', $noCategoryPathUri)[0];
-    }
+        $urlParams = explode('/', trim($noCategoryPathUri, '/'));
 
-    private function uriNoContainsValidCategoryPathUrl($url, $categoryPathUrl)
-    {
-        if ($url[0] !== '/') {
-            $url = '/'.$url;
+        // Здесь остался только урл товара и возможно id варианта, если еще что-то - бросаем 404
+        if (count($urlParams) > 2) {
+            return false;
         }
 
-        $comparePartUri = substr($url, 0, strlen($categoryPathUrl));
+        return array_pad($urlParams, 2, '');
+    }
 
+    private function uriNoContainsValidCategoryPathUrl($url, $categoryPathUrl) : bool
+    {
+        $comparePartUri = substr($url, 0, strlen($categoryPathUrl));
         return $comparePartUri !== $categoryPathUrl;
     }
 
-    private function matchCategories($noPrefixUri)
+    private function matchCategories($noPrefixUri) : array
     {
         $parts = explode('/', $noPrefixUri);
 
@@ -186,8 +192,7 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
 
             return $sortCategories($mappedByParentCategories[$category->id]);
         };
-
-        $mostNestedCategory = $sortCategories($mappedByParentCategories[0]);
+        $mostNestedCategory = $sortCategories(reset($mappedByParentCategories));
         return $mostNestedCategory->id;
     }
 
@@ -204,12 +209,12 @@ class PrefixAndPathStrategy extends AbstractRouteStrategy
         return $categoriesMappedByParent;
     }
 
-    private function prefixIsFailed($prefix, $url)
+    private function prefixIsFailed($prefix, $url) : bool
     {
         return $prefix !== substr($url, 0, strlen($prefix));
     }
 
-    private function getPrefix()
+    private function getPrefix() : string
     {
         $prefix = $this->settings->get('product_routes_template__prefix_and_path');
 

@@ -1,20 +1,18 @@
 ;<? exit(); ?>
 
-license = ut9snzpcfy ekwwdcxhuu ypqmynyzkp svlrzutzqn xmzgbfnouu 7umyedsbro 9ppdvprnhh evulhjmsst xnjzmzviot p4omszr6qm gurpqkrrhw mfvy8fvmqj urxmisqtps oxuoisrszc xfqgqdznqp uj4edioq7k 8p8svxuxux hykstyjuiv mvf7iaset7 s5l8oxwjpy rawqyzfjng xjuirsauiz vrivontyhx lsf5sjj9ny wsqpqeyomt nptxqgszti muioxojnwv mvhpqsgyqk dsfrdoqmyh lgirzrydne pyvgvyurwj xsyx3rwq 7weqlpojf2 zunawqklha gzftlvnjjh znnxpymyqk rlouwmzp 2oevkctmah nrrigdxcfz xnhlirnigw rgshlgtsyy squvykxoqr zp1r9nbgna 99edzfqqbs dlhlvxlqii fsmvlgmnwq plylqnvmuz rsr6st6kwm ay3yxrkziu msqutqmzip wnsksntriq wpusqqnrzz owpsxw
-
 [database]
 
 ;Сервер базы данных
-db_server = royalbud.mysql.tools
+db_server = localhost
 
 ;Пользователь базы данных
-db_user = royalbud_newroya
+db_user = root
 
 ;Пароль к базе
-db_password = "1c2j!UM@z2"
+db_password = ""
 
 ;Имя базы
-db_name = royalbud_newroya
+db_name = okaycms-git
 
 ;Драйвер базы данных
 db_driver = mysql
@@ -27,10 +25,13 @@ db_charset = UTF8MB4
 db_names = utf8mb4
 
 ;Режим SQL
-db_sql_mode = "ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
+db_sql_mode = "ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
 
 ;Смещение часового пояса
 ;db_timezone = +04:00
+
+[modules]
+marketplace_url = https://modules.okay-cms.com/
 
 [php]
 error_reporting = E_ALL
@@ -42,6 +43,7 @@ php_locale_numeric = ru_RU
 php_locale_time = ru_RU
 ;php_timezone = Europe/Moscow
 debug_mode = false
+tmp_dir = tmp/
 
 [smarty]
 smarty_compile_check = true
@@ -50,12 +52,21 @@ smarty_cache_lifetime = 0
 smarty_debugging = false
 smarty_html_minify = false
 smarty_security = true
+; Данный параметр может быть полезным при отладке модификаторов tpl файлов
+smarty_force_compile = false
 
 [design]
 debug_translation = false
 scripts_defer = true
 ;Режим разработчика, пока только в админке подписывает блоки
 dev_mode = false
+preload_head_css = false
+preload_head_js = false
+preload_footer_css = false
+preload_footer_js = false
+
+;Пока TplMod находится в состоянии теста, оставим здесь возможность экстренного отключения
+;disable_tpl_mod = true
 
 [images]
 ;Указываем какую библиотеку использовать для нарезки изображений. Варианты: Gregwar, Imagick или GD. Это имя класса адаптера
@@ -97,10 +108,6 @@ resized_authors_dir = files/resized/authors/
 ;Изображения оригиналов и нарезок фоток доставки
 original_deliveries_dir = files/originals/deliveries/
 resized_deliveries_dir = files/resized/deliveries/
-
-; Папка изображений преимуществ
-original_advantages_dir = files/originals/advantages/
-resized_advantages_dir = files/resized/advantages/
 
 ;Изображения оригиналов и нарезок фоток способов оплаты
 original_payments_dir = files/originals/payments/

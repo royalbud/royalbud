@@ -139,6 +139,16 @@
                         <div class="activity_of_switch">
                             <div class="activity_of_switch_item"> {* row block *}
                                 <div class="fn_step-4 okay_switch clearfix">
+                                    <label class="switch_label">{$btr->general_enable|escape}</label>
+                                    <label class="switch switch-default">
+                                        <input class="switch-input" name="visible" value='1' type="checkbox" {if $feature->visible}checked=""{/if}/>
+                                        <span class="switch-label"></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="activity_of_switch_item"> {* row block *}
+                                <div class="fn_step-4 okay_switch clearfix">
                                     <label class="switch_label">{$btr->feature_filter|escape}
                                         <i class="fn_tooltips" title="{$btr->tooltip_feature_url_in_product|escape}">
                                             {include file='svg_icon.tpl' svgId='icon_tooltips'}
@@ -152,13 +162,34 @@
 
                                 </div>
                             </div>
-                            {get_design_block block="feature_switch_checkboxes"}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {*Дополнительные настройки*}
+    {$switch_checkboxes = {get_design_block block="feature_switch_checkboxes"}}
+    {if !empty($switch_checkboxes)}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        {$switch_checkboxes}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {/if}
 
     {*Параметры элемента*}
     <div class="row">
@@ -200,7 +231,7 @@
                     <select class="selectpicker form-control fn_select_all_categories col-xs-12 px-0" multiple name="feature_categories[]" size="10" data-selected-text-format="count" >
                         {function name=category_select selected_id=$product_category level=0}
                             {foreach $categories as $category}
-                                <option value='{$category->id}' {if in_array($category->id, $feature_categories)}selected{/if} category_name='{$category->single_name}'>{section name=sp loop=$level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$category->name}</option>
+                                <option value='{$category->id}' {if in_array($category->id, $feature_categories)}selected{/if} category_name='{$category->single_name|escape}'>{section name=sp loop=$level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$category->name|escape}</option>
                                 {category_select categories=$category->subcategories selected_id=$selected_id  level=$level+1}
                             {/foreach}
                         {/function}
@@ -237,7 +268,7 @@
                     <input name="auto_value_id" class="form-control mb-t" type="text" value="{$feature->auto_value_id|escape}"/>
 
                     <div class="heading_label" >{$btr->feature_description|escape}</div>
-                    <textarea class="form-control okay_textarea" name="description">{$feature->description}</textarea>
+                    <textarea class="form-control okay_textarea" name="description">{$feature->description|escape}</textarea>
                 </div>
                 {get_design_block block="feature_meta_data"}
             </div>
@@ -263,7 +294,7 @@
                                 {include file='svg_icon.tpl' svgId='icon_tooltips'}
                             </i>
                         </span>
-                        <button type="button" class="btn btn_small btn-secondary fn_add_value mb-1">
+                        <button type="button" class="fn_step-7 btn btn_small btn-secondary fn_add_value mb-1">
                             {include file='svg_icon.tpl' svgId='plus'}
                             <span>{$btr->feature_add_value|escape}</span>
                         </button>
@@ -274,7 +305,7 @@
                 </div>
                 <div class="toggle_body_wrap on fn_card fn_sort_list">
 
-                    <div class="fn_step-7 row mb-1">
+                    <div class="fn_step-8 row mb-1">
                         <div class="col-lg-9 col-md-9 col-sm 12">
                             <div class="float-lg-left">
                                 {*<input type="submit" name="alphabet_sort_values" value="{$btr->general_sort_feature_values_alphabet|escape}">*}
@@ -481,7 +512,7 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 mb-2">
-            <button type="submit" class="fn_step-9 btn btn_small btn_blue float-md-right">
+            <button type="submit" class="fn_step-10 btn btn_small btn_blue float-md-right">
                 {include file='svg_icon.tpl' svgId='checked'}
                 <span>{$btr->general_apply|escape}</span>
             </button>

@@ -11,8 +11,11 @@ use Okay\Core\Database;
 use Okay\Core\QueryFactory;
 use Okay\Core\EntityFactory;
 use Okay\Entities\BrandsEntity;
+use Okay\Entities\FeaturesEntity;
+use Okay\Entities\FeaturesValuesEntity;
 use Okay\Entities\ImagesEntity;
 use Okay\Entities\ProductsEntity;
+use Okay\Entities\RouterCacheEntity;
 use Okay\Entities\VariantsEntity;
 use Okay\Entities\CategoriesEntity;
 use Okay\Entities\SpecialImagesEntity;
@@ -44,6 +47,16 @@ class BackendProductsHelper
     /** @var SpecialImagesEntity */
     private $specialImagesEntity;
 
+    /** @var RouterCacheEntity */
+    private $routerCacheEntity;
+
+    /** @var FeaturesValuesEntity */
+    private $featuresValuesEntity;
+
+
+    /** @var FeaturesEntity */
+    private $featuresEntity;
+
 
     public function __construct(
         EntityFactory $entityFactory,
@@ -64,11 +77,21 @@ class BackendProductsHelper
         $this->variantsEntity      = $entityFactory->get(VariantsEntity::class);
         $this->categoriesEntity    = $entityFactory->get(CategoriesEntity::class);
         $this->specialImagesEntity = $entityFactory->get(SpecialImagesEntity::class);
+        $this->routerCacheEntity   = $entityFactory->get(RouterCacheEntity::class);
+        $this->featuresValuesEntity= $entityFactory->get(FeaturesValuesEntity::class);
+        $this->featuresEntity      = $entityFactory->get(FeaturesEntity::class);
     }
 
     public function getProduct($id)
     {
         $product = $this->productsEntity->get((int) $id);
+
+        if (empty($product->id)) {
+            // Сразу активен
+            $product = new \stdClass();
+            $product->visible = 1;
+        }
+        
         return ExtenderFacade::execute(__METHOD__, $product, func_get_args());
     }
 
@@ -362,6 +385,8 @@ class BackendProductsHelper
                 $filter['visible'] = 0;
             } elseif($f == 'outofstock') {
                 $filter['not_in_stock'] = 1;
+            } elseif($f == 'instock') {
+                $filter['in_stock'] = 1;
             } elseif($f == 'without_images') {
                 $filter['has_no_images'] = 1;
             }
@@ -381,6 +406,35 @@ class BackendProductsHelper
             $filter['limit'] = $this->productsEntity->count($filter);
         }
 
+        if (!empty($_GET['feature_id'])) {
+            $featureId = $this->request->get('feature_id', 'integer');
+            $feature = $this->featuresEntity->findOne(['id' => $featureId]);
+            if (!empty($featureId)) {
+                $values = $this->featuresValuesEntity->find(['feature_id' => $featureId]);
+                $productIds = [];
+                $pid = [];
+                if (!empty($values)) {
+                    foreach ($values as $i=>$value) {
+
+                        $select = $this->queryFactory->newSelect();
+                        $select->from('ok_products_features_values')
+                            ->cols(['product_id'])
+                            ->where('value_id=:value_id')
+                            ->bindValues(['value_id' => $value->id]);
+                        $this->db->query($select);
+                        $productId = $this->db->results('product_id');
+                        array_push($productIds, $productId);
+                        if (in_array($value->id, $productIds)) {
+                            unset($productIds[$value->id]);
+                        }
+                        foreach ($productIds[$i] as $id) {
+                            array_push($pid, $id);
+                        }
+                    }
+                    $filter['id'] = $pid;
+                }
+            }
+        }
         return ExtenderFacade::execute(__METHOD__, $filter, func_get_args());
     }
 
@@ -452,6 +506,29 @@ class BackendProductsHelper
         ExtenderFacade::execute(__METHOD__, null, func_get_args());
     }
 
+    public function actionAddSecondCategories($ids)
+    {
+        /* Добавить категорию */
+        $categoryId = $this->request->post('target_second_category');
+        
+        // Подсчитываем кол-во категорий каждого товара, чтобы знать какой position ставить новым категориям
+        $productsCategoriesNum = [];
+        foreach ($this->categoriesEntity->getProductCategories($ids) as $pc) {
+            if (!isset($productsCategoriesNum[$pc->product_id])) {
+                $productsCategoriesNum[$pc->product_id] = 0;
+            }
+            $productsCategoriesNum[$pc->product_id]++;
+        }
+        foreach ($ids as $id) {
+            if (!isset($productsCategoriesNum[$id])) {
+                $productsCategoriesNum[$id] = 0;
+            }
+            $this->categoriesEntity->addProductCategory($id, $categoryId, $productsCategoriesNum[$id]++);
+        }
+        
+        ExtenderFacade::execute(__METHOD__, null, func_get_args());
+    }
+
     public function actionMoveToCategory($ids)
     {
         /*Переместить в категорию*/
@@ -491,6 +568,13 @@ class BackendProductsHelper
                     ->set('product_id', $id);
                 $this->db->query($insert);
             }
+            
+        }
+
+        if (!empty($ids)) {
+            $this->productsEntity->update($ids, ['main_category_id' => $categoryId]);
+            $productsUrls = $this->productsEntity->col('url')->find(['id' => $ids]);
+            $this->routerCacheEntity->deleteByUrl(RouterCacheEntity::TYPE_PRODUCT, $productsUrls);
         }
 
         ExtenderFacade::execute(__METHOD__, null, func_get_args());
@@ -595,8 +679,8 @@ class BackendProductsHelper
 
     public function delete($ids)
     {
-        $this->productsEntity->delete($ids);
         ExtenderFacade::execute(__METHOD__, null, func_get_args());
+        $this->productsEntity->delete($ids);
     }
 
 }

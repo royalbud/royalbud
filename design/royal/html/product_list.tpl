@@ -1,19 +1,35 @@
-{* Product preview *}
+<!-- Product preview -->
 <div class="product_preview fn_product">
     <div class="fn_transfer clearfix">
         <div class="product_preview__center">
-            <div class="d-flex product_preview__image fn_loader_image">
+            <div class="d-flex product_preview__image">
                 <a class="d-flex align-items-center justify-content-center" aria-label="{$product->name|escape}" href="{if $controller=='Comparison'}{$product->image->filename|resize:800:600:w}{else}{url_generator route='product' url=$product->url}{/if}" {if $controller=='Comparison'}data-fancybox="group" data-caption="{$product->name|escape}"{/if}>
                     {if $product->image->filename}
-                        <img class="fn_img preview_img lazy" data-src="{$product->image->filename|resize:300:180}" src="{$product->image->filename|resize:300:180}" alt="{$product->name|escape}" title="{$product->name|escape}"/>
+                        <picture>
+                            {if $settings->increased_image_size}
+                                {if $settings->support_webp}
+                                    <source type="image/webp" data-srcset="{$product->image->filename|resize:600:800|webp}" >
+                                {/if}
+                                <source data-srcset="{$product->image->filename|resize:600:800}">
+                                <img class="fn_img preview_img lazy" data-src="{$product->image->filename|resize:600:800}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$product->name|escape}" title="{$product->name|escape}"/>
+                            {else}
+                                {if $settings->support_webp}
+                                    <source type="image/webp" data-srcset="{$product->image->filename|resize:180:150|webp}" media="(max-width: 440px)" >
+                                    <source type="image/webp" data-srcset="{$product->image->filename|resize:300:150|webp}" >
+                                {/if}
+                                <source data-srcset="{$product->image->filename|resize:180:150}" media="(max-width: 440px)">
+                                <source data-srcset="{$product->image->filename|resize:300:150}">
+                                    
+                                <img class="fn_img preview_img lazy" data-src="{$product->image->filename|resize:300:150}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$product->name|escape}" title="{$product->name|escape}"/>
+                            {/if}
+                        </picture>
                     {else}
                         <div class="fn_img product_preview__no_image d-flex align-items-center justify-content-center" title="{$product->name|escape}">
                             {include file="svg.tpl" svgId="no_image"}
                         </div>
                     {/if}
-                </a>
 
-                {if $product->featured || $product->special || ($product->variant->price>0 && $product->variant->compare_price>0 && $product->variant->compare_price>$product->variant->price)}
+                    {if $product->featured || $product->special || ($product->variant->price>0 && $product->variant->compare_price>0 && $product->variant->compare_price>$product->variant->price)}
                     <div class="stickers">
                         {if $product->featured}
                         <span class="sticker sticker--hit" data-language="product_sticker_hit">{$lang->product_sticker_hit}</span>
@@ -31,7 +47,9 @@
                             </span>
                         {/if}
                     </div>
-                {/if}
+                    {/if}
+                </a>
+
                 {* Wishlist *}
                 {if $controller != "WishListController"}
                     {if is_array($wishlist->ids) && in_array($product->id, $wishlist->ids)}
@@ -56,12 +74,14 @@
                 </a>
             </div>
             <div class="d-flex align-items-center product_preview__prices">
+                {if $product->variant->price > 0}
                 <div class="old_price {if !$product->variant->compare_price} hidden-xs-up{/if}">
                     <span class="fn_old_price">{$product->variant->compare_price|convert}</span> <span class="currency">{$currency->sign|escape}</span>
                 </div>
                 <div class="price {if $product->variant->compare_price} price--red{/if}">
                     <span class="fn_price">{$product->variant->price|convert}</span> <span class="currency">{$currency->sign|escape}</span>
                 </div>
+                {/if}
             </div>
         </div>
         <div class="product_preview__bottom">

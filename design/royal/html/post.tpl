@@ -1,9 +1,6 @@
-{* Post page *}
+<!-- Post page -->
 
-{* The canonical address of the page *}
-{$canonical="{url_generator route=$route_name url=$post->url absolute=1}" scope=global}
-
-<div class="clearfix">
+<div class="d-lg-flex align-items-lg-start justify-content-lg-between flex-lg-row-reverse">
     {* Sidebar with post *}
     <div class="fn_mobile_toogle sidebar sidebar--right position_sticky d-lg-flex flex-lg-column">
         {include 'blog_sidebar.tpl'}
@@ -58,7 +55,7 @@
                         {if $post->date}
                             <div class="post_information__item" title="{$lang->blog_date_public}">
                                 {include file="svg.tpl" svgId="calendar_icon"}
-                                <span>{$post->date|date:"d cFR Y, cD"}</span>
+                                <span>{$post->date|date:"d m Y, H:i"}</span>
                             </div>
                         {/if}
                         {* Reading time *}
@@ -78,7 +75,7 @@
                     {if $post->updated_date > 0}
                         <div class="post__update_date">
                             {include file="svg.tpl" svgId="update_date_icon"}
-                            <span class="post__update_date_text">{$lang->blog_update_date} {$post->updated_date|date:"d cFR Y, cD"}</span>
+                            <span class="post__update_date_text">{$lang->blog_update_date} {$post->updated_date|date:"d m Y"}</span>
                         </div>
                     {/if}
                     {* Table contents *}
@@ -325,13 +322,13 @@
 
                                 {* User's name *}
                                 <div class="form__group">
-                                    <input class="form__input form__placeholder--focus" type="text" name="name" value="{$request_data.name|escape}" />
+                                    <input class="form__input form__placeholder--focus" type="text" name="name" value="{if $request_data.name}{$request_data.name|escape}{elseif $user->name}{$user->name|escape}{/if}" />
                                     <span class="form__placeholder">{$lang->form_name}*</span>
                                 </div>
 
                                 {* User's email *}
                                 <div class="form__group">
-                                    <input class="form__input form__placeholder--focus" type="text" name="email" value="{$request_data.email|escape}" data-language="form_email" />
+                                    <input class="form__input form__placeholder--focus" type="text" name="email" value="{if $request_data.email}{$request_data.email|escape}{elseif $user->email}{$user->email|escape}{/if}" data-language="form_email" />
                                     <span class="form__placeholder">{$lang->form_email}</span>
                                 </div>
 
@@ -414,8 +411,8 @@
         {/literal}
         {/if}
         {literal}
-        "description": "{/literal}{$post->annotation|strip_tags|escape}{literal}",
-        "articleBody": "{/literal}{$description|strip_tags|escape}{literal}"
+        "description": "{/literal}{$annotation|json_ld_text}{literal}",
+        "articleBody": "{/literal}{$description|json_ld_text}{literal}"
     }
 
 </script>

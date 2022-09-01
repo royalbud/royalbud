@@ -78,16 +78,20 @@
     {$name}_compact_product_list_item_add.removeAttr('id');
     $("input#{$name}_compact_product_list").devbridgeAutocomplete({
         serviceUrl:'ajax/search_products.php',
+        type: 'POST',
         minChars:0,
         orientation:'auto',
         noCache: false,
+        params: {
+            filter: {json_encode($filter)}
+        },
         onSelect:
             function(suggestion){
                 $("input#{$name}_compact_product_list").val('').focus().blur();
                 new_item = {$name}_compact_product_list_item_add.clone().appendTo('.{$name}_compact_product_list');
                 new_item.find('a.compact_list_product_name').html(suggestion.data.name);
                 new_item.find('a.compact_list_product_name').attr('href', 'index.php?controller=ProductAdmin&id='+suggestion.data.id);
-                new_item.find('input[name*="related_products"]').val(suggestion.data.id);
+                new_item.find('input[name*="{$name}"]').val(suggestion.data.id);
                 if(suggestion.data.image) {
                     new_item.find('img.product_icon').attr("src", suggestion.data.image);
                 }

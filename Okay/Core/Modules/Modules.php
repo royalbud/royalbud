@@ -4,15 +4,17 @@
 namespace Okay\Core\Modules;
 
 
+use Okay\Core\DebugBar\DebugBar;
+use Okay\Core\OkayContainer\OkayContainer;
+use Okay\Core\Router;
 use Smarty;
 use Okay\Core\Design;
 use Okay\Core\Database;
 use Okay\Core\QueryFactory;
 use Okay\Core\Config;
-use Okay\Core\TemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
 use Okay\Entities\ModulesEntity;
 use Okay\Core\EntityFactory;
-use OkayLicense\License;
 use Okay\Core\ServiceLocator;
 
 class Modules // TODO: подумать, мож сюда переедет CRUD Entity/Modules
@@ -21,10 +23,6 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
      * @var Module
      */
     private $module;
-    /**
-     * @var License
-     */
-    private $license;
 
     /**
      * @var EntityFactory
@@ -55,15 +53,23 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
      * @var array список контроллеров бекенда
      */
     private $backendControllersList = [];
-    
+
     /**
      * @var array список запущенных модулей
      */
     private $runningModules = [];
 
+    /**
+     * @var array параметры модулей из файла module.json
+     */
+    private $modulesParams = [];
+    private $modulesModifications = ['front' => [], 'backend' => []];
+    private $modificationsInit = false;
+
+    private $plugins;
+
     public function __construct(
         EntityFactory $entityFactory,
-        License       $license,
         Module        $module,
         QueryFactory  $queryFactory,
         Database      $database,
@@ -72,13 +78,12 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
     ) {
         $this->entityFactory = $entityFactory;
         $this->module        = $module;
-        $this->license       = $license;
         $this->queryFactory  = $queryFactory;
         $this->db            = $database;
         $this->config        = $config;
         $this->smarty        = $smarty;
     }
-    
+
     /**
      * Метод возвращает список зарегистрированных контроллеров для бекенда
      * @return array
@@ -92,7 +97,7 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
     {
         $this->startModules(false);
     }
-    
+
     /**
      * Процедура запуска включенных подулей. Включает в себя загрузку конфигураций,
      * маршрутов и сервисов обявленных в рамках модулей
@@ -102,7 +107,9 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
      */
     public function startEnabledModules()
     {
+        DebugBar::startMeasure("start_modules", "Start modules");
         $this->startModules(true);
+        DebugBar::stopMeasure("start_modules");
     }
 
     private function startModules($activeOnly = true)
@@ -116,12 +123,22 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
         $this->db->query($select);
         $modules = $this->db->results();
 
+        foreach ($modules as $module) {
+            // Запоминаем какие модули мы запустили, они понадобятся чтобы активировать их js и css
+            $this->runningModules[$module->vendor . '/' . $module->module_name] = [
+                'vendor' => $module->vendor,
+                'module_name' => $module->module_name,
+                'is_active' => $module->enabled,
+            ];
+        }
+
         $SL = ServiceLocator::getInstance();
         /** @var Design $design */
         $design = $SL->getService(Design::class);
-
         foreach ($modules as $module) {
+            DebugBar::startMeasure("$module->vendor/$module->module_name", "Module $module->vendor/$module->module_name");
             if ($this->module->moduleDirectoryNotExists($module->vendor, $module->module_name)) {
+                DebugBar::stopMeasure("$module->vendor/$module->module_name", ['init' => '']);
                 continue;
             }
 
@@ -150,23 +167,130 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
                         $design->registerPlugin('modifier', $tag, $mock);
                     }
                 }
-
+                DebugBar::stopMeasure("$module->vendor/$module->module_name", ['init' => '']);
                 continue;
             }
-
-            // Запоминаем какие модули мы запустили, они понадобятся чтобы активировать их js и css
-            $this->runningModules[] = [
-                'vendor' => $module->vendor,
-                'module_name' => $module->module_name,
-            ];
 
             $moduleConfigFile = __DIR__ . '/../../Modules/' . $module->vendor . '/' . $module->module_name . '/config/config.php';
             if (is_file($moduleConfigFile)) {
                 $this->config->loadConfigsFrom($moduleConfigFile);
             }
-            
-            $this->backendControllersList = array_merge($this->backendControllersList, $this->license->startModule($module->id, $module->vendor, $module->module_name));
+
+            if ($moduleParams = $this->module->getModuleParams($module->vendor, $module->module_name)) {
+                $this->modulesParams[$module->vendor . '/' . $module->module_name] = $moduleParams;
+            }
+
+            $this->backendControllersList = array_merge($this->backendControllersList, $this->startModule($module->id, $module->vendor, $module->module_name));
+            DebugBar::stopMeasure("$module->vendor/$module->module_name", ['init' => '']);
         }
+    }
+
+    public function getBackendModulesTplModifications()
+    {
+        $this->initModulesModifications();
+        return $this->modulesModifications['backend'];
+    }
+
+    public function getFrontModulesTplModifications()
+    {
+        $this->initModulesModifications();
+        return $this->modulesModifications['front'];
+    }
+
+    private function initModulesModifications()
+    {
+        if ($this->modificationsInit === true) {
+            return;
+        }
+
+        $allowedModifiers = [
+            'append',
+            'appendBefore',
+            'prepend',
+            'appendAfter',
+            'html',
+            'text',
+            'replace',
+            'remove',
+        ];
+
+        $frontModifications = [];
+        $backendModifications = [];
+        if (!empty($this->modulesParams)) {
+            $modulesParams = array_reverse($this->modulesParams);
+            foreach ($modulesParams as $vendorModule => $params) {
+
+                // Для выключенных модулей не нужно инициализировать модификаторы
+                if (!isset($this->runningModules[$vendorModule]) || !$this->runningModules[$vendorModule]['is_active']) {
+                    continue;
+                }
+
+                // TODO: подумать что делать с локатором и циклической зависимостью из-за которой нельзя заинжектить сервис
+                $serviceLocator = ServiceLocator::getInstance();
+
+                /** @var FrontTemplateConfig $frontTemplateConfig */
+                $frontTemplateConfig = $serviceLocator->getService(FrontTemplateConfig::class);
+                $themeDir  = $frontTemplateConfig->getTheme();
+
+                $moduleDir = __DIR__ . '/../../Modules/' . $vendorModule . '/';
+                $themeModuleHtmlDir = dirname(__DIR__,3).'/design/'.$themeDir.'/modules/'.$vendorModule.'/';
+
+                if (!empty($params->modifications->front)) {
+                    foreach ($params->modifications->front as $modification) {
+                        if (!empty($modification->changes)) {
+                            foreach ($modification->changes as $change) {
+
+                                // Если не указали комментарий, добавим название модуля
+                                if (empty($change->comment)) {
+                                    $change->comment = $vendorModule;
+                                }
+
+                                foreach ($allowedModifiers as $modifier) {
+                                    // Если в значении модификатора указано имя файла - значение считаем с самого файла
+                                    if (property_exists($change, $modifier)) {
+                                        if (is_file($themeModuleHtmlDir . 'html/' . $change->{$modifier})) {
+                                            $change->{$modifier} = file_get_contents($themeModuleHtmlDir . 'html/' . $change->{$modifier});
+                                        } else if (is_file($moduleDir . 'design/html/' . $change->{$modifier})) {
+                                            $change->{$modifier} = file_get_contents($moduleDir . 'design/html/' . $change->{$modifier});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $frontModifications = array_merge($frontModifications, $params->modifications->front);
+                }
+
+                if (!empty($params->modifications->backend)) {
+                    foreach ($params->modifications->backend as $modification) {
+                        if (!empty($modification->changes)) {
+                            foreach ($modification->changes as $change) {
+
+                                // Если не указали комментарий, добавим название модуля
+                                if (empty($change->comment)) {
+                                    $change->comment = $vendorModule;
+                                }
+
+                                foreach ($allowedModifiers as $modifier) {
+                                    // Если в занчении модификатора указано имя файла, значение считаем с самого файла
+                                    if (property_exists($change, $modifier)) {
+                                        if (is_file($moduleDir . 'Backend/design/html/' . $change->{$modifier})) {
+                                            $change->{$modifier} = file_get_contents($moduleDir . 'Backend/design/html/' . $change->{$modifier});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $backendModifications = array_merge($backendModifications, $params->modifications->backend);
+                }
+            }
+        }
+
+        $this->modulesModifications['front'] = $frontModifications;
+        $this->modulesModifications['backend'] = $backendModifications;
+
+        $this->modificationsInit = true;
     }
 
     /**
@@ -181,7 +305,7 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
     {
         return $this->runningModules;
     }
-    
+
     /**
      * Метод проверяет активен ли модуль
      * @param $vendor
@@ -198,10 +322,10 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
                 ->where('vendor = ?', (string)$vendor)
                 ->where('module_name = ?', (string)$moduleName)
         );
-        
+
         return (bool)$this->db->result('enabled');
     }
-    
+
     public function getPaymentModules($langLabel)
     {
         $modules = [];
@@ -214,7 +338,7 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
         }
         return $modules;
     }
-    
+
     public function getDeliveryModules($langLabel)
     {
         $modules = [];
@@ -257,7 +381,8 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
             if (!empty($defaultProperties['tag'])) {
                 $pluginName = $defaultProperties['tag'];
             } else {
-                $pluginName = strtolower(end(explode('\\', $plugin['class'])));
+                $classParts = explode('\\', $plugin['class']);
+                $pluginName = strtolower(end($classParts));
             }
 
             $this->smarty->registerPlugin('function', $pluginName, function() {
@@ -282,17 +407,17 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
                 $settings[(string)$setting->variable] = new \stdClass;
                 $settings[(string)$setting->variable]->name = $settingName;
                 $settings[(string)$setting->variable]->variable = (string)$setting->variable;
-                
+
                 if (empty((array)$setting->options)) {
                     $settings[(string)$setting->variable]->type = 'text';
                     if (!empty($attributes->type) && in_array(strtolower($attributes->type), ['hidden', 'text', 'date', 'checkbox'])) {
                         $settings[(string)$setting->variable]->type = strtolower($attributes->type);
                     }
-                    
+
                     if (!empty((string)$setting->value) && $settings[(string)$setting->variable]->type == 'checkbox') {
                         $settings[(string)$setting->variable]->value = (string)$setting->value;
                     }
-                    
+
                 } else {
                     $settings[(string)$setting->variable]->options = [];
                     foreach ($setting->options as $option) {
@@ -306,10 +431,10 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
                 }
             }
         }
-        
+
         return $settings;
     }
-    
+
     /**
      * Метод возвращает массив переводов
      * @param string $vendor
@@ -329,7 +454,7 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
         }
         return $lang;
     }
-    
+
     /**
      * @param string $vendor
      * @param string $moduleName
@@ -341,7 +466,7 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
     {
         $resultLabel = '';
         $moduleDir = $this->module->getModuleDirectory($vendor, $moduleName);
-        
+
         if (is_file($moduleDir . 'Backend/lang/' . $langLabel . '.php')) {
             $resultLabel = $langLabel;
         } elseif (is_file($moduleDir . 'Backend/lang/en.php')) {
@@ -349,29 +474,42 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
         } elseif (is_dir($moduleDir . 'Backend/lang/') && ($langs = array_slice(scandir($moduleDir . 'Backend/lang/'), 2)) && count($langs) > 0) {
             $resultLabel = str_replace('.php', '', reset($langs));
         }
-        
+
         return $resultLabel;
     }
 
     public function getModuleFrontTranslations($vendor, $moduleName, $langLabel)
     {
         $langLabel = $this->getFrontLangLabel($vendor, $moduleName, $langLabel);
+
+        $lang = [];
+        if ($langFile = $this->getModuleFrontTranslationsLangFile($vendor, $moduleName, $langLabel)) {
+            include $langFile;
+        }
+
+        return $lang;
+    }
+
+    public function getModuleFrontTranslationsLangFile($vendor, $moduleName, $langLabel)
+    {
         $moduleDir = $this->module->getModuleDirectory($vendor, $moduleName);
 
         // TODO: подумать что делать с локатором и циклической зависимостью из-за которой нельзя заинжектить сервис
         $serviceLocator = ServiceLocator::getInstance();
-        $templateConfig = $serviceLocator->getService(TemplateConfig::class);
-        $themeDir  = 'design/'.$templateConfig->getTheme().'/';
 
-        $lang = [];
+        /** @var FrontTemplateConfig $frontTemplateConfig */
+        $frontTemplateConfig = $serviceLocator->getService(FrontTemplateConfig::class);
+        $themeDir  = 'design/'.$frontTemplateConfig->getTheme().'/';
+
         if (is_file($themeDir .'modules/'.$vendor.'/'.$moduleName.'/lang/'. $langLabel.'.php')) {
-            include $themeDir .'modules/'.$vendor.'/'.$moduleName.'/lang/'. $langLabel.'.php';
+            return $themeDir .'modules/'.$vendor.'/'.$moduleName.'/lang/'. $langLabel.'.php';
+        } elseif (is_file($moduleDir . '/design/lang/' . $langLabel . '.php')) {
+            return $moduleDir . 'design/lang/' . $langLabel . '.php';
+        } else {
+            return false;
         }
-        elseif (is_file($moduleDir . '/design/lang/' . $langLabel . '.php')) {
-            include $moduleDir . 'design/lang/' . $langLabel . '.php';
-        }
-        return $lang;
     }
+
 
     /**
      * @param string $vendor
@@ -394,6 +532,77 @@ class Modules // TODO: подумать, мож сюда переедет CRUD E
         }
 
         return $resultLabel;
+    }
+
+    /**
+     * @param $moduleId
+     * @param $vendor
+     * @param $moduleName
+     * @param $design
+     * @return array
+     * @throws \Exception
+     * Запуск определенного модуля, по большому счету сделано чтобы можно было контроллировать
+     * какие модули запускать (для лайта), та и чтобы нельзя было просто так удалить лицензию
+     */
+    public function startModule($moduleId, $vendor, $moduleName)
+    {
+
+        if (empty($this->module)) {
+            return [];
+        }
+
+        $container = OkayContainer::getInstance();
+
+        $routes = $this->module->getRoutes($vendor, $moduleName);
+        if (self::isActiveModule($vendor, $moduleName) === false) {
+            foreach ($routes as &$route) {
+                $route['mock'] = true;
+            }
+        }
+
+        $parameters = $this->module->getParameters($vendor, $moduleName);
+        $container->bindParameters($parameters);
+
+        $services = $this->module->getServices($vendor, $moduleName);
+        $container->bindServices($services);
+
+        $plugins = $this->module->getSmartyPlugins($vendor, $moduleName);
+        $container->bindServices($plugins);
+
+        foreach($plugins as $name => $plugin) {
+            $this->plugins[$name] = $plugin;
+        }
+
+        Router::bindRoutes($routes);
+
+        $backendControllersList = [];
+        $initClassName = $this->module->getInitClassName($vendor, $moduleName);
+        if (!empty($initClassName)) {
+            /** @var AbstractInit $initObject */
+            $initObject = new $initClassName((int)$moduleId, $vendor, $moduleName);
+            $initObject->init();
+            foreach ($initObject->getBackendControllers() as $controllerName) {
+                $controllerName = $vendor . '.' . $moduleName . '.' . $controllerName;
+                if (!in_array($controllerName, $backendControllersList)) {
+                    $backendControllersList[] = $controllerName;
+                }
+            }
+        }
+
+        return $backendControllersList;
+    }
+
+    public function registerSmartyPlugins()
+    {
+        if (!empty($this->plugins)) {
+            $SL = ServiceLocator::getInstance();
+            $design = $SL->getService(Design::class);
+            $module = $SL->getService(Module::class);
+            foreach ($this->plugins as $plugin) {
+                $p = $SL->getService($plugin['class']);
+                $p->register($design, $module);
+            }
+        }
     }
     
 }

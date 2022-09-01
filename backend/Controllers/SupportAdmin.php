@@ -14,7 +14,7 @@ class SupportAdmin extends IndexAdmin
     {
         $error = '';
         if ($this->request->method('post') && !empty($this->request->post('get_new_keys'))) {
-            $result = $support->getNewKeys();
+            $result = $support->getNewKeys($this->manager->email);
             if (is_null($result) || (empty($result) && $result!==false)) {
                 $error = 'unknown_error';
             } elseif ($result === false) {
@@ -26,6 +26,16 @@ class SupportAdmin extends IndexAdmin
                 $this->response->sendHeaders();
                 exit();
             }
+        }
+        
+        if ($this->request->method('post') && !empty($this->request->post('manual_save_keys'))) {
+            $supportInfoEntity->updateInfo([
+                'public_key' => str_replace("\r\n", "\n", trim($this->request->post('public_key')) . "\r\n"),
+                'private_key' => str_replace("\r\n", "\n", trim($this->request->post('private_key')) . "\r\n"),
+            ]);
+            $this->response->addHeader("Refresh:0");
+            $this->response->sendHeaders();
+            exit();
         }
 
         $supportInfo = $supportInfoEntity->getInfo();

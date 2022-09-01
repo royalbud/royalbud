@@ -139,13 +139,34 @@
                                     </label>
                                 </div>
                             </div>
-                            {get_design_block block="brand_switch_checkboxes"}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {*Дополнительные настройки*}
+    {$switch_checkboxes = {get_design_block block="brand_switch_checkboxes"}}
+    {if !empty($switch_checkboxes)}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="boxed fn_toggle_wrap ">
+                <div class="heading_box">
+                    {$btr->general_additional_settings|escape}
+                    <div class="toggle_arrow_wrap fn_toggle_card text-primary">
+                        <a class="btn-minimize" href="javascript:;" ><i class="fa fn_icon_arrow fa-angle-down"></i></a>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    <div class="activity_of_switch activity_of_switch--box_settings">
+                        {$switch_checkboxes}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {/if}
 
     {*Параметры элемента*}
     <div class="row">
@@ -219,6 +240,16 @@
                             </i>
                         </div>
                         <textarea name="meta_description" class="form-control okay_textarea fn_meta_field">{$brand->meta_description|escape}</textarea>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="heading_label">{$btr->brand_h1|escape}
+                            <i class="fn_tooltips" title="{$btr->tooltip_brand_h1|escape}">
+                                {include file='svg_icon.tpl' svgId='icon_tooltips'}
+                            </i>
+                        </div>
+                        <div>
+                            <input name="name_h1" class="form-control" type="text" value="{$brand->name_h1|escape}"/>
+                        </div>
                     </div>
                 </div>
                 {get_design_block block="brand_meta"}

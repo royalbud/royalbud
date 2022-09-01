@@ -25,16 +25,16 @@
                 <div class="order_toolbar__status">
                     <select class="selectpicker form-control" name="status_id">
                         {foreach $all_status as $status_item}
-                            <option value="{$status_item->id}" {if $order->status_id == $status_item->id}selected=""{/if} {if $hasVariantNotInStock && !$order->closed && $status_item->is_close} disabled{/if} >{$status_item->name|escape}</option>
+                            <option value="{$status_item->id|escape}" {if $order->status_id == $status_item->id}selected=""{/if} {if $hasVariantNotInStock && !$order->closed && $status_item->is_close} disabled{/if} >{$status_item->name|escape}</option>
                         {/foreach}
                     </select>
                 </div>
                 {if $order->id && !empty($order->url)}
-                    <a data-hint="{$btr->general_open|escape}" class="hint-bottom-middle-t-info-s-small-mobile  hint-anim ml-h site_block_icon" target="_blank"  href="{url_generator route='order' url=$order->url absolute=1}" >
+                    <a data-hint="{$btr->general_open|escape}" class="hint-bottom-middle-t-info-s-small-mobile  hint-anim ml-h site_block_icon order_toolbar__eye" target="_blank"  href="{url_generator route='order' url=$order->url absolute=1}" >
                         {include file='svg_icon.tpl' svgId='eye'}
                     </a>
                 {/if}
-                <a data-hint="{$btr->order_print|escape}" href="{url view=print id=$order->id return=null}" target="_blank" title="{$btr->order_print|escape}" class="hint-bottom-middle-t-info-s-small-mobile  hint-anim ml-h print_block_icon">
+                <a data-hint="{$btr->order_print|escape}" href="{url view=print id=$order->id return=null}" target="_blank" title="{$btr->order_print|escape}" class="hint-bottom-middle-t-info-s-small-mobile  hint-anim ml-h print_block_icon order_toolbar__print">
                     {include file='svg_icon.tpl' svgId='print'}
                 </a>
                 {*Метки заказа*}
@@ -47,9 +47,9 @@
                                 <span class="heading_label">{$btr->orders_choose|escape} <i class="fn_delete_labels_hide btn_close delete_labels_hide">{include file='svg_icon.tpl' svgId='delete'}</i></span>
                                 <ul class="option_labels_box">
                                     {foreach $labels as $l}
-                                        <li class="fn_ajax_labels" data-order_id="{$order->id}"  style="background-color: #{$l->color|escape}">
-                                            <input id="l{$order->id}_{$l->id}" type="checkbox" class="hidden_check_1" name="order_labels[]"  value="{$l->id}" {if in_array($l->id, array_keys($order_labels)) && is_array($order_labels)}checked=""{/if} />
-                                            <label   for="l{$order->id}_{$l->id}" class="label_labels"><span>{$l->name|escape}</span></label>
+                                        <li class="fn_ajax_labels" data-order_id="{$order->id|escape}"  style="background-color: #{$l->color|escape}">
+                                            <input id="l{$order->id|escape}_{$l->id|escape}" type="checkbox" class="hidden_check_1" name="order_labels[]" value="{$l->id|escape}" {if in_array($l->id, array_keys($order_labels)) && is_array($order_labels)}checked=""{/if} />
+                                            <label for="l{$order->id|escape}_{$l->id|escape}" class="label_labels"><span>{$l->name|escape}</span></label>
                                         </li>
                                     {/foreach}
                                 </ul>
@@ -186,8 +186,8 @@
                                     {foreach $purchases as $purchase}
                                         <div class="fn_row okay_list_body_item purchases">
                                             <div class="okay_list_row">
-                                                <input type=hidden name=purchases[id][{$purchase->id}] value='{$purchase->id}'>
-    
+                                                <input type=hidden name=purchases[id][{$purchase->id|escape}] value='{$purchase->id|escape}'>
+
                                                 <div class="okay_list_boding okay_list_photo">
                                                     {if $purchase->variant}
                                                         <img class=product_icon src="{$purchase->product->image->filename|resize:50:50}">
@@ -198,37 +198,37 @@
                                                 <div class="okay_list_boding okay_list_order_name">
                                                     <div class="boxes_inline">
                                                         {if $purchase->product}
-                                                            <a class="{if $purchase->variant->stock == 0}hint-bottom-middle-t-info-s-small-mobile  hint-anim text_warning{/if}" {if $purchase->variant->stock == 0}data-hint="{$btr->product_out_stock|escape}"{/if} href="{url controller=ProductAdmin id=$purchase->product->id}">{$purchase->product_name|escape}</a>
+                                                            <a class="text_600 {if !$order->closed && $purchase->variant->stock == 0}hint-bottom-middle-t-info-s-small-mobile  hint-anim text_500 text_warning{/if}" {if !$order->closed && $purchase->variant->stock == 0}data-hint="{$btr->product_out_stock|escape}"{/if} href="{url controller=ProductAdmin id=$purchase->product->id}">{$purchase->product_name|escape}</a>
                                                             {if $purchase->variant_name}
-                                                                <span class="text_grey">{$btr->order_option|escape} {$purchase->variant_name|escape}</span>
+                                                                <div class="mt-q font_12"><span class="text_grey">{$btr->order_option|escape}</span> {$purchase->variant_name|escape}</div>
                                                             {/if}
                                                             {if $purchase->sku}
-                                                                <span class="text_grey">{$btr->general_sku|escape} {$purchase->sku|default:"&mdash;"}</span>
+                                                                <div class="mt-q font_12"><span class="text_grey">{$btr->general_sku|escape}:</span> {$purchase->sku|default:"&mdash;"}</div>
                                                             {/if}
                                                         {else}
-                                                            <div class="text_grey">{$purchase->product_name|escape}</div>
+                                                            <div class="text_grey text_600">{$purchase->product_name|escape}</div>
                                                             {if $purchase->variant_name}
-                                                                <div class="text_grey">{$btr->order_option|escape}{$purchase->variant_name|escape}</div>
+                                                                <div class="mt-q font_12"><span class="text_grey">{$btr->order_option|escape}</span> {$purchase->variant_name|escape}</div>
                                                             {/if}
                                                             {if $purchase->sku}
-                                                                <div class="text_grey">{$btr->general_sku|escape}{$purchase->sku|default:"&mdash;"}</div>
+                                                                <div class="mt-q font_12"><span class="text_grey">{$btr->general_sku|escape}:</span> {$purchase->sku|default:"&mdash;"}</div>
                                                             {/if}
                                                         {/if}
                                                         <div class="hidden-lg-up mt-q">
-                                                            <span class="text_primary text_600">{$purchase->price}</span>
+                                                            <span class="text_primary text_600 {if $purchase->discounts}text_warning{/if}">{$purchase->price|escape}</span>
                                                             <span class="hidden-md-up text_500">
-                                                            {$purchase->amount} {if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}</span>
+                                                            {$purchase->amount|escape} {if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}</span>
                                                         </div>
                                                         {get_design_block block="order_purchase_name" vars=['purchase'=>$purchase]}
                                                     </div>
-    
+
                                                     {if !$purchase->variant}
-                                                        <input class="form-control " type="hidden" name="purchases[variant_id][{$purchase->id}]" value="" />
+                                                        <input class="form-control " type="hidden" name="purchases[variant_id][{$purchase->id|escape}]" value="" />
                                                     {else}
-                                                        <div class="boxes_inline">
-                                                            <select name="purchases[variant_id][{$purchase->id}]" class="selectpicker form-control {if $purchase->product->variants|count == 1}hidden{/if} fn_purchase_variant">
+                                                        <div class="boxes_inline mt-h">
+                                                            <select name="purchases[variant_id][{$purchase->id|escape}]" class="selectpicker form-control {if $purchase->product->variants|count == 1}hidden{/if} fn_purchase_variant">
                                                                 {foreach $purchase->product->variants as $v}
-                                                                    <option data-price="{$v->price}" data-units="{if $v->units}{$v->units|escape}{else}{$settings->units|escape}{/if}" data-amount="{$v->stock}" value="{$v->id}" {if $v->id == $purchase->variant_id}selected{/if} >
+                                                                    <option {get_design_block block="order_purchase_variants_option_block" vars=['v'=>$v]} data-price="{$v->price|escape}" data-units="{if $v->units}{$v->units|escape}{else}{$settings->units|escape}{/if}" data-amount="{$v->stock|escape}" value="{$v->id|escape}" {if $v->id == $purchase->variant_id}selected{/if} >
                                                                         {if $v->name}
                                                                             {$v->name|escape}
                                                                         {else}
@@ -239,25 +239,31 @@
                                                             </select>
                                                         </div>
                                                     {/if}
+                                                    <div class="mt-h">
+                                                        <span class="tag {if $purchase->discounts}tag-danger{else}tag-default{/if} fn_discounted_toggle">
+                                                            <span>{$btr->general_discounts|escape}</span>
+                                                            <i class="fn_icon_arrow fa fa-angle-down fa-lg m-t-2 "></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <div class="okay_list_boding okay_list_price">
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control fn_purchase_price" name="purchases[price][{$purchase->id}]" value="{$purchase->price}">
-                                                        <span class="input-group-addon">{$currency->code}</span>
+                                                        <input type="text" class="form-control fn_purchase_price" name="purchases[undiscounted_price][{$purchase->id|escape}]" value="{$purchase->undiscounted_price|escape}">
+                                                        <span class="input-group-addon">{$currency->code|escape}</span>
                                                     </div>
                                                 </div>
                                                 <div class="okay_list_boding okay_list_count">
                                                     <div class="input-group">
-                                                        <input class="form-control fn_purchase_amount" type="text" name="purchases[amount][{$purchase->id}]" value="{$purchase->amount}"/>
+                                                        <input class="form-control fn_purchase_amount" type="text" name="purchases[amount][{$purchase->id|escape}]" value="{$purchase->amount|escape}"/>
                                                         <span class="input-group-addon p-0 fn_purchase_units">
                                                              {if $purchase->units}{$purchase->units|escape}{else}{$settings->units|escape}{/if}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <div class="okay_list_boding okay_list_order_amount_price">
-                                                    <div class="text_dark">
-                                                        <span>{($purchase->price) * ($purchase->amount)}</span>
-                                                        <span class="">{$currency->sign}</span>
+                                                    <div class="text_dark {if $purchase->discounts}text_warning text_600{/if}">
+                                                        <span class="font_16">{($purchase->price) * ($purchase->amount)}</span>
+                                                        <span class="font_12">{$currency->sign|escape}</span>
                                                     </div>
                                                 </div>
                                                 <div class="okay_list_boding okay_list_close">
@@ -267,59 +273,66 @@
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            {include 'order_purchase_discount.tpl'}
                                         </div>
                                     {/foreach}
                                 </div>
                                 <div class="okay_list_body fn_new_purchase" style="display: none">
                                     <div class="fn_row okay_list_body_item " >
-                                    <div class="okay_list_row">
-    
-                                        <div class="okay_list_boding okay_list_photo">
-                                            <input type="hidden" name="purchases[id][]" value="" />
-                                            <img class="fn_new_image" src="">
-                                        </div>
-    
-                                        <div class="okay_list_boding okay_list_order_name">
-                                            <div class="boxes_inline">
-                                                <a class="fn_new_product" href=""></a>
-                                                <div class="fn_new_variant_name"></div>
-                                                {get_design_block block="order_new_purchase_name"}
+                                        <div class="okay_list_row">
+                                            <div class="okay_list_boding okay_list_photo">
+                                                <input type="hidden" name="purchases[id][]" value="" />
+                                                <img class="fn_new_image" src="">
                                             </div>
-                                            <div class="boxes_inline">
-                                                <select name="purchases[variant_id][]" class="fn_new_variant"></select>
+                                            <div class="okay_list_boding okay_list_order_name">
+                                                <div class="boxes_inline">
+                                                    <a class="fn_new_product" href=""></a>
+                                                    <div class="fn_new_variant_name"></div>
+                                                    {get_design_block block="order_new_purchase_name"}
+                                                </div>
+                                                <div class="boxes_inline">
+                                                    <select name="purchases[variant_id][]" class="fn_new_variant"></select>
+                                                </div>
+                                                <div class="mt-h">
+                                                    <span class="tag tag-default fn_discounted_toggle">
+                                                        <span>{$btr->general_discounts|escape}</span>
+                                                        <i class="fn_icon_arrow fa fa-angle-down fa-lg m-t-2 "></i>
+                                                    </span>
+                                                </div>
                                             </div>
-    
-                                        </div>
-                                        <div class="okay_list_boding okay_list_price">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control fn_purchase_price" name=purchases[price][] value="">
-                                                <span class="input-group-addon">{$currency->code|escape}</span>
+                                            <div class="okay_list_boding okay_list_price">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control fn_purchase_price" name=purchases[undiscounted_price][] value="">
+                                                    <span class="input-group-addon">{$currency->code|escape}</span>
+                                                </div>
+                                            </div>
+                                            <div class="okay_list_boding okay_list_count">
+                                                <div class="input-group">
+                                                    <input class="form-control fn_purchase_amount" type="text" name="purchases[amount][]" value="1"/>
+                                                    <span class="input-group-addon p-0 fn_purchase_units">
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="okay_list_boding okay_list_order_amount_price">
+                                                <div class="text_dark">
+                                                    <span></span>
+                                                    <span class=""></span>
+                                                </div>
+                                            </div>
+                                            <div class="okay_list_boding okay_list_close">
+                                                {*delete*}
+                                                <button data-hint="{$btr->general_delete_product|escape}" type="button" class="btn_close fn_remove_item hint-bottom-right-t-info-s-small-mobile  hint-anim">
+                                                    {include file='svg_icon.tpl' svgId='trash'}
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="okay_list_boding okay_list_count">
-                                            <div class="input-group">
-                                                <input class="form-control fn_purchase_amount" type="text" name="purchases[amount][]" value="1"/>
-                                                <span class="input-group-addon p-0 fn_purchase_units">
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="okay_list_boding okay_list_order_amount_price">
-                                            <div class="text_dark">
-                                                <span></span>
-                                                <span class=""></span>
-                                            </div>
-                                        </div>
-                                        <div class="okay_list_boding okay_list_close">
-                                            {*delete*}
-                                            <button data-hint="{$btr->general_delete_product|escape}" type="button" class="btn_close fn_remove_item hint-bottom-right-t-info-s-small-mobile  hint-anim">
-                                                {include file='svg_icon.tpl' svgId='trash'}
-                                            </button>
-                                        </div>
+
+                                        {include 'order_purchase_discount.tpl' purchase=null}
                                     </div>
                                 </div>
-                                </div>
                             </div>
-    
+
                             <div class="row mt-2 mb-1">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="autocomplete_arrow">
@@ -338,7 +351,7 @@
                             </div>
                             {get_design_block block="order_purchases"}
                         </div>
-                        
+
                         {if $order->id}
                             <div id="tab2" class="tab">
                                 {include 'order_history.tpl'}
@@ -364,6 +377,31 @@
                 </div>
             </div>
 
+            {*Скидки к заказу*}
+            <div class="boxed fn_toggle_wrap boxed-discound_flex">
+                <div class="heading_box heading_box--discound_flex">
+                    <div class="pr-q">{$btr->order_discount_title|escape}</div>
+
+                    <div class="boxed-discound_activity text_400 opensans">
+                        <div class="activity_of_switch activity_of_switch--left" style="display: inline-block;">
+                            <div class="activity_of_switch_item">
+                                <div class="okay_switch clearfix">
+                                    <label class="switch_label">{$btr->order_show_order_discounts}</label>
+                                    <label class="switch switch-default">
+                                        <input class="switch-input" type="checkbox" {if $discounts}checked{/if} onchange="$('.fn_order_discounts_block').toggle(0)">
+                                        <span class="switch-label"></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle_body_wrap on fn_card">
+                    {include 'order_discount.tpl'}
+                </div>
+            </div>
+
             {*Информация по заказу*}
             <div class="boxed fn_toggle_wrap min_height_230px fn_step-3">
                 <div class="heading_box">
@@ -380,50 +418,12 @@
                                     <div class="okay_list_body_item">
                                         <div class="okay_list_row  d_flex">
                                             <div class="okay_list_boding okay_list_ordfig_name">
-                                                <div class="text_600 text_dark">{$btr->general_discount|escape}</div>
-                                            </div>
-                                            <div class="okay_list_boding okay_list_ordfig_val">
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" name="discount" value="{$order->discount}">
-                                                    <span class="input-group-addon p-0"><i class="fa fa-percent"></i></span>
-                                                </div>
-                                            </div>
-                                            <div class="okay_list_boding okay_list_ordfig_price">
-                                                <div class="text_dark">
-                                                    <span>{($subtotal-$subtotal*$order->discount/100)|round:2}</span>
-                                                    <span class="">{$currency->sign|escape}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="okay_list_body_item">
-                                        <div class="okay_list_row d_flex">
-                                            <div class="okay_list_boding okay_list_ordfig_name">
-                                                <div class="text_600 text_dark">{$btr->general_coupon|escape}{if $order->coupon_code} ({$order->coupon_code}){/if}</div>
-                                            </div>
-                                            <div class="okay_list_boding okay_list_ordfig_val">
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" name="coupon_discount" value="{$order->coupon_discount}" />
-                                                    <span class="input-group-addon p-0">{$currency->code|escape}</span>
-                                                </div>
-                                            </div>
-                                            <div class="okay_list_boding okay_list_ordfig_price">
-                                                <div class="text_dark">
-                                                    <span>{($subtotal-$subtotal*$order->discount/100-$order->coupon_discount)|round:2}</span>
-                                                    <span class="">{$currency->sign|escape}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="okay_list_body_item">
-                                        <div class="okay_list_row  d_flex">
-                                            <div class="okay_list_boding okay_list_ordfig_name">
                                                 <div class="text_600 text_dark boxes_inline">{$btr->general_shipping|escape}</div>
                                                 <div class="boxes_inline">
                                                     <select name="delivery_id" class="selectpicker form-control">
                                                         <option value="0">{$btr->order_not_selected|escape}</option>
                                                         {foreach $deliveries as $d}
-                                                            <option value="{$d->id}" {if $d->id==$delivery->id}selected{/if} data-module_id="{$d->module_id}">{$d->name|escape}</option>
+                                                            <option value="{$d->id|escape}" {if $d->id==$delivery->id}selected{/if} data-module_id="{$d->module_id|escape}">{$d->name|escape}</option>
                                                         {/foreach}
                                                     </select>
                                                 </div>
@@ -431,7 +431,7 @@
                                             </div>
                                             <div class="okay_list_boding okay_list_ordfig_val">
                                                 <div class="input-group">
-                                                    <input type=text name=delivery_price class="form-control" value='{$order->delivery_price}'>
+                                                    <input type=text name=delivery_price class="form-control" value='{$order->delivery_price|escape}'>
                                                     <span class="input-group-addon p-0">{$currency->code|escape}</span>
                                                 </div>
                                             </div>
@@ -448,7 +448,7 @@
                                                     <select name="payment_method_id" class="selectpicker form-control">
                                                         <option value="0">{$btr->order_not_selected|escape}</option>
                                                         {foreach $payment_methods as $pm}
-                                                        <option value="{$pm->id}" {if $pm->id==$payment_method->id}selected{/if} data-module_id="{$pm->module_id}">{$pm->name|escape}</option>
+                                                        <option value="{$pm->id}" {if $pm->id==$payment_method->id}selected{/if} data-module="{$pm->module|escape}">{$pm->name|escape}</option>
                                                         {/foreach}
                                                     </select>
                                                 </div>
@@ -457,8 +457,8 @@
                                             <div class="okay_list_boding okay_list_ordfig_val"></div>
                                             <div class="okay_list_boding okay_list_ordfig_price">
                                                 <div class="text_dark">
-                                                    <span>{$order->total_price} </span>
-                                                    <span class="">{$currency->sign}</span>
+                                                    <span>{$order->total_price|escape} </span>
+                                                    <span class="">{$currency->sign|escape}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -485,7 +485,7 @@
                                             <div class="order_prices__total">
                                                 <span class="text_grey text_500 font_18 mr-1">{$btr->order_to_pay|escape}</span>
                                                 <span class="text_dark text_600 font_26">{$order->total_price|convert:$payment_currency->id}</span>
-                                                <span class="text_dark text_400 font_18 ml-q">{$payment_currency->sign}</span>
+                                                <span class="text_dark text_400 font_18 ml-q">{$payment_currency->sign|escape}</span>
                                             </div>
                                         {/if}
                                     </div>
@@ -513,14 +513,20 @@
                     </div>
                 </div>
                 <div class="toggle_body_wrap on fn_card">
-                    <div class="box_border_buyer">
-                        <div class="mb-1">
-                            <div class="heading_label boxes_inline">{$btr->order_date|escape}</div>
-                            <div class="boxes_inline text_dark text_600">{$order->date|date} {$order->date|time}</div>
-                        </div>
+                    <div class="box_border_buyer fn_contact_info">
+                        {if $order->date}
+                            <div class="mb-1">
+                                <div class="heading_label boxes_inline">{$btr->order_date|escape}</div>
+                                <div class="boxes_inline text_dark text_600">{$order->date|date} {$order->date|time}</div>
+                            </div>
+                        {/if}
                         <div class="mb-1">
                             <div class="heading_label">{$btr->index_name|escape}</div>
                             <input name="name" class="form-control" type="text" value="{$order->name|escape}" />
+                        </div>
+                        <div class="mb-1">
+                            <div class="heading_label">{$btr->index_last_name|escape}</div>
+                            <input name="last_name" class="form-control" type="text" value="{$order->last_name|escape}" />
                         </div>
                         <div class="mb-1">
                             <div class="heading_label">{$btr->general_phone|escape}</div>
@@ -539,7 +545,7 @@
                             <textarea name="comment" class="form-control short_textarea">{$order->comment|escape}</textarea>
                         </div>
                          <div class="mb-1">
-                            <div class="heading_label boxes_inline">{$btr->order_ip|escape} {if $order->id}<a href="https://who.is/whois-ip/ip-address/{$order->ip}" target="_blank"><i class="fa fa-map-marker"></i> whois</a>{/if}</div>
+                            <div class="heading_label boxes_inline">{$btr->order_ip|escape} {if $order->id}<a href="https://who.is/whois-ip/ip-address/{$order->ip|escape}" target="_blank"><i class="fa fa-map-marker"></i> whois</a>{/if}</div>
                             <div class="boxes_inline text_dark text_600">{$order->ip|escape}</div>
                         </div>
                         {if $order->referer_channel}
@@ -548,23 +554,23 @@
                                 <div class="boxes_inline text_dark">
                                     {if $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_EMAIL}
                                         <span class="tag tag-chanel_email" title="{$order->referer_source|escape}">
-                                            {include file='svg_icon.tpl' svgId='tag_email'} {$order->referer_channel}
+                                            {include file='svg_icon.tpl' svgId='tag_email'} {$order->referer_channel|escape}
                                         </span>
                                     {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_SEARCH}
                                         <span class="tag tag-chanel_search" title="{$order->referer_source|escape}">
-                                            {include file='svg_icon.tpl' svgId='tag_search'} {$order->referer_channel}
+                                            {include file='svg_icon.tpl' svgId='tag_search'} {$order->referer_channel|escape}
                                         </span>
                                     {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_SOCIAL}
                                         <a href="{$order->referer_source|escape}" target="_blank" class="tag tag-chanel_social" title="{$order->referer_source|escape}">
-                                            {include file='svg_icon.tpl' svgId='tag_social'} {$order->referer_channel}
+                                            {include file='svg_icon.tpl' svgId='tag_social'} {$order->referer_channel|escape}
                                         </a>
                                     {elseif $order->referer_channel == Okay\Core\UserReferer\UserReferer::CHANNEL_REFERRAL}
                                         <a href="{$order->referer_source|escape}" target="_blank" class="tag tag-chanel_referral" title="{$order->referer_source|escape}">
-                                            {include file='svg_icon.tpl' svgId='tag_referral'} {$order->referer_channel}
+                                            {include file='svg_icon.tpl' svgId='tag_referral'} {$order->referer_channel|escape}
                                         </a>
                                     {else}
                                         <span class="tag tag-chanel_unknown" title="{$order->referer_source|escape}">
-                                            {include file='svg_icon.tpl' svgId='tag_unknown'} {$order->referer_channel}
+                                            {include file='svg_icon.tpl' svgId='tag_unknown'} {$order->referer_channel|escape}
                                         </span>
                                     {/if}
                                 </div>
@@ -580,17 +586,17 @@
                                         {$btr->order_buyer_not_registred|escape}
                                     </div>
                                     <div style="position:relative;">
-                                        <input type="hidden" name="user_id" value="{$user->id}" />
+                                        <input type="hidden" name="user_id" value="{$user->id|escape}" />
 
                                         <input type="text" class="fn_user_complite form-control" placeholder="{$btr->order_user_select|escape}" />
                                     </div>
                                 {else}
                                     <div class="fn_user_row">
-                                        <input type="hidden" name="user_id" value="{$user->id}" />
+                                        <input type="hidden" name="user_id" value="{$user->id|escape}" />
                                         <div class="heading_label boxes_inline">
                                             {$btr->order_buyer|escape}
                                             <a href="{url controller=UserAdmin id=$user->id}" target=_blank>
-                                                 {$user->name|escape}
+                                                 {$user->name|escape} {$user->last_name|escape}
                                             </a>
                                         </div>
                                         <a href="javascript:;" data-hint="{$btr->users_delete|escape}" class="btn_close delete_grey fn_delete_user hint-bottom-right-t-info-s-small-mobile  hint-anim boxes_inline" >
@@ -612,7 +618,7 @@
                             <div class="heading_label">{$btr->order_language|escape}</div>
                             <select name="entity_lang_id" class="selectpicker form-control">
                                 {foreach $languages as $l}
-                                    <option value="{$l->id}" {if $l->id == $order->lang_id}selected=""{/if}>{$l->name|escape}</option>
+                                    <option value="{$l->id|escape}" {if $l->id == $order->lang_id}selected=""{/if}>{$l->name|escape}</option>
                                 {/foreach}
                             </select>
                         </div>
@@ -654,6 +660,12 @@ $(function() {
     $(document).on( "click", "#fn_purchase .fn_remove_item", function() {
          $(this).closest(".fn_row").fadeOut(200, function() { $(this).remove(); });
          return false;
+    });
+
+    // Отобразить список скидок
+    $(document).on('click','.fn_discounted_toggle',function(){
+        $(this).find('.fn_icon_arrow').toggleClass('rotate_180');
+        $(this).parents('.fn_row').find('.order_discounted_block').slideToggle(300);
     });
 
     $(".fn_labels_show").click(function(){
@@ -701,7 +713,7 @@ $(function() {
             }
         });
     });
-    
+
     // Добавление товара
     var new_purchase = $('#fn_purchase .fn_new_purchase').clone(true);
     $('#fn_purchase .fn_new_purchase').remove().removeAttr('class');
@@ -713,7 +725,10 @@ $(function() {
     noCache: false,
     onSelect:
         function(suggestion){
-            new_item = new_purchase.clone().appendTo('#fn_purchase');
+            let new_item = new_purchase.clone().appendTo('#fn_purchase'),
+                temp_id = Date.now();
+            new_item.find('.fn_add_purchase_discount').data('purchase_id', temp_id);
+            new_item.find('.fn_default_purchase_discounts').attr('name', `purchases_discounts[${temp_id}]`)
             new_item.removeAttr('id');
             new_item.find('.fn_new_product').html(suggestion.data.name);
             new_item.find('.fn_new_product').attr('href', 'index.php?controller=ProductAdmin&id='+suggestion.data.id);
@@ -752,7 +767,7 @@ $(function() {
             }
 
             {/literal}{get_design_block block="order_new_purchase_js_block"}{literal}
-            
+
             $("input#fn_add_purchase").val('').focus().blur();
             new_item.show();
         },
@@ -785,16 +800,22 @@ $(function() {
         minChars:0,
         orientation:'auto',
         noCache: false,
-        onSelect:
-            function(suggestion){
-                $('input[name="user_id"]').val(suggestion.data.id);
-            },
-            formatResult:
-                function(suggestions, currentValue){
-                        var reEscape = new RegExp('(\\' + ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\'].join('|\\') + ')', 'g');
-                        var pattern = '(' + currentValue.replace(reEscape, '\\$1') + ')';
-                        return "<span>" + suggestions.value.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>') + "</span>";
-                    }
+        onSelect:function(suggestion){
+            $('input[name="user_id"]').val(suggestion.data.id);
+
+            for (let key in suggestion.data) {
+                let contactField = $('.fn_contact_info [name="' + key + '"]');
+                if (contactField.length > 0 && contactField.val() == '') {
+                    contactField.val(suggestion.data[key]);
+                }
+            }
+            
+        },
+        formatResult: function(suggestions, currentValue){
+            var reEscape = new RegExp('(\\' + ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\'].join('|\\') + ')', 'g');
+            var pattern = '(' + currentValue.replace(reEscape, '\\$1') + ')';
+            return "<span>" + suggestions.value.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>') + "</span>";
+        }
     });
 
     $(document).on("click", ".fn_delete_user", function () {
@@ -807,6 +828,41 @@ $(function() {
         change_variant($(this));
     });
 
+    $(document).on('click', '.fn_discount_remove', function() {
+        $(this).closest('.fn_row').remove();
+    });
+
+    $(function(){
+       let newOrderDiscount = $('.fn_new_order_discount').clone(true);
+        $('.fn_new_order_discount').remove();
+
+        $(document).on('click', '.fn_add_order_discount', function(){
+            newOrderDiscount.clone().appendTo($('.fn_order_discounts_block').find('.okay_list_body'));
+        });
+
+        $(document).on('click', '.fn_add_purchase_discount', function(){
+            let purchaseId = $(this).data('purchase_id'),
+                newPurchaseDiscount = newOrderDiscount.clone();
+            newPurchaseDiscount.find('input').each(function(){
+                $(this).attr('name', $(this).attr('name').replace('order_discounts', `purchases_discounts[${purchaseId}]`));
+            });
+            newPurchaseDiscount.appendTo($(this).closest('.fn_purchase_discounts_block').find('.okay_list_body'));
+            $(this).closest('.fn_row').find('.fn_discounted_toggle').removeClass('tag-default').addClass('tag-danger');
+        })
+    });
+
+    $(document).on('click', '.fn_discount_change_type', function(){
+        let input1 = $(this).closest('.input-group').find('input.fn_discount_type_input.active');
+        let input2 = $(this).closest('.input-group').find('input.fn_discount_type_input:not(.active)');
+        input1.removeClass('active').attr('disabled', true);
+        input2.addClass('active').attr('disabled', false);
+        $(this).find('.discount_type_absolute').toggle(0);
+        $(this).find('.discount_type_percent').toggle(0);
+    });
+
+    $(document).on('click', '.fn_discount_from_last_on', function(){
+        $(this).closest('.switch').find('.fn_discount_from_last_off')[0].toggleAttribute('disabled')
+    })
 });
 
 </script>

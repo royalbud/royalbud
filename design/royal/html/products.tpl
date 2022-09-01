@@ -1,22 +1,5 @@
-{* The Categories page *}
-{* The canonical address of the page *}
-{if $set_canonical || $current_page_num > 1 || $is_all_pages}
-    {if $category}
-        {$canonical="{if $cannonical}{$cannonical}{else}{url_generator route='category' url=$category->url absolute=1}{/if}" scope=global}
-    {elseif $brand}
-        {$canonical="{url_generator route='brand' url=$brand->url absolute=1}" scope=global}
-    {elseif $route_name == 'discounted'}
-        {$canonical="{url_generator route='discounted' absolute=1}" scope=global}
-    {elseif $route_name == 'bestsellers'}
-        {$canonical="{url_generator route='bestsellers' absolute=1}" scope=global}
-    {elseif $route_name == 'search'}
-        {$canonical="{url_generator route='search' absolute=1}" scope=global}
-    {/if}
-    {else}
-    {if $category}
-        {$canonical="{url_generator route='category' url=$category->url absolute=1}" scope=global}
-    {/if}
-{/if}
+<!-- The Categories page -->
+
 <div class="clearfix">
     {* Sidebar with filters *}
     <div class="fn_mobile_toogle sidebar d-lg-flex flex-lg-column">
@@ -47,11 +30,22 @@
         </div>
 
         <div class="fn_selected_features">
-            {include 'selected_features.tpl'}
+            {if !$settings->deferred_load_features}
+                {include file='selected_features.tpl'}
+            {/if}
         </div>
 
         <div class="fn_features">
-            {include file='features.tpl'}
+            {if !$settings->deferred_load_features}
+                {include file='features.tpl'}
+            {else}
+                {* Deferred load features *}
+                <div class='fn_skeleton_load'>
+                    {section name=foo start=1 loop=7 step=1}
+                        <div class='skeleton_load__item skeleton_load__item--{$smarty.section.foo.index}'></div>
+                    {/section}
+                </div>
+            {/if}
         </div>
 
         {* Browsed products *}
@@ -64,22 +58,14 @@
         <div class="products_container__boxed">
             <h1 class="h1"{if $category} data-category="{$category->id}"{/if}{if $brand} data-brand="{$brand->id}"{/if}>{$h1|escape}</h1>
 
-            {if $current_page_num == 1 && (!empty($category->annotation) || !empty($brand->annotation)) && !$is_filter_page && !$smarty.get.page && !$smarty.get.sort}
+            {if !empty($annotation)}
                 <div class="boxed boxed--big">
                     <div class="">
-                        
+                        <div class="fn_readmore">
                             <div class="block__description">
-                                {* Краткое описание категории *}
-                                {if !empty($category->annotation)}
-                                {$category->annotation}
-                                {/if}
-
-                                {* Краткое описание бренда *}
-                                {if !empty($brand->annotation)}
-                                {$brand->annotation}
-                                {/if}
+                                {$annotation}
                             </div>
-                        
+                        </div>
                     </div>
                 </div>
             {/if}
@@ -113,7 +99,9 @@
             {if $description}
                 <div class="boxed boxed--big">
                     <div class="">
-                        <div class="block__description">{$description}</div>
+                        <div class="fn_readmore">
+                            <div class="block__description">{$description}</div>
+                        </div>
                     </div>
                 </div>
             {/if}

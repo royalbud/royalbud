@@ -8,18 +8,24 @@ use Okay\Admin\Helpers\BackendExportHelper;
 use Okay\Admin\Helpers\BackendImportHelper;
 use Okay\Admin\Helpers\BackendOrdersHelper;
 use Okay\Admin\Requests\BackendProductsRequest;
+use Okay\Core\EntityFactory;
 use Okay\Core\Modules\AbstractInit;
 use Okay\Core\Modules\EntityField;
+use Okay\Core\Scheduler\Schedule;
+use Okay\Core\ServiceLocator;
+use Okay\Core\Settings;
 use Okay\Entities\PaymentsEntity;
 use Okay\Entities\VariantsEntity;
 use Okay\Helpers\CartHelper;
 use Okay\Helpers\DeliveriesHelper;
 use Okay\Helpers\OrdersHelper;
+use Okay\Helpers\ValidateHelper;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Entities\NPCitiesEntity;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Entities\NPCostDeliveryDataEntity;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Entities\NPWarehousesEntity;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Extenders\BackendExtender;
 use Okay\Modules\OkayCMS\NovaposhtaCost\Extenders\FrontExtender;
+use Okay\Modules\OkayCMS\NovaposhtaCost\NovaposhtaCost;
 
 class Init extends AbstractInit
 {
@@ -38,6 +44,12 @@ class Init extends AbstractInit
             (new EntityField('warehouse_id'))->setTypeVarchar(255, true),
             (new EntityField('delivery_term'))->setTypeVarchar(8, true),
             (new EntityField('redelivery'))->setTypeTinyInt(1, true),
+            (new EntityField('city_name'))->setTypeVarchar(255, true),
+            (new EntityField('area_name'))->setTypeVarchar(255, true),
+            (new EntityField('region_name'))->setTypeVarchar(255, true),
+            (new EntityField('street'))->setTypeVarchar(255, true),
+            (new EntityField('house'))->setTypeVarchar(255, true),
+            (new EntityField('apartment'))->setTypeVarchar(255, true),
         ]);
         
         $this->migrateEntityTable(NPCitiesEntity::class, [
@@ -62,69 +74,121 @@ class Init extends AbstractInit
 
         $this->registerEntityField(VariantsEntity::class, self::VOLUME_FIELD);
         $this->registerEntityField(PaymentsEntity::class, self::CASH_ON_DELIVERY);
+        $this->registerEntityField(NPWarehousesEntity::class, 'type');
         
         $this->addPermission('okaycms__novaposhta_cost');
 
         $this->addBackendBlock('product_variant', 'product_variant_block.tpl');
         $this->addBackendBlock('order_contact', 'order_contact_block.tpl');
         $this->addFrontBlock('front_cart_delivery', 'front_cart_delivery_block.tpl');
+        $this->addFrontBlock('front_scripts_after_validate', 'validation.js');
         
         $this->registerChainExtension(
-            ['class' => DeliveriesHelper::class, 'method' => 'prepareDeliveryPriceInfo'],
-            ['class' => FrontExtender::class, 'method' => 'setCartDeliveryPrice']
+            [DeliveriesHelper::class, 'prepareDeliveryPriceInfo'],
+            [FrontExtender::class, 'setCartDeliveryPrice']
         );
         
         $this->registerChainExtension(
-            ['class' => CartHelper::class, 'method' => 'getDefaultCartData'],
-            ['class' => FrontExtender::class, 'method' => 'getDefaultCartData']
+            [CartHelper::class, 'getDefaultCartData'],
+            [FrontExtender::class, 'getDefaultCartData']
         );
         
         $this->registerChainExtension(
-            ['class' => DeliveriesHelper::class, 'method' => 'getCartDeliveriesList'],
-            ['class' => FrontExtender::class, 'method' => 'getCartDeliveriesList']
+            [DeliveriesHelper::class, 'getCartDeliveriesList'],
+            [FrontExtender::class, 'getCartDeliveriesList']
         );
         
         $this->registerQueueExtension(
-            ['class' => OrdersHelper::class, 'method' => 'finalCreateOrderProcedure'],
-            ['class' => FrontExtender::class, 'method' => 'setCartDeliveryDataProcedure']
+            [OrdersHelper::class, 'finalCreateOrderProcedure'],
+            [FrontExtender::class, 'setCartDeliveryDataProcedure']
         );
 
         $this->registerChainExtension(
-            ['class' => BackendProductsRequest::class, 'method' => 'postVariants'],
-            ['class' => BackendExtender::class, 'method' => 'correctVariantsVolume']
+            [BackendProductsRequest::class, 'postVariants'],
+            [BackendExtender::class, 'correctVariantsVolume']
         );
         
         // В админке в заказе достаём данные по доставке
         $this->registerQueueExtension(
-            ['class' => BackendOrdersHelper::class, 'method' => 'findOrderDelivery'],
-            ['class' => BackendExtender::class, 'method' => 'getDeliveryDataProcedure']
+            [BackendOrdersHelper::class, 'findOrder'],
+            [BackendExtender::class, 'getDeliveryDataProcedure']
         );
 
         // В админке в заказе обновляем данные по доставке
         $this->registerQueueExtension(
-            ['class' => BackendOrdersHelper::class, 'method' => 'executeCustomPost'],
-            ['class' => BackendExtender::class, 'method' => 'updateDeliveryDataProcedure']
+            [BackendOrdersHelper::class, 'executeCustomPost'],
+            [BackendExtender::class, 'updateDeliveryDataProcedure']
         );
 
         // Добавляемся в импорт
         $this->addBackendBlock('import_fields_association', 'import_fields_association.tpl');
 
         $this->registerChainExtension(
-            ['class' => BackendImportHelper::class, 'method' => 'parseVariantData'],
-            ['class' => BackendExtender::class, 'method' => 'parseVariantData']
+            [BackendImportHelper::class, 'parseVariantData'],
+            [BackendExtender::class, 'parseVariantData']
         );
 
         $this->registerChainExtension(
-            ['class' => BackendExportHelper::class, 'method' => 'getColumnsNames'],
-            ['class' => BackendExtender::class, 'method' => 'extendExportColumnsNames']
+            [BackendExportHelper::class, 'getColumnsNames'],
+            [BackendExtender::class, 'extendExportColumnsNames']
         );
 
         $this->registerChainExtension(
-            ['class' => BackendExportHelper::class, 'method' => 'prepareVariantsData'],
-            ['class' => BackendExtender::class, 'method' => 'extendExportPrepareVariantData']
+            [BackendExportHelper::class, 'prepareVariantsData'],
+            [BackendExtender::class, 'extendExportPrepareVariantData']
+        );
+
+        $this->registerChainExtension(
+            [ValidateHelper::class, 'getCartValidateError'],
+            [FrontExtender::class, 'getCartValidateError']
         );
         
         $this->registerBackendController('NovaposhtaCostAdmin');
         $this->addBackendControllerPermission('NovaposhtaCostAdmin', 'okaycms__novaposhta_cost');
+
+        $this->registerSchedule(
+            (new Schedule([NovaposhtaCost::class, 'parseCitiesToCache']))
+                ->name('Parses NP cities to the db cache')
+                ->time('0 0 * * *')
+                ->overlap(false)
+                ->timeout(3600)
+        );
+
+        $this->registerSchedule(
+            (new Schedule([NovaposhtaCost::class, 'parseWarehousesToCache']))
+                ->name('Parses NP warehouses to the db cache')
+                ->time('0 0 * * *')
+                ->overlap(false)
+                ->timeout(3600)
+        );
+    }
+
+    public function update_1_1_0()
+    {
+        $this->migrateEntityField(NPWarehousesEntity::class, (new EntityField('type'))->setTypeVarchar(100, true)->setDefault(''));
+        
+        $defaultWarehouseTypes = [
+            '841339c7-591a-42e2-8233-7a0a00f0ed6f',
+            '9a68df70-0267-42a8-bb5c-37f427e36ee4'
+        ];
+
+        $SL = ServiceLocator::getInstance();
+        $settings = $SL->getService(Settings::class);
+        $entityFactory = $SL->getService(EntityFactory::class);
+        
+        $settings->set('np_warehouses_types', $defaultWarehouseTypes);
+        
+        $warehousesTypesData = (array)json_decode(file_get_contents(dirname(__FILE__,2).'/tempData/typeData.json'));
+        
+        /** @var NPWarehousesEntity $warehousesEntity */
+        $warehousesEntity = $entityFactory->get(NPWarehousesEntity::class);
+
+        $warehouses = $warehousesEntity->mappedBy('ref')->noLimit()->find();
+        foreach ($warehouses as $ref => $warehouse) {
+            if(isset($warehousesTypesData[$ref])){
+                $warehousesEntity->update((int)$warehouse->id,['type' => $warehousesTypesData[$ref]]); 
+            } 
+        }
+        $warehousesEntity->removeRedundant();
     }
 }

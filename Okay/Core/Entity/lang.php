@@ -57,14 +57,12 @@ trait lang
             $fields = array_merge($fields, $additional);
         }
 
-        $allFields = array_merge($fields, $langFields);
-
-        return $allFields;
+        return array_merge($fields, $langFields);
     }
 
     /**
      * @return array
-     * Метод возврщает список полей сущности без алиасв таблиц указываемых перед именем поля (Пример: l.name => name)
+     * Метод возвращает список полей сущности без алиасв таблиц указываемых перед именем поля (Пример: l.name => name)
      */
     final public function getAllFieldsWithoutAlias()
     {
@@ -79,11 +77,12 @@ trait lang
         return $allFields;
     }
 
-    protected function getDescription($object)
+    protected function getDescription($object, $clear = true)
     {
         return $this->lang->getDescription(
             $object,
-            $this->getLangFields()
+            $this->getLangFields(),
+            $clear
         );
     }
 

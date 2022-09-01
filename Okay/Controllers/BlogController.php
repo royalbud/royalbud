@@ -4,6 +4,7 @@
 namespace Okay\Controllers;
 
 
+use Okay\Core\Router;
 use Okay\Entities\BlogCategoriesEntity;
 use Okay\Entities\BlogEntity;
 use Okay\Helpers\BlogHelper;
@@ -25,25 +26,20 @@ class BlogController extends AbstractController
         $url
     ) {
         $post = $blogEntity->findOne(['url' => $url]);
-        
-        // Если не найден - ошибка
-        if (empty($post) || (!$post->visible && empty($_SESSION['admin']))) {
-            return false;
-        }
 
-        $this->setMetadataHelper($postMetadataHelper);
+        //метод можно расширять и отменить либо переопределить дальнейшую логику работы контроллера
+        if (($setPost = $blogHelper->setPost($post)) !== null) {
+            return $setPost;
+        }
         
         $this->response->setHeaderLastModify($post->last_modify);
-        
-        // Автозаполнение имени для формы комментария
-        if (!empty($this->user)) {
-            $this->design->assign('comment_name', $this->user->name);
-            $this->design->assign('comment_email', $this->user->email);
-        }
 
         // Комментарии к посту
         $commentsHelper->addCommentProcedure('post', $post->id);
-        $comments = $commentsHelper->getCommentsList('post', $post->id);
+        $commentsFilter = $commentsHelper->getCommentsFilter('post', $post->id);
+        $commentsSort = $commentsHelper->getCurrentSort();
+        $comments = $commentsHelper->getList($commentsFilter, $commentsSort);
+        $comments = $commentsHelper->attachAnswers($comments);
         $this->design->assign('comments', $comments);
 
         // Связанные товары
@@ -76,6 +72,11 @@ class BlogController extends AbstractController
             $this->design->assign('prev_post', $neighborsProducts['prev']);
         }
 
+        $this->design->assign('canonical', Router::generateUrl('post', ['url' => $post->url], true));
+
+        $postMetadataHelper->setUp($post);
+        $this->setMetadataHelper($postMetadataHelper);
+
         $this->response->setContent('post.tpl');
     }
     
@@ -91,13 +92,14 @@ class BlogController extends AbstractController
 
         $category = null;
         if (!empty($url)) {
-            if (!($category = $blogCategoriesEntity->findOne(['url' => $url])) || (!$category->visible && empty($_SESSION['admin']))) {
-                return false;
+            $category = $blogCategoriesEntity->findOne(['url' => $url]);
+            if (($setCategory = $blogHelper->setBlogCategory($category)) !== null) {
+                return $setCategory;
             }
         }
+
         if (!empty($category)) {
             $filter['category_id'] = $category->children;
-            $this->setMetadataHelper($categoryMetadataHelper);
             $this->design->assign('category', $category);
         }
         
@@ -128,6 +130,23 @@ class BlogController extends AbstractController
         
         // Передаем в шаблон
         $this->design->assign('posts', $posts);
+
+        if (!empty($category)) {
+            $canonical = Router::generateUrl('blog_category', ['url' => $category->url], true);
+        } else {
+            $canonical = Router::generateUrl('blog', [], true);
+        }
+
+        if (!empty($currentSort)) {
+            $this->design->assign('noindex_follow', true);
+        }
+
+        $this->design->assign('canonical', $canonical);
+
+        if (!empty($category)) {
+            $categoryMetadataHelper->setUp($category, $this->design->getVar('is_all_pages'), $this->design->getVar('current_page_num'));
+            $this->setMetadataHelper($categoryMetadataHelper);
+        }
         
         $this->response->setContent('blog.tpl');
     }

@@ -15,10 +15,9 @@ use Okay\Core\QueryFactory;
 use Okay\Core\Request;
 use Okay\Core\Settings;
 use Okay\Core\Modules\Extender\ExtenderFacade;
-use Okay\Core\TemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
 use Okay\Entities\LanguagesEntity;
 use Okay\Entities\ManagersEntity;
-use Okay\Entities\AdvantagesEntity;
 
 class BackendSettingsHelper
 {
@@ -47,10 +46,6 @@ class BackendSettingsHelper
      */
     private $languagesEntity;
 
-    /**
-     * @var AdvantagesEntity
-     */
-    private $advantagesEntity;
 
     /**
      * @var DataCleaner
@@ -63,9 +58,9 @@ class BackendSettingsHelper
     private $managers;
 
     /**
-     * @var TemplateConfig
+     * @var FrontTemplateConfig
      */
-    private $templateConfig;
+    private $frontTemplateConfig;
 
     /**
      * @var QueryFactory
@@ -87,7 +82,7 @@ class BackendSettingsHelper
      */
     private $imageCore;
 
-    private $allowedImageExtensions = ['png', 'gif', 'jpg', 'jpeg', 'ico'];
+    private $allowedImageExtensions = ['png', 'gif', 'jpg', 'jpeg', 'ico', 'svg'];
 
     public function __construct(
         Settings $settings,
@@ -96,7 +91,7 @@ class BackendSettingsHelper
         EntityFactory $entityFactory,
         DataCleaner $dataCleaner,
         Managers $managers,
-        TemplateConfig $templateConfig,
+        FrontTemplateConfig $frontTemplateConfig,
         QueryFactory $queryFactory,
         Languages $languages,
         JsSocial $jsSocial,
@@ -105,12 +100,11 @@ class BackendSettingsHelper
     {
         $this->managersEntity = $entityFactory->get(ManagersEntity::class);
         $this->languagesEntity = $entityFactory->get(LanguagesEntity::class);
-        $this->advantagesEntity = $entityFactory->get(AdvantagesEntity::class);
         $this->settings = $settings;
         $this->request = $request;
         $this->config = $config;
         $this->managers = $managers;
-        $this->templateConfig = $templateConfig;
+        $this->frontTemplateConfig = $frontTemplateConfig;
         $this->queryFactory = $queryFactory;
         $this->languages = $languages;
         $this->jsSocial = $jsSocial;
@@ -121,13 +115,19 @@ class BackendSettingsHelper
     public function updateSettings()
     {
         $this->settings->set('decimals_point', $this->request->post('decimals_point', null, ','));
-        $this->settings->set('thousands_separator', $this->request->post('thousands_separator', null, ' '));
+        $this->settings->set('thousands_separator', $this->request->post('thousands_separator'));
         $this->settings->set('products_num', $this->request->post('products_num', 'int', 24));
         $this->settings->set('max_order_amount', $this->request->post('max_order_amount', 'int', 50));
         $this->settings->set('comparison_count', $this->request->post('comparison_count', 'int', 5));
         $this->settings->set('posts_num', $this->request->post('posts_num', 'int', 8));
         $this->settings->set('missing_products', $this->request->post('missing_products', null, 'default'));
         $this->settings->set('hide_single_filters', $this->request->post('hide_single_filters', 'int'));
+        $this->settings->set('support_webp', $this->request->post('support_webp', 'int'));
+        $this->settings->set('hide_equal_compare_price', $this->request->post('hide_equal_compare_price', 'int'));
+        $this->settings->set('increased_image_size', $this->request->post('increased_image_size', 'int'));
+        $this->settings->set('features_cache_ttl', $this->request->post('features_cache_ttl', 'int'));
+        $this->settings->set('deferred_load_features', $this->request->post('deferred_load_features', 'int'));
+        $this->settings->set('features_max_count_products', $this->request->post('features_max_count_products', 'int'));
         $this->settings->update('units', $this->request->post('units'));
 
         if ($this->request->post('is_preorder', 'integer')) {
@@ -215,7 +215,6 @@ class BackendSettingsHelper
         $this->settings->set('phone_default_region', $this->request->post('phone_default_region'));
         $this->settings->set('phone_default_format', $this->request->post('phone_default_format'));
         $this->settings->set('date_format', $this->request->post('date_format'));
-        $this->settings->set('admin_email', $this->request->post('admin_email'));
         $this->settings->set('site_work', $this->request->post('site_work'));
         $this->settings->set('captcha_comment', $this->request->post('captcha_comment', 'boolean'));
         $this->settings->set('captcha_cart', $this->request->post('captcha_cart', 'boolean'));
@@ -302,11 +301,11 @@ class BackendSettingsHelper
     public function updateThemeSettings()
     {
         if ($cssColors = $this->request->post('css_colors')) {
-            $this->templateConfig->updateCssVariables($cssColors);
+            $this->frontTemplateConfig->updateCssVariables($cssColors);
         }
 
         if ($this->settings->get('social_share_theme') != $this->request->post('social_share_theme')) {
-            $this->templateConfig->clearCompiled();
+            $this->frontTemplateConfig->clearCompiled();
         }
 
         $this->settings->set('social_share_theme', $this->request->post('social_share_theme'));
@@ -422,7 +421,7 @@ class BackendSettingsHelper
 
     public function getCssVariables()
     {
-        return ExtenderFacade::execute(__METHOD__, $this->templateConfig->getCssVariables(), func_get_args());
+        return ExtenderFacade::execute(__METHOD__, $this->frontTemplateConfig->getCssVariables(), func_get_args());
     }
 
     public function uploadSiteLogo()
@@ -552,87 +551,5 @@ class BackendSettingsHelper
     {
         $this->settings->initSettings();
         ExtenderFacade::execute(__METHOD__, null, func_get_args());
-    }
-
-    public function findAdvantages($filter = [])
-    {
-        $advantages = $this->advantagesEntity->find($filter);
-        return ExtenderFacade::execute(__METHOD__, $advantages, func_get_args());
-    }
-
-    public function updateAdvantage(
-        $advantageId,
-        $updates,
-        $advantageImagesToUpload,
-        $advantageImagesToDelete
-    ){
-        if (in_array($advantageId, $advantageImagesToDelete)) {
-            $this->deleteAdvantageImage($advantageId);
-        }
-
-        if (in_array($advantageId, array_keys($advantageImagesToUpload))) {
-            $this->uploadAdvantageImage($advantageId, $advantageImagesToUpload[$advantageId]);
-        }
-
-        $this->advantagesEntity->update($advantageId, $updates);
-        ExtenderFacade::execute(__METHOD__, null, func_get_args());
-    }
-
-    public function deleteAdvantage($ids)
-    {
-        $result = $this->advantagesEntity->delete($ids);
-        return ExtenderFacade::execute(__METHOD__, $result, func_get_args());
-    }
-
-    public function sortPositionAdvantage($positions)
-    {
-        $positions = (array) $positions;
-        $ids       = array_keys($positions);
-        sort($positions);
-        return ExtenderFacade::execute(__METHOD__, [$ids, $positions], func_get_args());
-    }
-
-    public function updatePositionAdvantage($ids, $positions)
-    {
-        foreach ($positions as $i => $position) {
-            $this->advantagesEntity->update($ids[$i], ['position' => (int)$position]);
-        }
-
-        ExtenderFacade::execute(__METHOD__, null, func_get_args());
-    }
-
-    public function uploadAdvantageImage($advantageId, $fileImage)
-    {
-        if (!empty($fileImage['name']) &&
-            ($filename = $this->imageCore->uploadImage(
-                $fileImage['tmp_name'],
-                $fileImage['name'],
-                $this->config->original_advantages_dir))
-        ) {
-            $this->imageCore->deleteImage(
-                $advantageId,
-                'filename',
-                AdvantagesEntity::class,
-                $this->config->original_advantages_dir,
-                $this->config->resized_advantages_dir
-            );
-
-            $this->advantagesEntity->update($advantageId, ['filename' => $filename]);
-        }
-
-        ExtenderFacade::execute(__METHOD__, null, func_get_args());
-    }
-
-    private function deleteAdvantageImage($advantageId)
-    {
-        $this->imageCore->deleteImage(
-            $advantageId,
-            'filename',
-            AdvantagesEntity::class,
-            $this->config->original_advantages_dir,
-            $this->config->resized_advantages_dir
-        );
-
-        $this->advantagesEntity->update($advantageId, ['filename' => '']);
     }
 }

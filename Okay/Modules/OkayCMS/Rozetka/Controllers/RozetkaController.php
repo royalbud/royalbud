@@ -6,37 +6,55 @@ namespace Okay\Modules\OkayCMS\Rozetka\Controllers;
 
 use Aura\Sql\ExtendedPdo;
 use Okay\Controllers\AbstractController;
+use Okay\Core\Money;
 use Okay\Core\QueryFactory;
 use Okay\Core\Router;
 use Okay\Core\Routes\ProductRoute;
 use Okay\Entities\CategoriesEntity;
+use Okay\Entities\CurrenciesEntity;
 use Okay\Helpers\XmlFeedHelper;
+use Okay\Modules\OkayCMS\Rozetka\Entities\RozetkaFeedsEntity;
+use Okay\Modules\OkayCMS\Rozetka\Entities\RozetkaRelationsEntity;
 use Okay\Modules\OkayCMS\Rozetka\Helpers\RozetkaHelper;
-use Okay\Modules\OkayCMS\Rozetka\Init\Init;
 use PDO;
 
 class RozetkaController extends AbstractController
 {
     public function render(
-        CategoriesEntity $categoriesEntity,
-        QueryFactory $queryFactory,
-        ExtendedPdo $pdo,
-        RozetkaHelper $rozetkaHelper,
-        XmlFeedHelper $feedHelper
+        CategoriesEntity   $categoriesEntity,
+        QueryFactory       $queryFactory,
+        ExtendedPdo        $pdo,
+        RozetkaHelper      $rozetkaHelper,
+        XmlFeedHelper      $feedHelper,
+        RozetkaFeedsEntity $feedsEntity,
+        Money              $money,
+        CurrenciesEntity   $currenciesEntity,
+        $url
     ) {
-        
-        if (!empty($this->currencies)) {
-            $this->design->assign('main_currency', reset($this->currencies));
+        if (!($feed = $feedsEntity->findOne(['url' => $url])) || !$feed->enabled) {
+            return false;
+        }
+
+        if ($currencies = $currenciesEntity->find()) {
+            $this->design->assign('main_currency', reset($currencies));
+
+            // Передаем валюты, чтобы класс потом не лез в базу за валютами, т.к. мы работаем с небуферизированными запросами
+            foreach ($currencies as $c) {
+                $money->setCurrency($c);
+            }
         }
 
         $sql = $queryFactory->newSqlQuery();
         $sql->setStatement('SET SQL_BIG_SELECTS=1');
         $sql->execute();
 
-        $sql = $queryFactory->newSqlQuery();
-        $sql->setStatement("SELECT id FROM " . CategoriesEntity::getTable() . " WHERE ".Init::TO_FEED_FIELD."=1");
-        
-        $categoriesToFeed = $sql->results('id');
+        $select = $queryFactory->newSelect();
+        $select ->from(RozetkaRelationsEntity::getTable())
+                ->cols(['entity_id'])
+                ->where("feed_id = :feed_id AND entity_type = 'category'")
+                ->bindValue('feed_id', $feed->id);
+
+        $categoriesToFeed = $select->results('entity_id');
         $uploadCategories = $feedHelper->addAllChildrenToList($categoriesToFeed);
 
         $this->design->assign('all_categories', $categoriesEntity->find());
@@ -57,18 +75,19 @@ class RozetkaController extends AbstractController
         
         // Для экономии памяти работаем с небуферизированными запросами
         $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-        $query = $rozetkaHelper->getQuery($uploadCategories);
+        $query = $rozetkaHelper->getQuery($feed->id, $uploadCategories);
 
         $prevProductId = null;
         while ($product = $query->result()) {
             $product = $feedHelper->attachFeatures($product);
+            $product = $feedHelper->attachDescriptionByTemplate($product);
             $product = $feedHelper->attachProductImages($product);
 
             $addVariantUrl = false;
             if ($prevProductId === $product->product_id) {
                 $addVariantUrl = true;
             }
-            
+            $prevProductId = $product->product_id;
             $item = $rozetkaHelper->getItem($product, $addVariantUrl);
             $xmlProduct = $feedHelper->compileItem($item, 'offer', [
                 'id' => $product->variant_id,

@@ -8,7 +8,6 @@ use Okay\Core\ManagerMenu;
 use Okay\Core\BackendTranslations;
 use Okay\Entities\LanguagesEntity;
 use Okay\Entities\ManagersEntity;
-use OkayLicense\License;
 use Okay\Core\Modules\Modules;
 
 chdir('../../../../');
@@ -25,18 +24,22 @@ $DI = include 'Okay/Core/config/container.php';
 /** @var Config $config */
 $config = $DI->get(Config::class);
 
+if ($config->get('debug_mode') == true) {
+    ini_set('display_errors', 'on');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 'off');
+    error_reporting(0);
+}
+
 /** @var ManagerMenu $managerMenu */
 $managerMenu = $DI->get(ManagerMenu::class);
-
-/** @var License $license */
-$license = $DI->get(License::class);
-$license->check();
 
 /** @var Modules $modules */
 $modules = $DI->get(Modules::class);
 $modules->startEnabledModules();
 
-$license->registerSmartyPlugins();
+$modules->registerSmartyPlugins();
 
 // Кеширование нам не нужно
 /** @var Response $response */
@@ -64,6 +67,7 @@ $backendTranslations->initTranslations($manager->lang);
 $design->assign('btr', $backendTranslations);
 $language = $manager = $DI->get(EntityFactory::class)->get(LanguagesEntity::class)->get((string)$manager->lang);
 $design->assign('language', $language);
+$design->assign('front_lang_id', $_SESSION['lang_id'] ?? (string)$manager->lang->id);
 
 $menuSelector = [];
 $fastMenu = $managerMenu->getFastMenu();

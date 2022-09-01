@@ -41,7 +41,7 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
     // Сообщаем что данная стратегия может использовать sql для формирования урла
     protected $isUsesSqlToGenerate = true;
 
-    private $mockRouteParams = ['{$url}', ['{$url}' => ''], []];
+    private $mockRouteParams = ['{$url}/?{$variantId}', ['{$url}' => '', '{$variantId}' => '(\d*)'], []];
 
     public function __construct()
     {
@@ -56,7 +56,7 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
         $this->cacheEntity      = $entityFactory->get(RouterCacheEntity::class);
     }
 
-    public function generateSlugUrl($url)
+    public function generateSlugUrl($url) : string
     {
         if (empty($url)) {
             return '';
@@ -77,7 +77,7 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
             $this->logger->warning('Missing "main_category_id" for product "'.$url.'"');
         } else {
             $category = $this->categoriesEntity->get((int) $product->main_category_id);
-            $slug = substr($category->path_url, 1).'/'.$product->url;
+            $slug = $category->path_url.'/'.$product->url;
         }
 
         // Запоминаем в оперативке slug для этого урла
@@ -93,7 +93,7 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
         return $slug;
     }
 
-    public function generateRouteParams($url)
+    public function generateRouteParams($url) : array
     {
         $matchedCategories      = $this->matchCategories($url);
         $mappedParentCategories = $this->mapCategoriesByParents($matchedCategories);
@@ -104,28 +104,32 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
 
         $mainCategoryId = $this->findMostNestedCategoryId($mappedParentCategories);
         $category   = $this->categoriesEntity->get((int) $mainCategoryId);
+        $category->path_url = ltrim($category->path_url, '/');
 
-        if ($this->urlNoContainsValidCategoryPathUrl($url, $category->path_url)) {
+        if ($this->uriNoContainsValidCategoryPathUrl($url, $category->path_url)) {
             return $this->mockRouteParams;
         }
 
-        $productUrl = $this->matchProductUrlFromUri($url, $category->path_url);
-        $product    = $this->productsEntity->findOne([
+        list($productUrl, $variantId) = $this->matchProductUrlFromUri($url, $category->path_url);
+        $productId    = $this->productsEntity->col('id')->findOne([
             'url'              => $productUrl,
             'main_category_id' => $mainCategoryId
         ]);
+        $productPath = $category->path_url . '/' . $productUrl;
 
-        if (empty($product)) {
+        if (empty($productId)) {
             return $this->mockRouteParams;
         }
 
         return [
-            '{$url}',
+            '{$url}/?{$variantId}',
             [
-                '{$url}' => $url
+                '{$url}' => $productPath,
+                '{$variantId}' => $variantId,
             ],
             [
-                '{$url}' => $productUrl
+                '{$url}' => $productUrl,
+                '{$variantId}' => $variantId,
             ]
         ];
     }
@@ -138,21 +142,23 @@ class NoPrefixAndPathStrategy extends AbstractRouteStrategy
             $noCategoryPathUri = substr($noCategoryPathUri, 1);
         }
 
-        return explode('/', $noCategoryPathUri)[0];
-    }
+        $urlParams = explode('/', trim($noCategoryPathUri, '/'));
 
-    private function urlNoContainsValidCategoryPathUrl($url, $categoryPathUrl)
-    {
-        if ($url[0] !== '/') {
-            $url = '/'.$url;
+        // Здесь остался только урл товара и возможно id варианта, если еще что-то - бросаем 404
+        if (count($urlParams) > 2) {
+            return false;
         }
 
-        $comparePartUri = substr($url, 0, strlen($categoryPathUrl));
+        return array_pad($urlParams, 2, '');
+    }
 
+    private function uriNoContainsValidCategoryPathUrl($url, $categoryPathUrl) : bool
+    {
+        $comparePartUri = substr($url, 0, strlen($categoryPathUrl));
         return $comparePartUri !== $categoryPathUrl;
     }
 
-    private function matchCategories($noPrefixUri)
+    private function matchCategories($noPrefixUri) : array
     {
         $parts = explode('/', $noPrefixUri);
 

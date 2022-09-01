@@ -2,6 +2,52 @@
     {* Full base address *}
     <base href="{$base}/">
 
+    {* Include fonts *}
+
+    <link href="{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-SemiBold.woff2" rel="preload" as="font" crossorigin="anonymous" type="font/woff2">
+    <link href="{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Bold.woff2" rel="preload" as="font" crossorigin="anonymous" type="font/woff2">
+    <link href="{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Regular.woff2" rel="preload" as="font" crossorigin="anonymous" type="font/woff2">
+    <link href="{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Medium.woff2" rel="preload" as="font" crossorigin="anonymous" type="font/woff2">
+
+    <style>
+        @font-face {
+            font-family: 'Montserrat';
+            font-display: swap;
+            src: local('Montserrat SemiBold'), local('Montserrat-SemiBold'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-SemiBold.woff2') format('woff2'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-SemiBold.woff') format('woff');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            font-display: swap;
+            src: local('Montserrat Bold'), local('Montserrat-Bold'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Bold.woff2') format('woff2'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Bold.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            font-display: swap;
+            src: local('Montserrat Regular'), local('Montserrat-Regular'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Regular.woff2') format('woff2'),
+            url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+        font-family: 'Montserrat';
+        font-display: swap;
+        src: local('Montserrat Medium'), local('Montserrat-Medium'),
+        url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Medium.woff2') format('woff2'),
+        url('{$rootUrl}/design/{$settings->theme}/fonts/montserrat/Montserrat-Medium.woff') format('woff');
+        font-weight: 500;
+        font-style: normal;
+        }
+    </style>
+
     {$ok_head}
     
     {strip}
@@ -18,6 +64,42 @@
         }
     </script>
     {/strip}
+
+    {* Schema Website *}
+    {literal}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "WebSite",
+        "name": "{/literal}{$settings->site_name}{literal}",
+        "url": "{/literal}{url_generator route='main' absolute=1}{literal}",
+        "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{/literal}{url_generator route='products' absolute=1}{literal}?keyword={search_term_string}",
+        "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    {/literal}
+
+    {* Schema Organization *}
+    {literal}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "{/literal}{$settings->site_name}{literal}",
+        "url": "{/literal}{url_generator route='main' absolute=1}{literal}",
+        "logo": "{/literal}{$rootUrl}/{$config->design_images}{$settings->site_logo}{literal}"{/literal}{if $site_social}{literal},
+        "sameAs": [
+        {/literal}{foreach $site_social as $social}{literal}
+            "{/literal}{if !preg_match('~^https?://.*$~', $social.url)}{literal}https://{/literal}{/if}{$social.url|escape}{literal}"{/literal}{if !$social@last}{literal},{/literal}{/if}{literal}
+        {/literal}{/foreach}{literal}
+        ]
+        {/literal}{/if}{literal}
+    }
+    </script>
+    {/literal}
     
     {* Title *}
     <title>{$meta_title|escape}</title>
@@ -33,21 +115,9 @@
 
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
-    {if $controller == 'CategoryController' || $controller == 'BrandController' || $controller == 'ProductsController'}
-        {if $set_canonical && !$need_indexing}
-            <meta name="robots" content="noindex,nofollow">
-        {elseif $sort}
-            <meta name="robots" content="noindex,follow">
-        {elseif isset($smarty.get.keyword)}
-            <meta name="robots" content="noindex,follow">
-        {else}
-            <meta name="robots" content="index,follow">
-        {/if}
-    {elseif $controller == "RegisterController" || $controller == "LoginController" || $controller == "UserController" || $controller == "CartController"}
-        <meta name="robots" content="noindex,follow">
-    {elseif $controller == "OrderController"}
+    {if $noindex_nofollow}
         <meta name="robots" content="noindex,nofollow">
-    {elseif $controller == "CartController"}
+    {elseif $noindex_follow}
         <meta name="robots" content="noindex,follow">
     {else}
         <meta name="robots" content="index,follow">
@@ -79,25 +149,62 @@
     {* rel prev next для каталога товаров *}
     {$rel_prev_next}
 
-    {* Product image/Post image for social networks *}
+    {* Images for social networks *}
     {if $controller == 'ProductController'}
         <meta property="og:url" content="{$canonical}">
         <meta property="og:type" content="website">
-        <meta property="og:title" content="{$product->name|escape}">
-        <meta property="og:description" content='{$product->annotation|strip_tags|escape}'>
+        <meta property="og:title" content="{$h1|escape}">
+        <meta property="og:description" content='{$annotation|strip_tags|escape}'>
         <meta property="og:image" content="{$product->image->filename|resize:330:300}">
         <link rel="image_src" href="{$product->image->filename|resize:330:300}">
-        {*twitter*}
         <meta name="twitter:card" content="product"/>
         <meta name="twitter:url" content="{$canonical}">
         <meta name="twitter:site" content="{$settings->site_name|escape}">
-        <meta name="twitter:title" content="{$product->name|escape}">
-        <meta name="twitter:description" content="{$product->annotation|strip_tags|escape}">
+        <meta name="twitter:title" content="{$h1|escape}">
+        <meta name="twitter:description" content="{$annotation|strip_tags|escape}">
         <meta name="twitter:image" content="{$product->image->filename|resize:330:300}">
         <meta name="twitter:data1" content="{$lang->cart_head_price}">
         <meta name="twitter:label1" content="{$product->variant->price|convert:null:false} {$currency->code|escape}">
         <meta name="twitter:data2" content="{$lang->meta_organization}">
         <meta name="twitter:label2" content="{$settings->site_name|escape}">
+    {elseif $controller == "CategoryController"} 
+        <meta property="og:title" content="{$h1|escape}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{$canonical}">
+        <meta property="og:site_name" content="{$settings->site_name|escape}">
+        <meta property="og:description" content="{$description|strip_tags|escape}">
+        {if $category->image}
+            <meta property="og:image" content="{$category->image|resize:330:300:false:$config->resized_categories_dir}">
+            <link rel="image_src" href="{$category->image|resize:330:300:false:$config->resized_categories_dir}">
+            <meta name="twitter:image" content="{$category->image|resize:330:300:false:$config->resized_categories_dir}">
+        {else}
+            <meta property="og:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+            <link rel="image_src" href="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+            <meta name="twitter:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+        {/if}
+        <meta name="twitter:url" content="{$canonical}">
+        <meta name="twitter:site" content="{$settings->site_name|escape}">
+        <meta name="twitter:title" content="{$h1|escape}">
+        <meta name="twitter:description" content="{$description|strip_tags|escape}">
+    {elseif $controller == "BrandController"} 
+        <meta property="og:title" content="{$h1|escape}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{$canonical}">
+        <meta property="og:site_name" content="{$settings->site_name|escape}">
+        <meta property="og:description" content="{$description|strip_tags|escape}">
+        {if $brand->image}
+            <meta property="og:image" content="{$brand->image|resize:330:330:false:$config->resized_brands_dir}">
+            <link rel="image_src" href="{$brand->image|resize:330:330:false:$config->resized_brands_dir}">
+            <meta name="twitter:image" content="{$brand->image|resize:330:330:false:$config->resized_brands_dir}">
+        {else}
+            <meta property="og:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+            <link rel="image_src" href="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+            <meta name="twitter:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+        {/if}
+        <meta name="twitter:url" content="{$canonical}">
+        <meta name="twitter:site" content="{$settings->site_name|escape}">
+        <meta name="twitter:title" content="{$h1|escape}">
+        <meta name="twitter:description" content="{$description|strip_tags|escape}">
     {elseif $controller == 'BlogController' && $post}
         <meta property="og:url" content="{$canonical}">
         <meta property="og:type" content="article">
@@ -105,27 +212,26 @@
         {if $post->image}
             <meta property="og:image" content="{$post->image|resize:400:300:false:$config->resized_blog_dir}">
             <link rel="image_src" href="{$post->image|resize:400:300:false:$config->resized_blog_dir}">
+            <meta name="twitter:image" content="{$post->image|resize:400:300:false:$config->resized_blog_dir}">
         {else}
             <meta property="og:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
+            <link rel="image_src" href="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
             <meta name="twitter:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
         {/if}
-        <meta property="og:description" content='{$post->annotation|strip_tags|escape}'>
-        {*twitter*}
+        <meta property="og:description" content='{$annotation|strip_tags|escape}'>
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="{$post->name|escape}">
-        <meta name="twitter:description" content="{$post->annotation|strip_tags|escape}">
-        <meta name="twitter:image" content="{$post->image|resize:400:300:false:$config->resized_blog_dir}">
+        <meta name="twitter:description" content="{$annotation|strip_tags|escape}">
     {else}
-        <meta property="og:title" content="{$settings->site_name|escape}">
+        <meta property="og:title" content="{$meta_title|escape}">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{$rootUrl}">
         <meta property="og:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
         <meta property="og:site_name" content="{$settings->site_name|escape}">
         <meta property="og:description" content="{$meta_description|escape}">
         <link rel="image_src" href="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
-        {*twitter*}
         <meta name="twitter:card" content="summary">
-        <meta name="twitter:title" content="{$settings->site_name|escape}">
+        <meta name="twitter:title" content="{$meta_title|escape}">
         <meta name="twitter:description" content="{$meta_description|escape}">
         <meta name="twitter:image" content="{$rootUrl}/{$config->design_images}{$settings->site_logo}">
     {/if}
@@ -133,8 +239,6 @@
     {* The canonical address of the page *}
     {if isset($canonical)}
         <link rel="canonical" href="{$canonical|escape}">
-    {elseif $sort}
-        <link rel="canonical" href="{$sort_canonical|escape}">
     {/if}
 
     {* Language attribute *}
@@ -157,10 +261,10 @@
                     var recaptcha_action = 'other';
                 {/if}
 
-                var all_captchеs = document.getElementsByClassName('fn_recaptchav3');
+                var allCaptchеs = document.getElementsByClassName('fn_recaptchav3');
                 grecaptcha.execute('{$settings->public_recaptcha_v3|escape}', { action: recaptcha_action })
                     .then(function (token) {
-                        for (capture of all_captchеs) {
+                        for (capture of allCaptchеs) {
                             capture.value = token;
                         }
                     });
@@ -199,27 +303,21 @@
                 document.getElementById("fn_blog_comment").submit();
             }
         </script>
-        <script src='https://www.google.com/recaptcha/api.js'></script>
+        <script>
+            var onloadReCaptchaInvisible = function() { };
+        </script>
+        <script src='https://www.google.com/recaptcha/api.js?onload=onloadReCaptchaInvisible'></script>
         <script>ut_tracker.end('render:recaptcha');</script>
     {/if}
 
-    <link rel="search" type="application/opensearchdescription+xml" title="{$rootUrl} Search" href="{url_generator route="opensearch" absolute=1}" />
+    <link rel="search" type="application/opensearchdescription+xml" title="{$rootUrl} Search" href="{url_generator route='opensearch' absolute=1}" />
 
     {* Favicon *}
     <link href="{$rootUrl}/{$config->design_images|escape}{$settings->site_favicon|escape}?v={$settings->site_favicon_version|escape}" type="image/x-icon" rel="icon">
     <link href="{$rootUrl}/{$config->design_images|escape}{$settings->site_favicon|escape}?v={$settings->site_favicon_version|escape}" type="image/x-icon" rel="shortcut icon">
 
-    {*<link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap&subset=cyrillic" rel="stylesheet">
-    <link href="https://cdn.materialdesignicons.com/3.8.95/css/materialdesignicons.min.css" rel="stylesheet">*}
-
     {* JQuery *}
     <script>ut_tracker.start('parsing:page');</script>
-
-    <script>ut_tracker.start('parsing:head:scripts');</script>
-    {if ($is_mobile === true || $is_tablet === true) && ($controller == "CategoryController" || $controller == "BrandController" || $controller == "ProductsController")}
-        {js file='jquery.ui.touch-punch.js' defer=true}
-    {/if}
-    <script>ut_tracker.end('parsing:head:scripts');</script>
 
     {if !empty($counters['head'])}
     <script>ut_tracker.start('parsing:head:counters');</script>

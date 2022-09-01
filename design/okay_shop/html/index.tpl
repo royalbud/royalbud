@@ -7,19 +7,19 @@
     {get_design_block block="front_after_head_content"}
 </head>
 
-<body class="d-flex flex-column {if $controller == 'MainController'}main_page{else}other_page{/if}">
-    <div>
-        {get_design_block block="front_start_body_content"}
-    </div>
-
+<body class="d-flex flex-column {if $controller == 'MainController'}main_page{elseif $controller == 'CartController'}cart_page{else}other_page{/if}">
     {if !empty($counters['body_top'])}
-        <script>ut_tracker.start('parsing:body_top:counters');</script>
         {foreach $counters['body_top'] as $counter}
         {$counter->code}
         {/foreach}
-        <script>ut_tracker.end('parsing:body_top:counters');</script>
     {/if}
 
+    {if $block = {get_design_block block="front_start_body_content"} }
+    <div>
+        {$block}
+    </div>
+    {/if}
+    {if $controller !== 'CartController'}
     <header class="header">
         {if $is_mobile == false || $is_tablet == true}
         <div class="header__top hidden-md-down">
@@ -52,7 +52,11 @@
                     <div class="header__logo logo">
                         {if !empty({$settings->site_logo})}
                         <a class="logo__link " href="{if $controller=='MainController'}javascript:;{else}{url_generator route='main'}{/if}">
-                            <img src="{$rootUrl}/{$config->design_images|escape}{$settings->site_logo|escape}?v={$settings->site_logo_version|escape}" alt="{$settings->site_name|escape}"/>
+                            {if strtolower(pathinfo($settings->site_logo, $smarty.const.PATHINFO_EXTENSION)) == 'svg'}
+                                {$settings->site_logo|read_svg:$config->design_images}
+                            {else}
+                                <img src="{$rootUrl}/{$config->design_images|escape}{$settings->site_logo|escape}?v={$settings->site_logo_version|escape}" alt="{$settings->site_name|escape}"/>
+                            {/if}
                         </a>
                         {/if}
                     </div>
@@ -94,14 +98,14 @@
         </div>
         {/if}
         <div class="header__bottom">
-            <div class="{if $controller != 'MainController'}fn_header__sticky {/if}" data-margin-top="0" data-sticky-for="1024" data-sticky-class="is-sticky">
+            <div class="{if $controller != 'MainController'}fn_header__sticky {/if}" data-margin-top="0" data-sticky-for="991" data-sticky-class="is-sticky">
                 <div class="container">
                     <div class="header__bottom_panel f_row no_gutters flex-nowrap align-content-stretch justify-content-between">
                         {* Mobile menu button*}
                         <div class="fn_menu_switch menu_switcher hidden-lg-up">
                             <div class="menu_switcher__heading d-flex align-items-center">
                                 <i class="fa fa-bars catalog_icon"></i>
-                                <span class="" data-language="index_categories">{$lang->index_mobile_menu}</span>
+                                <span class="" data-language="index_mobile_menu">{$lang->index_mobile_menu}</span>
                             </div>
                         </div>
                         {* Catalog heading *}
@@ -115,7 +119,7 @@
                             </div>
                          </div>
                         {* Search form *}
-                        <form id="fn_search" class="fn_search_mob search d-md-flex" action="{url_generator route='search'}">
+                        <form id="fn_search" class="fn_search_mob search d-md-flex" action="{url_generator route='products'}">
                             <input class="fn_search search__input" type="text" name="keyword" value="{$keyword|escape}" aria-label="search" data-language="index_search" placeholder="{$lang->index_search}"/>
                             <button class="search__button d-flex align-items-center justify-content-center" aria-label="search" type="submit"></button>
                         </form>
@@ -140,9 +144,10 @@
             </div>
         </div>
     </header>
+    {/if}
 
     {* Тело сайта *}
-    <div id="fn_content" class="main">
+    <div class="main">
         {* Include module banner *}
         {if !empty($global_banners)}
             <div class="container">
@@ -153,7 +158,7 @@
         {/if}
 
         {* Контент сайта *}
-        {if $controller == "MainController" || (!empty($page) && $page->url == '404')}
+        {if $controller == "MainController" || $controller == "CartController" || (!empty($page) && $page->url == '404')}
             <div class="fn_ajax_content">
                 {$content}
             </div>
@@ -162,10 +167,14 @@
                 {include file='breadcrumb.tpl'}
                 <div class="fn_ajax_content">
                     {$content}
-
-                    {* Преимущества магазина *}
-                    {include file='advantages.tpl'}
                 </div>
+            </div>
+        {/if}
+
+        {* Преимущества магазина *}
+        {if !empty($banner_shortcode_advantage)}
+            <div class="container">
+                {$banner_shortcode_advantage}
             </div>
         {/if}
     </div>
@@ -178,6 +187,7 @@
     </div>
 
     {* Footer *}
+    {if $controller != 'CartController'}
     <footer class="footer">
         <div class="container">
             <div class="f_row flex-column flex-md-row justify-content-md-between align-items-start">
@@ -241,8 +251,8 @@
                     <div class="fn_view_content footer__content footer__menu footer__hidden">
                         {$c_count = 0}
                         {foreach $categories as $c}
-                            {$c_count = $c_count+1}
                             {if $c->visible && ($c->has_products || $settings->show_empty_categories)}
+                                {$c_count = $c_count+1}
                                 <div class="footer__menu_item {if $c_count > 5}closed{else}opened{/if}">
                                     <a class="footer__menu_link" href="{url_generator route='category' url=$c->url}">{$c->name|escape}</a>
                                 </div>
@@ -263,37 +273,23 @@
                         <div class="subscribe__title">
                             <span data-language="subscribe_promotext">{$lang->subscribe_promotext}</span>
                         </div>
-                        <form class="subscribe_form fn_validate_subscribe" method="post">
-                            <div class="d-flex align-items-center subscribe_form__group">
-                                <div class="form__group form__group--subscribe">
-                                    <input type="hidden" name="subscribe" value="1"/>
-                                    <input class="form__input form__input_subscribe" aria-label="subscribe" type="email" name="subscribe_email" value="" data-format="email" placeholder="{$lang->form_email}"/>
+                        <form class="fn_subscribe_form fn_validate_subscribe" method="post">
+                            <div class="subscribe_form__group">
+                                 <div class="d-flex align-items-center ">
+                                    <div class="form__group form__group--subscribe">
+                                        <input type="hidden" name="subscribe" value="1"/>
+                                        <input class="form__input form__input_subscribe" aria-label="subscribe" type="email" name="subscribe_email" value="" data-format="email" placeholder="{$lang->form_email}"/>
+                                    </div>
+                                    <button class="form__button form__button--subscribe" type="submit"><span data-language="subscribe_button">{$lang->subscribe_button}</span></button>
                                 </div>
-                                <button class="form__button form__button--subscribe" type="submit"><span data-language="subscribe_button">{$lang->subscribe_button}</span></button>
+                                <div class="fn_subscribe_success subscribe_success hidden">
+                                    <span data-language="subscribe_sent">{$lang->index_subscribe_sent}</span>
+                                </div>
+                                
+                                <div class="fn_subscribe_error subscribe_error hidden">
+                                     <span class="fn_error_text"></span>
+                                </div>
                             </div>
-                            {if !empty($subscribe_error)}
-                                <div id="subscribe_error" class="popup">
-                                    <div class="popup__heading">
-                                        {include file="svg.tpl" svgId="success_icon"}
-                                        {if $subscribe_error == 'email_exist'}
-                                            <span data-language="subscribe_already">{$lang->index_subscribe_already}</span>
-                                        {elseif $subscribe_error == 'empty_email'}
-                                            <span data-language="form_enter_email">{$lang->form_enter_email}</span>
-                                        {else}
-                                            <span>{$subscribe_error|escape}</span>
-                                        {/if}
-                                    </div>
-                                </div>
-                            {/if}
-                            {if !empty($subscribe_success)}
-                                <div id="fn_subscribe_sent" class="popup">
-                                    <div class="popup__heading">
-                                        {include file="svg.tpl" svgId="success_icon"}
-                                        <span data-language="subscribe_sent">{$lang->index_subscribe_sent}</span>
-                                    </div>
-
-                                </div>
-                            {/if}
                         </form>
                     </div>
                     {* Social buttons *}
@@ -313,7 +309,6 @@
                 </div>
             </div>
         </div>
-
         <div class="footer__copyright">
             <div class="container">
                 <div class="f_row flex-column flex-md-row justify-content-center justify-content-md-between align-items-center">
@@ -323,31 +318,63 @@
                             {foreach $payment_methods as $payment_method}
                                 {if !$payment_method->image}{continue}{/if}
                                 <li class="d-flex justify-content-center align-items-center payments__item" title="{$payment_method->name|escape}">
-                                    <img src="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}" alt="{$payment_method->name|escape}" />
+                                    <picture>
+                                        {if $settings->support_webp}
+                                            <source type="image/webp" data-srcset="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir|webp}">
+                                        {/if}
+                                        <source data-srcset="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}">
+                                        <img class="lazy" data-src="{$payment_method->image|resize:80:30:false:$config->resized_payments_dir}" src="{$rootUrl}/design/{get_theme}/images/xloading.gif" alt="{$payment_method->name|escape}" title="{$payment_method->name|escape}"/>
+                                    </picture>
                                 </li>
                             {/foreach}
                         </ul>
                     </div>
                     {* Copyright *}
-                    <div class="f_col-md flex-md-first copyright">
-                        <span>© {$smarty.now|date_format:"%Y"}</span>
-                        <a href="https://okay-cms.com" rel="noreferrer" target="_blank">
-                        <span data-language="index_copyright">{$lang->index_copyright}</span>
-                        </a>
+                    <div class="f_col-md flex-md-first d-flex align-items-center copyright">
+                        <div class="d-flex align-items-center">
+                            <span>© {$smarty.now|date_format:"%Y"}</span>
+                            <span data-language="index_copyright">{$lang->index_copyright}</span>
+                        </div>
+                        <a href="https://okay-cms.com" rel="noreferrer" target="_blank" title="OkayCms">{include file="svg.tpl" svgId="okaycms"}</a>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
+    {/if}
 
-    {if $is_mobile === true || $is_tablet === true}
     <div class="fn_mobile_menu hidden">
         {include file="mobile_menu.tpl"}
     </div>
-    {/if}
+
     {* Форма обратного звонка *}
     {include file='callback.tpl'}
+    
+    {* Всплывающая корзина *}
+    {if $route_name != 'cart'}
+    <div id="fn_pop_up_cart_wrap" class="popup_animated" style="display: none;">
+        <div id="fn_pop_up_cart" class="popup_animated">
+            {include file='pop_up_cart.tpl'}
+        </div>
+    </div>
+    {/if}
 
+    {* Уведомления о добавление в сравнение *}
+    <div id="fn_compare_confirm" class="popup_bg popup_animated"  style="display: none;">
+        <div class="popup_confirm__title">
+            {include file="svg.tpl" svgId="success_icon"}
+            <span data-language="popup_add_to_compare">{$lang->popup_add_to_compare}</span>
+        </div>
+    </div>
+
+    {* Уведомления о добавление в избранное *}
+    <div id="fn_wishlist_confirm" class="popup_bg popup_animated" style="display: none;">
+        <div class="popup_confirm__title">
+            {include file="svg.tpl" svgId="success_icon"}
+            <span data-language="popup_add_to_wishlist">{$lang->popup_add_to_wishlist}</span>
+        </div>
+    </div>
+    
     <script>ut_tracker.start('parsing:body_bottom:scripts');</script>
 
     {if $controller == 'ProductController' || $controller == "BlogController"}
@@ -372,13 +399,14 @@
         <script>ut_tracker.end('parsing:body_bottom:counters');</script>
     {/if}
 
-    {if $controller == 'UserController'}
-        <script src="//ulogin.ru/js/ulogin.js"></script>
-    {/if}
     <script>ut_tracker.end('parsing:page');</script>
 
     <div>
         {get_design_block block="front_after_footer_content"}
     </div>
+
+    {if $debug_bar_renderer}
+        {$debug_bar_renderer->render()}
+    {/if}
 </body>
 </html>

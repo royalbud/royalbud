@@ -8,16 +8,18 @@
 </head>
 
 <body class="d-flex flex-column {if $controller == 'MainController'}main_page{else}other_page{/if}">
-    <div>
-        {get_design_block block="front_start_body_content"}
-    </div>
 
     {if !empty($counters['body_top'])}
         <script>ut_tracker.start('parsing:body_top:counters');</script>
         {foreach $counters['body_top'] as $counter}
         {$counter->code}
         {/foreach}
-        <script>ut_tracker.end('parsing:body_top:counters');</script>
+    {/if}
+
+    {if $block = {get_design_block block="front_start_body_content"} }
+    <div>
+        {$block}
+    </div>
     {/if}
 
     {* NEW header *}
@@ -68,7 +70,7 @@
                     </div>
 
                     {* Search form *}
-                    <form id="fn_search" class="search d-md-flex" action="{url_generator route='search'}">
+                    <form id="fn_search" class="search d-md-flex" action="">
                         <input class="fn_search search__input" type="text" name="keyword" value="{$keyword|escape}" aria-label="search" data-language="index_search" placeholder="{$lang->index_search}"/>
                         <button class="search__button d-flex align-items-center justify-content-center" aria-label="search" type="submit">
                             {include file="svg.tpl" svgId="search_icon"}
@@ -198,7 +200,7 @@
                             </div>
 
                             {* Mobile search form *}
-                            <form id="fn_search" class="fn_search_mob search d-md-flex" action="{url_generator route='search'}">
+                            <form id="fn_search" class="fn_search_mob search d-md-flex" action="">
                                 <input class="fn_search search__input" type="text" name="keyword" value="{$keyword|escape}" aria-label="search" data-language="index_search" placeholder="{$lang->index_search}"/>
                                 <button class="search__button d-flex align-items-center justify-content-center" aria-label="search" type="submit">
                                     {include file="svg.tpl" svgId="search_icon"}
@@ -289,10 +291,10 @@
                         {/if}
                         {if $settings->site_working_hours}
                             <div class="footer__contact_item">
-                                <span class="d-flex align-items-start open_hours">
+                                <div class="d-flex align-items-start open_hours">
                                     {include file="svg.tpl" svgId="time_icon"}
                                     {$settings->site_working_hours}
-                                </span>
+                                </div>
                             </div>
                         {/if}
                         <div class="footer__contact_item">

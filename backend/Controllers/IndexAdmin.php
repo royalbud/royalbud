@@ -19,18 +19,13 @@ use Okay\Core\Request;
 use Okay\Core\Response;
 use Okay\Core\Settings;
 use Okay\Core\ManagerMenu;
-use Okay\Core\BackendTranslations;
-use Okay\Core\TemplateConfig;
+use Okay\Core\TemplateConfig\BackendTemplateConfig;
+use Okay\Core\TemplateConfig\FrontTemplateConfig;
 use Okay\Core\Translit;
 use Okay\Entities\ManagersEntity;
 use Okay\Entities\LanguagesEntity;
-use Okay\Entities\CallbacksEntity;
-use Okay\Entities\CommentsEntity;
 use Okay\Entities\CurrenciesEntity;
-use Okay\Entities\FeedbacksEntity;
-use Okay\Entities\OrdersEntity;
-use Okay\Entities\OrderStatusEntity;
-use OkayLicense\License;
+use Okay\Entities\ModulesEntity;
 use Okay\Entities\SupportInfoEntity;
 
 class IndexAdmin
@@ -38,6 +33,7 @@ class IndexAdmin
 
     protected $manager;
     protected $backendController;
+    protected $controllerMethod;
     
     /**
      * @var EntityFactory
@@ -109,7 +105,6 @@ class IndexAdmin
         Response $response,
         Settings $settings,
         Config $config,
-        License $license,
         Languages $languages,
         EntityFactory $entityFactory,
         ManagerMenu $managerMenu,
@@ -124,7 +119,8 @@ class IndexAdmin
         BackendMainHelper $backendMainHelper,
         Module $module,
         BackendPostRedirectGet $postRedirectGet,
-        TemplateConfig $templateConfig
+        FrontTemplateConfig $frontTemplateConfig,
+        BackendTemplateConfig $backendTemplateConfig
     ) {
         $this->design        = $design;
         $this->request       = $request;
@@ -143,13 +139,60 @@ class IndexAdmin
         $design->assign('is_tablet', $design->isTablet());
         $design->assign('is_module', $module->isBackendControllerName($this->backendController));
 
+        $design->assign('ok_head', $backendTemplateConfig->head());
+        $design->assign('ok_footer', $backendTemplateConfig->footer());
+        
         $design->assign('settings',  $this->settings);
         $design->assign('config',    $this->config);
 
         $this->design->assign('rootUrl', $this->request->getRootUrl());
+
+        $modulesEntity = $this->entityFactory->get(ModulesEntity::class);
+        $modules = $modulesEntity->cols(['module_name'])->find();
+        if(is_dir('design/')){
+        $dirs = scandir('design/');
+        $themes = [];
+        foreach($dirs as $dir){
+            if($dir != '.' && $dir != '..' && $dir != '.htaccess'){
+                $themes [] = $dir;
+            }
+        }
+        }
+
+        if (!isset($_SESSION['last_version_data'])) {
+            $query = http_build_query([
+                'domain'  => Request::getDomain(),
+                'version' => $config->version,
+                'modules' => $modules,
+                'themes'  => $themes
+            ]);
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://okay-cms.com/last_version.json?' . $query);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+            $versionData = curl_exec($ch);
+            curl_close($ch);
+            
+            if ($versionData) {
+                $versionData = json_decode($versionData, true);
+                $_SESSION['last_version_data'] = $versionData;
+            } else {
+                $_SESSION['last_version_data'] = false;
+            }
+        }
+        
+        if (isset($_SESSION['last_version_data'])
+            && !empty($_SESSION['last_version_data'])
+            && $module->getMathVersion($_SESSION['last_version_data']['version']) > $module->getMathVersion($config->version)) {
+            $design->assign('has_new_version', $_SESSION['last_version_data']);
+        }
         
         $design->assign('manager', $this->manager);
-        $design->assign('registered_front_css', $templateConfig->getRegisteredCss());
+        $design->assign('registered_front_css', $frontTemplateConfig->getRegisteredCss());
 
         $supportInfo = $supportInfoEntity->getInfo();
         $this->design->assign('support_info', $supportInfo);
@@ -159,7 +202,7 @@ class IndexAdmin
         $isNotLocalServer = !in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '0:0:0:0:0:0:0:1']);
         if (empty($supportInfo->public_key) && !empty($supportInfo->is_auto) && $isNotLocalServer) {
             $supportInfoEntity->updateInfo(['is_auto' => 0]);
-            if ($support->getNewKeys() !== false) {
+            if ($support->getNewKeys($this->manager->email) !== false) {
                 $this->response->addHeader("Refresh:0");
                 $this->response->sendHeaders();
                 exit();
@@ -171,6 +214,19 @@ class IndexAdmin
             $activeControllerName = $managerMenu->getActiveControllerName($this->manager, $this->backendController);
             $design->assign('left_menu', $menu);
             $design->assign('menu_selected', $activeControllerName);
+            
+            if (!empty($menu)) {
+                $subMenu = reset($menu);
+                $backendControllerName = reset($subMenu);
+                $design->assign('manager_main_controller', $backendControllerName['controller']);
+            }
+            
+            $activeController = $this->backendController;
+            
+            if ($this->controllerMethod != 'fetch') {
+                $activeController = $this->backendController . '@' . $this->controllerMethod;
+            }
+            $design->assign('controller_selected', $activeController);
         }
 
         $design->assign('translit_pairs', $translit->getTranslitPairs());
@@ -195,8 +251,6 @@ class IndexAdmin
         if (!empty($mainLanguage->id)) {
             $design->assign('main_lang_id', $mainLanguage->id);
         }
-        
-        $design->assign('is_valid_license', $license->check());
 
         if ($request->method('post') && !empty($this->manager->id)) {
             $managersEntity->updateLastActivityDate($this->manager->id);
@@ -213,6 +267,10 @@ class IndexAdmin
 
         if ($messageSuccess = $this->postRedirectGet->matchMessageSuccess()) {
             $this->design->assign('message_success', $messageSuccess);
+        }
+
+        if ($messageError = $this->postRedirectGet->matchMessageError()) {
+            $this->design->assign('message_error', $messageError);
         }
 
         // Запоминаем логин менеджера для работы темы под админом
@@ -232,9 +290,10 @@ class IndexAdmin
         return false;
     }
 
-    public function __construct($manager, $backendController)
+    public function __construct($manager, $backendController, $controllerMethod)
     {
         $this->manager = $manager;
         $this->backendController  = $backendController;
+        $this->controllerMethod  = $controllerMethod;
     }
 }

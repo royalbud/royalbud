@@ -11,7 +11,7 @@
                 {$btr->faq_title|escape}
             </div>
             <div class="box_btn_heading">
-                <a class="btn btn_small btn-info" href="{url controller='OkayCMS.FAQ.FAQAdmin'}">
+                <a class="btn btn_small btn-info" href="{url controller='OkayCMS.FAQ.FAQAdmin' return=$smarty.server.REQUEST_URI}">
                     {include file='svg_icon.tpl' svgId='plus'}
                     <span>{$btr->faq_add|escape}</span>
                 </a>
@@ -46,7 +46,7 @@
                             {foreach $faqs as $faq}
                                 <div class="fn_row okay_list_body_item">
                                     <div class="okay_list_row">
-                                        <input type="hidden" name="positions[{$faq->id}]" value="{$faq->position}">
+                                        <input type="hidden" name="positions[{$faq->id}]" value="{$faq->position|escape}">
 
                                         <div class="okay_list_boding okay_list_drag move_zone">
                                             {include file='svg_icon.tpl' svgId='drag_vertical'}
@@ -106,6 +106,9 @@
                         </div>
                     </div>
                 </form>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm 12 txt_center">
+                {include file='pagination.tpl'}
             </div>
         </div>
     {else}

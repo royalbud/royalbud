@@ -8,7 +8,9 @@ use Okay\Core\EntityFactory;
 use Okay\Core\Languages;
 use Okay\Core\QueryFactory\Select;
 use Okay\Core\ServiceLocator;
+use Okay\Core\Settings;
 use Okay\Entities\CategoriesEntity;
+use Okay\Entities\CurrenciesEntity;
 use Okay\Entities\FeaturesEntity;
 use Okay\Entities\FeaturesValuesEntity;
 use Okay\Entities\ImagesEntity;
@@ -22,20 +24,82 @@ use Okay\Entities\ImagesEntity;
 
 class XmlFeedHelper
 {
-
     /** @var Languages */
     private $languages;
     
+    private $siteName;
+    private $defaultProductsSeoPattern;
+    private $allCategories;
+    private $mainCurrency;
+    private $allCurrencies;
+    
     public function __construct(
-        Languages $languages
+        Languages $languages,
+        Settings $settings,
+        EntityFactory $entityFactory
     ) {
         $this->languages = $languages;
+        $this->siteName = $settings->get('site_name');
+        $this->defaultProductsSeoPattern = (object)$settings->get('default_products_seo_pattern');
+        
+        /** @var CategoriesEntity $categoriesEntity */
+        $categoriesEntity = $entityFactory->get(CategoriesEntity::class);
+        
+        $this->allCategories = $categoriesEntity->find();
+
+        /** @var CurrenciesEntity $currenciesEntity */
+        $currenciesEntity = $entityFactory->get(CurrenciesEntity::class);
+
+        $this->mainCurrency  = $currenciesEntity->getMainCurrency();
+        $this->allCurrencies = $currenciesEntity->mappedBy('id')->find();
+        
+    }
+
+    /**
+     * Принимает массив тегов, каждый из которых является массивом с ключами:
+     * data - значение, которое нужно вставить в тег (можно текст XML, если там должен быть вложенный тег,а можно
+     *        другой массив с тегами, так как метод рекурсивный)
+     * tag - если много тегов с одинаковым названием, можно указывать его не в ключе массива, а указать здесь
+     *       название тега
+     * attributes - ассоциативный массив аттрибутов тега, ключ - название аттрибута, значение - значение аттрибута
+     *
+     * Пример:
+     * [
+     *      [
+     *          'tag' => 'item',
+     *          'attributes => [
+     *              'id' => 245
+     *          ],
+     *          'data' => 'item_text_1'
+     *      ],
+     *      [
+     *          'tag' => 'item',
+     *          'attributes => [
+     *              'id' => 246
+     *          ],
+     *          'data' => [...]
+     *      ]
+     * ]
+     *
+     * @param array $items
+     * @return string
+     */
+    public function compileItems(array $items): string
+    {
+        $result = '';
+
+        foreach ($items as $key => $item) {
+            $result .= $this->compileItem($item['data'] ?? [], $item['tag'] ?? $key, $item['attributes'] ?? []);
+        }
+
+        return $result;// No ExtenderFacade
     }
     
     /**
      * Метод формирует XML строку, на основе данных из массива.
      * Метод принимает массив, как описание офера. Ключ массива это название тега, а значение - массив с ключами:
-     * data - значение, которое нужно вставить в тег (можно текст XML, если там должен быть вложенный тег)
+     * data - значение, которое нужно вставить в тег (можно текст XML, если там должен быть вложенный тег,а можно
+     *        другой массив с тегами)
      * tag - если много тегов с одинаковым названием, можно указывать его не в ключе массива, а указать здесь
      *       название тега
      * attributes - ассоциативный массив аттрибутов тега, ключ - название аттрибута, значение - значение аттрибута
@@ -53,12 +117,12 @@ class XmlFeedHelper
      * <id>1</id>
      * <guarantee type="shop">2</guarantee>
      *
-     * @param array $item описание офера
+     * @param mixed $data описание офера
      * @param string $itemTag название тега в который нужно обернуть сам офер
      * @param array $itemTagAttributes атрибуты для тега офера
      * @return string
      */
-    public function compileItem(array $item, $itemTag = null, array $itemTagAttributes = [])
+    public function compileItem($data, $itemTag = null, array $itemTagAttributes = [])
     {
         $xmlProduct = '';
         if (!empty($itemTag)) {
@@ -70,21 +134,13 @@ class XmlFeedHelper
                 }
             }
             
-            $xmlProduct .= "<{$itemTag}{$itemTagAttributesString}>" . PHP_EOL;
+            $xmlProduct .= PHP_EOL."<{$itemTag}{$itemTagAttributesString}>";
         }
-        foreach ($item as $tag => $value) {
-            if (!empty($value['tag'])) {
-                $tag = $value['tag'];
-            }
 
-            $attributes = '';
-            if (!empty($value['attributes'])) {
-                foreach ($value['attributes'] as $attrName => $attrValue) {
-                    $attributes .= " {$attrName}=\"{$attrValue}\"";
-                }
-            }
-
-            $xmlProduct .= "<{$tag}{$attributes}>{$value['data']}</{$tag}>" . PHP_EOL;
+        if (is_array($data)) {
+            $xmlProduct .= $this->compileItems($data);
+        } else {
+            $xmlProduct .= $data;
         }
 
         if (!empty($itemTag)) {
@@ -103,13 +159,16 @@ class XmlFeedHelper
     public function joinFeatures(Select $select)
     {
         $select->cols([
-            'GROUP_CONCAT(DISTINCT f.feature_id, "!-", f.name SEPARATOR "@|@") AS features_string',
-            'GROUP_CONCAT(DISTINCT fv.feature_id, "!-", fv.value SEPARATOR "@|@") AS values_string',
+            'GROUP_CONCAT(DISTINCT lf.feature_id, "!-", lf.name SEPARATOR "@|@") AS features_string',
+            'GROUP_CONCAT(DISTINCT fv.feature_id, "!-", lfv.value SEPARATOR "@|@") AS values_string',
+            'GROUP_CONCAT(DISTINCT f.id, "!-", f.auto_name_id SEPARATOR "@|@") AS auto_name_id_string',
+            'GROUP_CONCAT(DISTINCT f.id, "!-", f.auto_value_id SEPARATOR "@|@") AS auto_value_id_string',
         ])
             ->leftJoin('__products_features_values pv', 'pv.product_id = p.id')
             ->leftJoin(FeaturesValuesEntity::getTable().' AS  fv', 'pv.value_id = fv.id')
             ->leftJoin(FeaturesValuesEntity::getLangTable().' AS  lfv', 'fv.id = lfv.feature_value_id and lfv.lang_id=' . $this->languages->getLangId())
-            ->leftJoin(FeaturesEntity::getLangTable().' AS  f', 'fv.feature_id = f.feature_id and f.lang_id=' . $this->languages->getLangId());
+            ->leftJoin(FeaturesEntity::getTable().' AS  f', 'fv.feature_id = f.id AND f.visible')
+            ->leftJoin(FeaturesEntity::getLangTable().' AS  lf', 'f.id = lf.feature_id and lf.lang_id=' . $this->languages->getLangId());
         
         return $select;// No ExtenderFacade
     }
@@ -160,6 +219,22 @@ class XmlFeedHelper
                 list($featureId, $val) = explode('!-', $value, 2);
                 $values[$featureId][] = $val;
             }
+            $autoNameIds = [];
+            foreach (explode('@|@', $product->auto_name_id_string) as $autoNameId) {
+                list($featureId, $val) = explode('!-', $autoNameId, 2);
+                if (!empty($val)) {
+                    $autoNameIds[$featureId] = $val;
+                }
+            }
+            
+            $autoValueIds = [];
+            foreach (explode('@|@', $product->auto_value_id_string) as $autoValueId) {
+                list($featureId, $val) = explode('!-', $autoValueId, 2);
+                if (!empty($val)) {
+                    $autoValueIds[$featureId] = $val;
+                }
+            }
+            
             foreach ($features as $feature) {
                 list($featureId, $featureName) = explode('!-', $feature, 2);
                 
@@ -171,12 +246,117 @@ class XmlFeedHelper
                         'values_string' => implode(', ', $values[$featureId]),
                     ];
                 }
+
+                if (isset($autoNameIds[$featureId])) {
+                    $product->features[$featureId]['auto_name_id'] = $autoNameIds[$featureId];
+                }
+
+                if (isset($autoValueIds[$featureId])) {
+                    $product->features[$featureId]['auto_value_id'] = $autoValueIds[$featureId];
+                }
             }
         }
 
         return $product; // No ExtenderFacade
     }
 
+    public function attachDescriptionByTemplate($product)
+    {
+        if (!empty($product->main_category_id)) {
+            $category = $this->allCategories[$product->main_category_id];
+
+            if (isset($product->description) && empty($product->description)) {
+                if ($data = $this->getCategoryField($category, 'auto_description')) {
+                    $descriptionTemplate = $data;
+                } elseif (!empty($this->defaultProductsSeoPattern->auto_description)) {
+                    $descriptionTemplate = $this->defaultProductsSeoPattern->auto_description;
+                }
+
+                if (!empty($descriptionTemplate)) {
+                    $metaData = strtr($descriptionTemplate, $this->getMetadataParts($product));
+                    $product->description = trim(preg_replace('/{\$[^$]*}/', '', $metaData));
+                }
+            }
+
+            if (isset($product->annotation) && empty($product->annotation)) {
+                if ($data = $this->getCategoryField($category, 'auto_annotation')) {
+                    $annotationTemplate = $data;
+                } elseif (!empty($this->defaultProductsSeoPattern->auto_annotation)) {
+                    $annotationTemplate = $this->defaultProductsSeoPattern->auto_annotation;
+                }
+
+                if (!empty($annotationTemplate)) {
+                    $metaData = strtr($annotationTemplate, $this->getMetadataParts($product));
+                    $product->annotation = trim(preg_replace('/{\$[^$]*}/', '', $metaData));
+                }
+            }
+        }
+        
+        return $product; // No ExtenderFacade
+    }
+    
+    protected function getMetadataParts($product)
+    {
+
+        $price = round($product->price, 2);
+        $comparePrice = null;
+        if (isset($this->allCurrencies[$product->currency_id])) {
+            // Переводим в основную валюту сайта
+            $variantCurrency = $this->allCurrencies[$product->currency_id];
+            if (!empty($product->currency_id) && $variantCurrency->rate_from != $variantCurrency->rate_to) {
+                $price = round($product->price * $variantCurrency->rate_to / $variantCurrency->rate_from, 2);
+                if (!empty($product->compare_price)) {
+                    $comparePrice = round($product->compare_price * $variantCurrency->rate_to / $variantCurrency->rate_from, 2);
+                }
+            }
+        }
+        
+        $mataDataParts = [
+            '{$brand}'         => $product->brand_name,
+            '{$product}'       => $product->product_name,
+            '{$price}'         => $price . ' ' . $this->mainCurrency->sign,
+            '{$compare_price}' => ($comparePrice != null ? $comparePrice . ' ' . $this->mainCurrency->sign : ''),
+            '{$sku}'           => $product->sku,
+            '{$sitename}'      => $this->siteName,
+        ];
+
+        if (!empty($product->main_category_id) && isset($this->allCategories[$product->main_category_id])) {
+            $category = $this->allCategories[$product->main_category_id];
+            $mataDataParts['{$category}'] = ($category->name ? $category->name : '');
+            $mataDataParts['{$category_h1}'] = ($category->name_h1 ? $category->name_h1 : '');
+        }
+        
+        if (!empty($product->features)) {
+            foreach ($product->features as $feature) {
+                
+                if (!empty($feature['auto_name_id'])) {
+                    $mataDataParts['{$' . $feature['auto_name_id'] . '}'] = $feature['name'];
+                }
+                if (!empty($feature['auto_value_id'])) {
+                    $mataDataParts['{$' . $feature['auto_value_id'] . '}'] = $feature['values_string'];
+                }
+            }
+        }
+        
+        return $mataDataParts; // No ExtenderFacade
+    }
+
+    protected function getCategoryField($category, $fieldName)
+    {
+        if (empty($category)) {
+            return false;
+        }
+
+        $categoryPath = array_reverse($category->path);
+        
+        foreach ($categoryPath as $c) {
+            if (!empty($c->{$fieldName})) {
+                return $c->{$fieldName};
+            }
+        }
+        return false;
+    }
+    
     /**
      * Метод парсит строку с изображениями, и складывает их в виде массива filename в свойстве images.
      * Чтобы для данного метода были валидные данные нужно обязательно расширить sql запрос методом self::joinImages()
@@ -218,7 +398,9 @@ class XmlFeedHelper
         $uploadCategories = [];
         foreach ($categoriesIds as $cId) {
             $category = $categoriesEntity->get((int)$cId);
-            $uploadCategories = array_merge($uploadCategories, $category->children);
+            if (!empty($category)) {
+                $uploadCategories = array_merge($uploadCategories, $category->children);
+            }
         }
         return $uploadCategories; // no ExtenderFacade
     }

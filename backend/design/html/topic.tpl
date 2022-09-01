@@ -139,7 +139,7 @@
                             </div>
                             {else}
                             <div class="heading_box mt-1">
-                                <div class="text_grey">Нет сообщений</div>
+                                <div class="text_grey">{$btr->no_message}</div>
                             </div>
                             {/if}
                         </div>
@@ -249,7 +249,7 @@
                 $("[type='submit']").trigger("click");
                 {literal}}{/literal},
 
-            language : "{$manager->lang}",
+            language : "{$manager->lang|escape}",
             /* Замена тега P на BR при разбивке на абзацы
              force_br_newlines : true,
              force_p_newlines : false,

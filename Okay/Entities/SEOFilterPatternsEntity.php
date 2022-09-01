@@ -14,6 +14,7 @@ class SEOFilterPatternsEntity extends Entity
         'category_id',
         'type',
         'feature_id',
+        'second_feature_id',
     ];
 
     protected static $langFields = [
@@ -21,6 +22,7 @@ class SEOFilterPatternsEntity extends Entity
         'meta_title',
         'meta_keywords',
         'meta_description',
+        'annotation',
         'description',
     ];
 

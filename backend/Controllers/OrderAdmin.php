@@ -11,6 +11,7 @@ use Okay\Core\Image;
 use Okay\Core\Notify;
 use Okay\Entities\CurrenciesEntity;
 use Okay\Entities\DeliveriesEntity;
+use Okay\Entities\DiscountsEntity;
 use Okay\Entities\OrderLabelsEntity;
 use Okay\Entities\OrdersEntity;
 use Okay\Entities\OrderStatusEntity;
@@ -21,17 +22,18 @@ class OrderAdmin extends IndexAdmin
 {
     
     public function fetch(
-        OrdersEntity         $ordersEntity,
-        PurchasesEntity      $purchasesEntity,
-        OrderLabelsEntity    $orderLabelsEntity,
-        OrderStatusEntity    $orderStatusEntity,
-        DeliveriesEntity     $deliveriesEntity,
-        PaymentsEntity       $paymentsEntity,
-        CurrenciesEntity     $currenciesEntity,
-        Notify               $notify,
-        BackendOrdersRequest $ordersRequest,
-        BackendOrdersHelper  $backendOrdersHelper,
-        BackendOrderHistoryHelper $backendOrderHistoryHelper
+        OrdersEntity              $ordersEntity,
+        PurchasesEntity           $purchasesEntity,
+        OrderLabelsEntity         $orderLabelsEntity,
+        OrderStatusEntity         $orderStatusEntity,
+        DeliveriesEntity          $deliveriesEntity,
+        PaymentsEntity            $paymentsEntity,
+        CurrenciesEntity          $currenciesEntity,
+        Notify                    $notify,
+        BackendOrdersRequest      $ordersRequest,
+        BackendOrdersHelper       $backendOrdersHelper,
+        BackendOrderHistoryHelper $backendOrderHistoryHelper,
+        DiscountsEntity           $discountsEntity
     ) {
         
         /*Прием информации о заказе*/
@@ -40,11 +42,13 @@ class OrderAdmin extends IndexAdmin
             $order = $ordersRequest->postOrder();
             $purchases = $ordersRequest->postPurchases();
 
-            $orderBeforeUpdate = null;
-            $purchasesBeforeUpdate = null;
+            $orderBeforeUpdate = [];
+            $purchasesBeforeUpdate = [];
+            $discountsBeforeUpdate = [];
             if (!empty($order->id)) {
                 $orderBeforeUpdate = $ordersEntity->get((int)$order->id);
                 $purchasesBeforeUpdate = $purchasesEntity->find(['order_id' => $order->id]);
+                $discountsBeforeUpdate = $backendOrdersHelper->getDiscountsBeforeUpdate($order->id);
             }
             
             if (!$orderLabels = $this->request->post('order_labels')) {
@@ -75,23 +79,60 @@ class OrderAdmin extends IndexAdmin
                 $orderLabelsEntity->updateOrderLabels($order->id, $orderLabels);
 
                 if ($order->id) {
+                    $orderDiscounts = $ordersRequest->postOrderDiscounts();
+                    $purchasesDiscounts = $ordersRequest->postPurchasesDiscounts();
+
                     /*Работа с покупками заказа*/
-                    $postedPurchasesIds = [];
-                    foreach ($purchases as $purchase) {
+                    foreach ($purchases as $i => $purchase) {
+                        $purchaseDiscounts = $purchasesDiscounts[$i] ?? [];
                         if (!empty($purchase->id)) {
-                            $preparedPurchase = $backendOrdersHelper->prepareUpdatePurchase($order, $purchase);
+                            $preparedPurchase = $backendOrdersHelper->prepareUpdatePurchase($order, $purchase, $purchaseDiscounts);
                             $backendOrdersHelper->updatePurchase($preparedPurchase);
                         } else {
-                            $preparedPurchase = $backendOrdersHelper->prepareAddPurchase($order, $purchase);
+                            $preparedPurchase = $backendOrdersHelper->prepareAddPurchase($order, $purchase, $purchaseDiscounts);
                             if (!$purchase->id = $backendOrdersHelper->addPurchase($preparedPurchase)) {
                                 $this->design->assign('message_error', 'error_closing');
                             }
                         }
                         $postedPurchasesIds[] = $purchase->id;
+
+                        // Обновляем скидки товаров
+                        if ($purchase->id && !empty($purchaseDiscounts)) {
+                            foreach ($purchaseDiscounts as $discount) {
+                                if (!empty($discount->id)) {
+                                    $preparedDiscount = $backendOrdersHelper->prepareUpdatePurchaseDiscount($discount, $purchase);
+                                    $backendOrdersHelper->updateDiscount($preparedDiscount);
+                                } else {
+                                    $preparedDiscount = $backendOrdersHelper->prepareAddPurchaseDiscount($discount, $purchase);
+                                    $discount->id = $backendOrdersHelper->addDiscount($preparedDiscount);
+                                }
+                                $postedDiscountIds[] = $discount->id;
+                            }
+                        }
                     }
 
                     // Удалить непереданные товары
-                    $backendOrdersHelper->deletePurchases($order, $postedPurchasesIds);
+                    $backendOrdersHelper->deletePurchases($order, $postedPurchasesIds ?? []);
+
+                    // Обновляем скидки заказа
+                    foreach ($orderDiscounts as $discount) {
+                        if (!empty($discount->id)) {
+                            $preparedDiscount = $backendOrdersHelper->prepareUpdateOrderDiscount($discount, $order);
+                            $backendOrdersHelper->updateDiscount($preparedDiscount);
+                        } else {
+                            $preparedDiscount = $backendOrdersHelper->prepareAddOrderDiscount($discount, $order);
+                            $discount->id = $backendOrdersHelper->addDiscount($preparedDiscount);
+                        }
+                        $postedDiscountIds[] = $discount->id;
+                    }
+
+                    // Удаляем непереданные скидки
+                    $backendOrdersHelper->deleteDiscounts($postedDiscountIds ?? [], $order->id);
+
+                    // Обновим позиции скидок
+                    $positions = $ordersRequest->postDiscountPositions();
+                    list($ids, $positions) = $backendOrdersHelper->sortDiscountPositions($positions);
+                    $backendOrdersHelper->updateDiscountPositions($ids, $positions);
 
                     // Обновим статус заказа
                     $newStatusId = $this->request->post('status_id', 'integer');
@@ -109,7 +150,7 @@ class OrderAdmin extends IndexAdmin
                     }
                 }
 
-                $backendOrderHistoryHelper->updateHistory($orderBeforeUpdate, $order, $purchasesBeforeUpdate);
+                $backendOrderHistoryHelper->updateHistory($orderBeforeUpdate, $order, $purchasesBeforeUpdate, $discountsBeforeUpdate);
 
                 // По умолчанию метод ничего не делает, но через него можно зацепиться модулем
                 $backendOrdersHelper->executeCustomPost($order);
@@ -132,7 +173,7 @@ class OrderAdmin extends IndexAdmin
             $subtotal = 0;
             $hasVariantNotInStock = false;
             foreach ($purchases as $purchase) {
-                if ((empty($purchase->variant) || $purchase->amount > $purchase->variant->stock || !$purchase->variant->stock) && !$hasVariantNotInStock) {
+                if (!$order->closed && ((empty($purchase->variant) || $purchase->amount > $purchase->variant->stock || !$purchase->variant->stock) && !$hasVariantNotInStock)) {
                     $hasVariantNotInStock = true;
                 }
                 $subtotal += $purchase->price * $purchase->amount;
@@ -149,6 +190,8 @@ class OrderAdmin extends IndexAdmin
                 $this->design->assign('payment_currency', $paymentCurrency);
             }
 
+            $discounts = $backendOrdersHelper->getOrderDiscounts($order->id);
+
             $user = $backendOrdersHelper->findOrderUser($order);
             $neighborsOrders = $backendOrdersHelper->findNeighborsOrders(
                 $order,
@@ -164,11 +207,13 @@ class OrderAdmin extends IndexAdmin
             $this->design->assign('order', $order);
             $this->design->assign('hasVariantNotInStock', $hasVariantNotInStock);
             $this->design->assign('neighbors_orders', $neighborsOrders);
+            $this->design->assign('discounts', $discounts);
         }
 
-        //все статусы
+        // все статусы
         $allStatuses = $orderStatusEntity->mappedBy('id')->find();
         $this->design->assign('all_status', $allStatuses);
+
         // Все способы доставки
         $deliveries = $deliveriesEntity->find();
         $this->design->assign('deliveries', $deliveries);
@@ -186,19 +231,20 @@ class OrderAdmin extends IndexAdmin
         if (!empty($order->id)) {
             $orderHistory = $backendOrderHistoryHelper->getHistory($order->id);
             $this->design->assign('order_history', $orderHistory);
+            
+            $page             = $ordersRequest->getPage();
+            $currentPage      = $backendOrdersHelper->determineCurrentPage($page);
+            $perPage          = $backendOrdersHelper->getPaginationPerPage();
+            $otherOrders      = $backendOrdersHelper->findOtherOrdersOfClient($order, $currentPage, $perPage);
+            $otherOrdersCount = $backendOrdersHelper->countOtherOrdersOfClient($order);
+            $this->design->assign('match_orders', $otherOrders);
+            $this->design->assign('current_page', $currentPage);
+            $this->design->assign('pages_count',  ceil($otherOrdersCount / $perPage));
         }
 
         if ($this->request->get('match_orders_tab_active')) {
             $this->design->assign('match_orders_tab_active', true);
         }
-        $page             = $ordersRequest->getPage();
-        $currentPage      = $backendOrdersHelper->determineCurrentPage($page);
-        $perPage          = $backendOrdersHelper->getPaginationPerPage();
-        $otherOrders      = $backendOrdersHelper->findOtherOrdersOfClient($order, $currentPage, $perPage);
-        $otherOrdersCount = $backendOrdersHelper->countOtherOrdersOfClient($order);
-        $this->design->assign('match_orders', $otherOrders);
-        $this->design->assign('current_page', $currentPage);
-        $this->design->assign('pages_count',  ceil($otherOrdersCount / $perPage));
 
         if ($this->request->get('view') == 'print') {
             $this->response->setContent($this->design->fetch('order_print.tpl'));
