@@ -48,10 +48,10 @@
             {/if}
         </div>
 
-        {* Browsed products *}
+        {* Browsed products 
         <div class="browsed products">
             {include file='browsed_products.tpl'}
-        </div>
+        </div>*}
     </div>
 
     <div class="products_container d-flex flex-column">

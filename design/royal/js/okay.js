@@ -555,7 +555,7 @@ $(function(){
     /* Hiding blocks with great text */
     if( $('.fn_readmore').length ) {
         $('.fn_readmore').readmore({
-            collapsedHeight: 215,
+            collapsedHeight: 4000,
             lessLink: '<a href="#"><span>-</span></a>',
             moreLink: '<a href="#"><span>+</span></a>',
             afterToggle: function(trigger, element, expanded) {
